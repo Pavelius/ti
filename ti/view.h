@@ -14,7 +14,7 @@ extern gui_info gui_data;
 namespace draw {
 namespace controls {
 struct list {
-	int				origin, maximum, current;
+	int				origin, current;
 	int				maximum_width, origin_width;
 	int				lines_per_page, pixels_per_line;
 	bool			show_grid_lines;
@@ -23,6 +23,7 @@ struct list {
 	virtual void	background(rect& rc);
 	void			correction();
 	void			ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
+	virtual int		getmaximum() const { return 0; }
 	void			keydown();
 	void			keyend();
 	void			keyenter();
@@ -36,6 +37,12 @@ struct list {
 	void			select(int index);
 	virtual void	row(rect rc, int index); // Draw single row - part of list
 	void			updaterowheight();
+};
+struct unitlist : list {
+	unitlist(army& source) : source(source) {}
+	int				getmaximum() const override { return source.count; }
+private:
+	army&			source;
 };
 }
 int					buttonr(int x, int y, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);

@@ -2,7 +2,7 @@
 
 using namespace draw::controls;
 
-list::list() : origin(0), maximum(0), current(0),
+list::list() : origin(0), current(0),
 maximum_width(0), origin_width(0),
 lines_per_page(0), pixels_per_line(0) {}
 
@@ -19,6 +19,7 @@ void list::select(int index) {
 }
 
 void list::correction() {
+	auto maximum = getmaximum();
 	if(current >= maximum)
 		current = maximum - 1;
 	if(current < 0)
@@ -46,6 +47,7 @@ void list::background(rect& rc) {
 }
 
 void list::redraw(rect rc) {
+	auto maximum = getmaximum();
 	auto hilite_rows = true;
 	if(!pixels_per_line)
 		return;
@@ -131,6 +133,7 @@ void list::keyhome() {
 }
 
 void list::keyend() {
+	auto maximum = getmaximum();
 	if(current == maximum - 1)
 		return;
 	current = maximum - 1;
@@ -166,6 +169,7 @@ void list::keyenter() {
 
 void list::mousewheel(point position, int step) {
 	origin += step;
+	auto maximum = getmaximum();
 	if(origin > maximum - lines_per_page)
 		origin = maximum - lines_per_page;
 	if(origin < 0)
