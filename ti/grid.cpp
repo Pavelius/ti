@@ -1,0 +1,1 @@
+unsigned char indecies[8*8];
