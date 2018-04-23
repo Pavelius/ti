@@ -49,7 +49,7 @@ void list::row(rect rc, int index) {
 	if(index == current)
 		hilight(rc);
 	else if(index == current_hilite)
-		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 64));
+		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
 	char temp[260];
 	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
 	if(p)
@@ -106,9 +106,9 @@ void list::view(rect rcorigin) {
 		}
 	}
 	if(scroll)
-		draw::scrollv((int)this, scroll, origin, lines_per_page, maximum, ishilited());
+		draw::scrollv((int)this, scroll, origin, lines_per_page, maximum, isfocused());
 	if(scrollh)
-		draw::scrollh((int)this, scrollh, origin_width, rc.width(), maximum_width, ishilited());
+		draw::scrollh((int)this, scrollh, origin_width, rc.width(), maximum_width, isfocused());
 }
 
 void list::keyup() {

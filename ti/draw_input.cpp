@@ -140,10 +140,8 @@ int draw::getnext(int id, int key) {
 void draw::setfocus(int id, bool instant) {
 	if(instant)
 		current_focus = id;
-	else {
-		hot::param = id;
-		execute(setfocus_callback);
-	}
+	else if(current_focus!=id)
+		execute(setfocus_callback, id);
 }
 
 int draw::getfocus() {
@@ -156,22 +154,19 @@ void draw::execute(int id, int param) {
 	hot::param = param;
 }
 
-void draw::execute(void(*proc)()) {
-	execute(InputExecute, 0);
+void draw::execute(void(*proc)(), int param) {
+	execute(InputExecute, param);
 	current_execute = proc;
 }
 
 int draw::input(bool redraw) {
 	if(current_command) {
 		hot::key = current_command;
-		if(current_execute) {
-			current_execute();
-			hot::key = InputUpdate;
-		}
-		for(auto p = renderplugin::first; p; p = p->next) {
-			if(p->translate(hot::key))
-				break;
-		}
+		return hot::key;
+	}
+	if(current_execute) {
+		current_execute();
+		hot::key = InputUpdate;
 		return hot::key;
 	}
 	// After render plugin events

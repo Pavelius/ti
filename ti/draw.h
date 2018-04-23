@@ -248,7 +248,7 @@ void					circle(int x, int y, int radius, const color c1);
 void					circlef(int x, int y, int radius, const color c1, unsigned char alpha = 0xFF);
 void					create(int x, int y, int width, int height, unsigned flags, int bpp);
 void					decortext(unsigned flags);
-void					execute(void(*callback)());
+void					execute(void(*callback)(), int value = 0);
 void					execute(int id, int value = 0);
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
@@ -334,7 +334,7 @@ struct control {
 	virtual void		keypagedown() {}
 	virtual void		keyright() {}
 	virtual void		keyup() {}
-	virtual void		mouseleft(point position) {}
+	virtual void		mouseleft(point position); // Default behaivor set focus
 	virtual void		mouseleftdbl(point position) {}
 	virtual void		mousewheel(point position, int step) {}
 	virtual void		view(rect rc);

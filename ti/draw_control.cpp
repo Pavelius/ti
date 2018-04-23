@@ -53,16 +53,20 @@ bool control::isfocused() const {
 	return current_focus == this;
 }
 
+void control::mouseleft(point position) {
+	setfocus((int)this, true);
+}
+
 void control::view(rect rc) {
 	if(isfocusable()) {
 		addelement((int)this, rc);
 		if(!getfocus())
 			setfocus((int)this, true);
 	}
-	if((control*)getfocus() == this)
-		current_focus = this;
 	if(areb(rc))
 		current_hilite = this;
+	if((control*)getfocus() == this)
+		current_focus = this;
 	if(show_border)
 		rectb(rc, colors::border);
 }
