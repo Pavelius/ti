@@ -159,6 +159,9 @@
     <ClCompile Include="draw_control.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="view_board.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="library">

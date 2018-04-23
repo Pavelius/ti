@@ -167,6 +167,7 @@
     <ClCompile Include="uicommand.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="view.cpp" />
+    <ClCompile Include="view_board.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />

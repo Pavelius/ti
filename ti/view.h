@@ -19,12 +19,13 @@ struct list : control {
 	int				lines_per_page, pixels_per_line;
 	bool			show_grid_lines;
 	list();
+	void			cell(rect rc, int line, int column) const;
 	void			correction();
 	void			ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
 	static int		getrowheight(); // Get default row height for any List Control
 	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
 	virtual int		getmaximum() const { return 0; }
-	void			hilight(rect rc);
+	void			hilight(rect rc) const;
 	void			keydown() override;
 	void			keyend() override;
 	void			keyenter() override;
@@ -35,7 +36,7 @@ struct list : control {
 	void			mouseleftdbl(point position) override;
 	void			mousewheel(point position, int step) override;
 	void			select(int index);
-	virtual void	row(rect rc, int index); // Draw single row - part of list
+	virtual void	row(rect rc, int index) const; // Draw single row - part of list
 	void			view(rect rc) override;
 };
 struct unitlist : list {
