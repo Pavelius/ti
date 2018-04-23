@@ -12,9 +12,9 @@ static struct video_8t {
 
 static HWND hwnd;
 static point minimum;
+static bool	use_mouse = true;
 extern bool	sys_optimize_mouse_move;
 extern rect	sys_static_area;
-static bool	use_mouse = true;
 
 static int tokey(int vk) {
 	switch(vk) {

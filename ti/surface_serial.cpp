@@ -1,6 +1,6 @@
 ﻿#include "crt.h"
+#include "draw.h"
 #include "io.h"
-#include "surface.h"
 
 #pragma pack(push)
 #pragma pack(1)
@@ -24,17 +24,6 @@ struct bmp_info {
 	unsigned		color_important;
 };
 #pragma pack(pop)
-
-//void io::stream::writescan(void* p, int width, int height, int scan_line, int element_size)
-//{
-//	char* pc = (char*)p;
-//	while(height > 0)
-//	{
-//		write(pc, width*element_size);
-//		pc += scan_line;
-//		height--;
-//	}
-//}
 
 void draw::write(const char* url, unsigned char* bits, int width, int height, int bpp, int scanline, color* pallette) {
 	bmp_header bmf = {0};

@@ -31,9 +31,6 @@
     <ClInclude Include="draw.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="surface.h">
-      <Filter>ui</Filter>
-    </ClInclude>
     <ClInclude Include="view.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -117,9 +114,6 @@
     <ClCompile Include="draw_textf.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="surface.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
     <ClCompile Include="surface_serial.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -160,6 +154,9 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="draw_scroll.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_control.cpp">
       <Filter>ui</Filter>
     </ClCompile>
   </ItemGroup>

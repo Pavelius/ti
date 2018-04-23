@@ -133,7 +133,6 @@
     <ClInclude Include="point.h" />
     <ClInclude Include="rect.h" />
     <ClInclude Include="stringcreator.h" />
-    <ClInclude Include="surface.h" />
     <ClInclude Include="view.h" />
     <ClInclude Include="win.h" />
   </ItemGroup>
@@ -148,6 +147,7 @@
     <ClCompile Include="crt_parse.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
+    <ClCompile Include="draw_control.cpp" />
     <ClCompile Include="draw_icons.cpp" />
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
@@ -162,7 +162,6 @@
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="stringcreator.cpp" />
-    <ClCompile Include="surface.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="uicommand.cpp" />

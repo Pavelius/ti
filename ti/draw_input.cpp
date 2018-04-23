@@ -2,6 +2,7 @@
 #include "draw.h"
 
 static int		current_command;
+static int		current_focus;
 static void		(*current_execute)();
 extern rect		sys_static_area;
 
@@ -23,6 +24,23 @@ static struct input_plugin : draw::renderplugin {
 
 } input_plugin_instance;
 
+static void setfocus_callback() {
+	current_focus = hot::param;
+}
+
+void draw::setfocus(int id, bool instant) {
+	if(instant)
+		current_focus = id;
+	else {
+		hot::param = id;
+		execute(setfocus_callback);
+	}
+}
+
+int draw::getfocus() {
+	return current_focus;
+}
+
 void draw::execute(int id, int param) {
 	current_command = id;
 	hot::key = 0;
@@ -41,6 +59,10 @@ int draw::input(bool redraw) {
 			current_execute();
 			hot::key = InputUpdate;
 		}
+		for(auto p = renderplugin::first; p; p = p->next) {
+			if(p->translate(hot::key))
+				break;
+		}
 		return hot::key;
 	}
 	// After render plugin events
@@ -53,5 +75,9 @@ int draw::input(bool redraw) {
 		hot::key = draw::rawinput();
 	if(!hot::key)
 		exit(0);
+	for(auto p = renderplugin::first; p; p = p->next) {
+		if(p->translate(hot::key))
+			break;
+	}
 	return hot::key;
 }

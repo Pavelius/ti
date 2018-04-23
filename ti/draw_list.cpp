@@ -2,7 +2,7 @@
 
 using namespace draw::controls;
 
-list::list() : origin(0), current(0),
+list::list() : origin(0), current(0), current_hilite(-1),
 maximum_width(0), origin_width(0),
 lines_per_page(0), pixels_per_line(0) {}
 
@@ -35,20 +35,21 @@ void list::correction() {
 void list::row(rect rc, int index) {
 	if(index == current)
 		hilight(rc, Focused);
+	else if(index == current_hilite)
+		rectf({rc.x1+1, rc.y1+1, rc.x2-1, rc.y2-2}, colors::window.mix(colors::edit, 64));
+	char temp[260];
+	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
+	if(p)
+		draw::textc(rc.x1, rc.y1, rc.width() - 4 * 2, p);
 }
 
-void list::updaterowheight() {
+void list::view(rect rcorigin) {
+	control::view(rcorigin);
+	rect rc = rcorigin; rc.offset(1, 1);
 	if(!pixels_per_line)
 		pixels_per_line = texth() + 8;
-}
-
-void list::background(rect& rc) {
-	updaterowheight();
-}
-
-void list::redraw(rect rc) {
+	current_hilite = -1;
 	auto maximum = getmaximum();
-	auto hilite_rows = true;
 	if(!pixels_per_line)
 		return;
 	rect scroll = {0};
@@ -56,39 +57,24 @@ void list::redraw(rect rc) {
 	lines_per_page = rc.height() / pixels_per_line;
 	correction();
 	if(maximum > lines_per_page)
-		scroll.set(rc.x2 - metrics::scroll, rc.y1, rc.x2, rc.y2);
+		scroll.set(rcorigin.x2 - metrics::scroll, rcorigin.y1, rcorigin.x2, rcorigin.y2);
 	if(maximum_width > rc.width())
-		scrollh.set(rc.x1, rc.y2 - metrics::scroll, rc.x2, rc.y2);
-	// mouse input handle
-	if(hilite_rows && hot::key == MouseMove)
-		current = -1;
+		scrollh.set(rcorigin.x1, rcorigin.y2 - metrics::scroll, rcorigin.x2, rcorigin.y2);
 	int rk = hot::key&CommandMask;
 	if(draw::areb(rc)) {
-		// Обработаем выбор мышкой
-		if(hot::pressed && (rk == MouseLeft || rk == MouseRight)) {
-			if(hot::mouse.y > rc.y1 && hot::mouse.y <= rc.y1 + pixels_per_line * (maximum - origin)) {
-				if(!scroll.width() || hot::mouse.x < scroll.x1) {
-					int curn = origin + (hot::mouse.y - rc.y1 - 2) / pixels_per_line;
-					rect rc1 = {rc.x1, rc.y1 + 2 + (curn - origin)*pixels_per_line, rc.x2, rc.y1 + 2 + (curn - origin + 1)*pixels_per_line};
-					//if(selecting(rc1, curn, hot::mouse))
-					//	current = curn;
-					if(maximum > lines_per_page)
-						scroll.set(rc.x2 - metrics::scroll, rc.y1, rc.x2, rc.y2);
-					else
-						scroll.clear();
-				}
-			}
-		}
-		// Если надо подсвечивать
-		if(hilite_rows
-			&& (rk == MouseMove || rk == MouseWheelDown || rk == MouseWheelUp || rk == MouseLeft || rk == MouseRight || rk == MouseLeftDBL)) {
+		if(hot::mouse.y > rc.y1 && hot::mouse.y <= rc.y1 + pixels_per_line * (maximum - origin)) {
 			if(!scroll.width() || hot::mouse.x < scroll.x1)
-				current = origin + (hot::mouse.y - rc.y1) / pixels_per_line;
+				current_hilite = origin + (hot::mouse.y - rc.y1) / pixels_per_line;
+		}
+		// Mouse select
+		if(hot::pressed && (rk == MouseLeft || rk == MouseRight)) {
+			if(current_hilite!=-1)
+				select(current_hilite);
 		}
 	}
 	if(true) {
 		draw::state push;
-		setclip(rc);
+		setclip(rcorigin);
 		int x1 = rc.x1;
 		int y1 = rc.y1;
 		int rw = rc.x2 - x1 + 1;
@@ -100,16 +86,16 @@ void list::redraw(rect rc) {
 				break;
 			rect rcm = {x1 - origin_width, y1, rc.x1 + rw, y1 + pixels_per_line};
 			if(show_grid_lines)
-				line(rcm.x1, rcm.y2 - 1, rcm.x2, rcm.y2 - 1, colors::form);
-			row(rcm, ix);
+				line(rcm.x1, rcm.y2 - 1, rcm.x2, rcm.y2 - 1, colors::border);
+			area(rcm); row(rcm, ix);
 			y1 += pixels_per_line;
 			ix++;
 		}
 	}
 	if(scroll)
-		draw::scrollv((int)this, scroll, origin, lines_per_page, maximum, focused);
+		draw::scrollv((int)this, scroll, origin, lines_per_page, maximum, ishilited());
 	if(scrollh)
-		draw::scrollh((int)this, scrollh, origin_width, rc.width(), maximum_width, focused);
+		draw::scrollh((int)this, scrollh, origin_width, rc.width(), maximum_width, ishilited());
 }
 
 void list::keyup() {
@@ -160,8 +146,7 @@ void list::keypagedown() {
 }
 
 void list::mouseleftdbl(point position) {
-	if(!position.in(hot::element))
-		return;
+	keyenter();
 }
 
 void list::keyenter() {

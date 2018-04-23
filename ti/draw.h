@@ -1,5 +1,5 @@
 #include "point.h"
-#include "surface.h"
+#include "color.h"
 
 #pragma once
 
@@ -164,6 +164,36 @@ void					begin(int id, drag_part_s part = DragControl);
 extern point			mouse;
 extern int				value;
 }
+struct surface {
+	struct plugin {
+		const char*		name;
+		const char*		filter;
+		plugin*			next;
+		static plugin*	first;
+		//
+		plugin(const char* name, const char* filter);
+		//
+		virtual bool	decode(unsigned char* output, const unsigned char* input, unsigned size, int& output_scanline) = 0;
+		virtual bool	inspect(int& w, int& h, int& bpp, const unsigned char* input, unsigned size) = 0;
+	};
+	int					width;
+	int					height;
+	int					scanline;
+	int					bpp;
+	unsigned char*		bits;
+	surface();
+	surface(int width, int height, int bpp);
+	surface(const char* url, color* pallette = 0);
+	~surface();
+	operator bool() const { return bits != 0; }
+	void				clear() { resize(0, 0, 0, true); }
+	void				convert(int bpp, color* pallette);
+	void				flipv();
+	unsigned char*		ptr(int x, int y);
+	bool				read(const char* url, color* pallette = 0, int need_bpp = 0);
+	void				resize(int width, int height, int bpp, bool alloc_memory);
+	void				write(const char* url, color* pallette);
+};
 struct state // Push state in stack
 {
 	state();
@@ -222,6 +252,7 @@ void					execute(int id, int value = 0);
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
 color					getcolor(rect rc, color normal, color hilite, unsigned flags);
+int						getfocus();
 int						getheight();
 int						getresult();
 int						getwidth();
@@ -261,6 +292,7 @@ void					set(void(*proc)(int& x, int& y, int x0, int x2, int* max_width, int& w,
 void					setcaption(const char* string);
 void					setclip(rect rc);
 inline void				setclip() { clipping.set(0, 0, getwidth(), getheight()); }
+void					setfocus(int id, bool instant = false);
 void					settimer(unsigned milleseconds);
 const char*				skiptr(const char* string);
 void					spline(point* points, int n);
@@ -282,8 +314,31 @@ int						textw(const char* string, int count = -1);
 int						textw(rect& rc, const char* string);
 int						textw(sprite* font);
 void					updatewindow();
+void					write(const char* url, unsigned char* bits, int width, int height, int bpp, int scanline, color* pallette);
 }
 namespace draw {
+namespace controls {
+struct control {
+	bool				show_border;
+	control();
+	virtual bool		isfocusable() const { return true; }
+	bool				isfocused() const;
+	bool				ishilited() const;
+	virtual void		keydown() {}
+	virtual void		keyend() {}
+	virtual void		keyenter() {}
+	virtual void		keyleft() {}
+	virtual void		keyhome() {}
+	virtual void		keypageup() {}
+	virtual void		keypagedown() {}
+	virtual void		keyright() {}
+	virtual void		keyup() {}
+	virtual void		mouseleft(point position) {}
+	virtual void		mouseleftdbl(point position) {}
+	virtual void		mousewheel(point position, int step) {}
+	virtual void		view(rect rc);
+};
+}
 int						button(int x, int y, int width, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);
 bool					buttonh(rect rc, bool checked, bool focused, bool disabled, bool border, color value, const char* string, int key, bool press, const char* tips = 0);
 bool					buttonh(rect rc, bool checked, bool focused, bool disabled, bool border, const char* string, int key = 0, bool press = false, const char* tips = 0);

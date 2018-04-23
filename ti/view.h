@@ -13,30 +13,28 @@ extern gui_info gui_data;
 
 namespace draw {
 namespace controls {
-struct list {
-	int				origin, current;
+struct list : control {
+	int				origin, current, current_hilite;
 	int				maximum_width, origin_width;
 	int				lines_per_page, pixels_per_line;
 	bool			show_grid_lines;
-	bool			focused;
 	list();
-	virtual void	background(rect& rc);
 	void			correction();
 	void			ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
+	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
 	virtual int		getmaximum() const { return 0; }
-	void			keydown();
-	void			keyend();
-	void			keyenter();
-	void			keyhome();
-	void			keypageup();
-	void			keypagedown();
-	void			keyup();
-	void			mouseleftdbl(point position);
-	void			mousewheel(point position, int step);
-	void			redraw(rect rc);
+	void			keydown() override;
+	void			keyend() override;
+	void			keyenter() override;
+	void			keyhome() override;
+	void			keypageup() override;
+	void			keypagedown() override;
+	void			keyup() override;
+	void			mouseleftdbl(point position) override;
+	void			mousewheel(point position, int step) override;
 	void			select(int index);
 	virtual void	row(rect rc, int index); // Draw single row - part of list
-	void			updaterowheight();
+	void			view(rect rc) override;
 };
 struct unitlist : list {
 	unitlist(army& source) : source(source) {}
