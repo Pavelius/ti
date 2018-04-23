@@ -56,11 +56,15 @@ void list::row(rect rc, int index) {
 		draw::textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, p);
 }
 
+int	list::getrowheight() {
+	return texth() + 8;
+}
+
 void list::view(rect rcorigin) {
 	control::view(rcorigin);
 	rect rc = rcorigin; rc.offset(1, 1);
 	if(!pixels_per_line)
-		pixels_per_line = texth() + 8;
+		pixels_per_line = getrowheight();
 	current_hilite = -1;
 	auto maximum = getmaximum();
 	if(!pixels_per_line)

@@ -21,6 +21,7 @@ struct list : control {
 	list();
 	void			correction();
 	void			ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
+	static int		getrowheight(); // Get default row height for any List Control
 	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
 	virtual int		getmaximum() const { return 0; }
 	void			hilight(rect rc);
