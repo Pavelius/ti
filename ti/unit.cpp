@@ -30,9 +30,9 @@ unsigned select(unit** result, unit** result_max, unit* location, player_s playe
 	for(auto& e : units) {
 		if(!e)
 			continue;
-		if(!e.in(location))
-			continue;
 		if(e.player != player)
+			continue;
+		if(location && !e.in(location))
 			continue;
 		if(test && !(e.*test)())
 			continue;

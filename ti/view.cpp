@@ -196,6 +196,11 @@ int	draw::buttonr(int x, int y, int id, unsigned flags, const char* label, const
 	return width;
 }
 
+const char* draw::controls::unitlist::getname(char* result, const char* result_max, int line, int column) const {
+	return source.data[line]->getname();
+}
+
+
 static void choose_accept() {
 	draw::breakmodal(AcceptButton);
 }

@@ -39,6 +39,7 @@ struct list : control {
 struct unitlist : list {
 	unitlist(army& source) : source(source) {}
 	int				getmaximum() const override { return source.count; }
+	const char*		getname(char* result, const char* result_max, int line, int column) const override;
 private:
 	army&			source;
 };

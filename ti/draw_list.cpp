@@ -4,7 +4,8 @@ using namespace draw::controls;
 
 list::list() : origin(0), current(0), current_hilite(-1),
 maximum_width(0), origin_width(0),
-lines_per_page(0), pixels_per_line(0) {}
+lines_per_page(0), pixels_per_line(0) {
+}
 
 void list::ensurevisible() {
 	if(current < origin)
@@ -36,11 +37,11 @@ void list::row(rect rc, int index) {
 	if(index == current)
 		hilight(rc, Focused);
 	else if(index == current_hilite)
-		rectf({rc.x1+1, rc.y1+1, rc.x2-1, rc.y2-2}, colors::window.mix(colors::edit, 64));
+		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::window.mix(colors::edit, 64));
 	char temp[260];
 	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
 	if(p)
-		draw::textc(rc.x1, rc.y1, rc.width() - 4 * 2, p);
+		draw::textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, p);
 }
 
 void list::view(rect rcorigin) {
@@ -68,7 +69,7 @@ void list::view(rect rcorigin) {
 		}
 		// Mouse select
 		if(hot::pressed && (rk == MouseLeft || rk == MouseRight)) {
-			if(current_hilite!=-1)
+			if(current_hilite != -1)
 				select(current_hilite);
 		}
 	}

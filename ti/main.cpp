@@ -8,7 +8,7 @@ using namespace draw::controls;
 void test_list() {
 	const int pixel_per_line = 24;
 	const int list_height = pixel_per_line * 4 + 1;
-	army a1; a1.count = (a1.data, endofs(a1.data), 0, TheEmiratesOfHacan);
+	army a1; a1.count = select(a1.data, endofs(a1.data), 0, TheEmiratesOfHacan);
 	unitlist e1(a1);
 	unitlist e2(a1);
 	e1.show_grid_lines = false;
