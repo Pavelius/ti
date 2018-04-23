@@ -232,6 +232,7 @@ extern const sprite*	font; // Currently selected font
 //
 int						aligned(int x, int width, unsigned state, int string_width);
 int						alignedh(const rect& rc, const char* string, unsigned state);
+void					addelement(int id, const rect& rc);
 areas					area(rect rc);
 bool					areb(rect rc);
 void					bezier(int x0, int y0, int x1, int y1, int x2, int y2);
@@ -254,12 +255,12 @@ color					getcolor(color normal, unsigned flags);
 color					getcolor(rect rc, color normal, color hilite, unsigned flags);
 int						getfocus();
 int						getheight();
+int						getnext(int id, int key);
 int						getresult();
 int						getwidth();
 void					glyph(int x, int y, int sym, unsigned flags);
 void					gradv(rect rc, const color c1, const color c2, int skip = 0);
 void					gradh(rect rc, const color c1, const color c2, int skip = 0);
-void					hilight(rect rc, unsigned flags);
 int						hittest(int x, int test_x, const char* string, int lenght);
 int						hittest(rect rc, const char* string, unsigned state, point mouse);
 inline bool				ischecked(unsigned flags) { return (flags&Checked) != 0; }

@@ -33,11 +33,23 @@ void list::correction() {
 	}
 }
 
+void list::hilight(rect rc) {
+	auto focused = isfocused();
+	const color c1 = focused ? colors::edit : colors::edit.mix(colors::window, 192);
+	rc.y2--; rc.x2--;
+	if(!focused)
+		rc.y2--;
+	rectf(rc, c1);
+	rectb(rc, c1);
+	if(focused)
+		rectx(rc, colors::text.mix(colors::form, 200));
+}
+
 void list::row(rect rc, int index) {
 	if(index == current)
-		hilight(rc, Focused);
+		hilight(rc);
 	else if(index == current_hilite)
-		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::window.mix(colors::edit, 64));
+		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 64));
 	char temp[260];
 	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
 	if(p)

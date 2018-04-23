@@ -55,6 +55,7 @@ bool control::isfocused() const {
 
 void control::view(rect rc) {
 	if(isfocusable()) {
+		addelement((int)this, rc);
 		if(!getfocus())
 			setfocus((int)this, true);
 	}

@@ -893,16 +893,6 @@ void draw::decortext(unsigned flags) {
 	draw::fore = getcolor(colors::text, flags);
 }
 
-void draw::hilight(rect rc, unsigned flags) {
-	auto focused = isfocused(flags);
-	const color c1 = focused ? colors::edit : colors::edit.mix(colors::window, 180);
-	rc.y2--; rc.x2--;
-	rectf(rc, c1);
-	rectb(rc, c1);
-	if(focused)
-		rectx(rc, colors::text.mix(colors::form, 200));
-}
-
 void draw::pixel(int x, int y) {
 	if(x >= clipping.x1 && x < clipping.x2 && y >= clipping.y1 && y < clipping.y2) {
 		if(!canvas)
