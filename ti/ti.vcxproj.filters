@@ -43,9 +43,6 @@
     <ClInclude Include="bstream.h">
       <Filter>collections</Filter>
     </ClInclude>
-    <ClInclude Include="command.h">
-      <Filter>library</Filter>
-    </ClInclude>
     <ClInclude Include="converter.h">
       <Filter>library</Filter>
     </ClInclude>
@@ -131,9 +128,6 @@
     </ClCompile>
     <ClCompile Include="bstream.cpp">
       <Filter>collections</Filter>
-    </ClCompile>
-    <ClCompile Include="command.cpp">
-      <Filter>library</Filter>
     </ClCompile>
     <ClCompile Include="converter.cpp">
       <Filter>library</Filter>

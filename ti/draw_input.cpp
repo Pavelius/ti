@@ -1,12 +1,27 @@
-#include "command.h"
 #include "crt.h"
 #include "draw.h"
 
-command* command_after_render;
-command* command_clear_render;
-static int	current_command;
-static void	(*current_execute)();
-extern rect	sys_static_area;
+static int		current_command;
+static void		(*current_execute)();
+extern rect		sys_static_area;
+
+static struct input_plugin : draw::renderplugin {
+
+	void before() override {
+		current_command = 0;
+		current_execute = 0;
+		hot::cursor = CursorArrow;
+		if(hot::mouse.x < 0 || hot::mouse.y < 0)
+			sys_static_area.clear();
+		else
+			sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
+	}
+
+	//void after() override {
+	//	draw::rectf(sys_static_area, colors::blue, 128);
+	//}
+
+} input_plugin_instance;
 
 void draw::execute(int id, int param) {
 	current_command = id;
@@ -19,35 +34,23 @@ void draw::execute(void(*proc)()) {
 	current_execute = proc;
 }
 
-//COMMAND(after_render)
-//{
-//	draw::rectf(sys_static_area, colors::blue, 128);
-//}
-
 int draw::input(bool redraw) {
-	command_clear_render->execute();
-	hot::key = current_command;
-	current_command = 0;
-	if(hot::key) {
+	if(current_command) {
+		hot::key = current_command;
 		if(current_execute) {
-			auto proc = current_execute;
+			current_execute();
 			hot::key = InputUpdate;
-			current_execute = 0;
-			proc();
 		}
 		return hot::key;
 	}
-	command_after_render->execute();
+	// After render plugin events
+	for(auto p = renderplugin::first; p; p = p->next)
+		p->after();
 	hot::key = InputUpdate;
 	if(redraw)
 		draw::sysredraw();
 	else
 		hot::key = draw::rawinput();
-	if(hot::mouse.x < 0 || hot::mouse.y < 0)
-		sys_static_area.clear();
-	else
-		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
-	hot::cursor = CursorArrow;
 	if(!hot::key)
 		exit(0);
 	return hot::key;

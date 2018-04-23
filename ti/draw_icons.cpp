@@ -1,5 +1,4 @@
 #include "amap.h"
-#include "command.h"
 #include "crt.h"
 #include "draw.h"
 
@@ -23,6 +22,10 @@ static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, co
 	draw::blit(*draw::canvas, x, y + dy - p->height, w, p->height, ImageTransparent, *p, 0, 0);
 }
 
-COMMAND(app_initialize) {
-	draw::set(draw_icon);
-}
+struct icons_plugin : draw::renderplugin {
+	
+	void initialize() override {
+		draw::set(draw_icon);
+	}
+
+} icons_plugin_instance;

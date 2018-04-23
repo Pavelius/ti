@@ -1,5 +1,4 @@
 #include "color.h"
-#include "command.h"
 #include "crt.h"
 #include "draw.h"
 
@@ -24,44 +23,45 @@ color colors::tips::back;
 color colors::tabs::text;
 color colors::tabs::back;
 // Color context and font context
-color			draw::fore;
-color			draw::fore_stroke;
-const sprite*	draw::font;
-float			draw::linw = 1.0;
-bool			draw::mouseinput = true;
-color*			draw::palt;
-rect			draw::clipping;
-char			draw::link[4096];
+color				draw::fore;
+color				draw::fore_stroke;
+const sprite*		draw::font;
+float				draw::linw = 1.0;
+bool				draw::mouseinput = true;
+color*				draw::palt;
+rect				draw::clipping;
+char				draw::link[4096];
 // Hot keys and menus
-int				hot::animate; // Каждый такт таймера это значение увеличивается на единицу.
-cursors			hot::cursor; // Текущая форма курсора
-int				hot::key; // Событие, которое происходит в данный момент
-point			hot::mouse; // current mouse coordinates
-bool			hot::pressed; // flag if any of mouse keys is pressed
-int				hot::param; // Event numeric parameter (optional)
-rect			hot::element; // Event rectange (optional)
-rect			hot::hilite; // Event rectange (optional)
-bool			sys_optimize_mouse_move = true;
-rect			sys_static_area;
+int					hot::animate; // Каждый такт таймера это значение увеличивается на единицу.
+cursors				hot::cursor; // Текущая форма курсора
+int					hot::key; // Событие, которое происходит в данный момент
+point				hot::mouse; // current mouse coordinates
+bool				hot::pressed; // flag if any of mouse keys is pressed
+int					hot::param; // Event numeric parameter (optional)
+rect				hot::element; // Event rectange (optional)
+rect				hot::hilite; // Event rectange (optional)
+bool				sys_optimize_mouse_move = true;
+rect				sys_static_area;
 // Locale draw variables
 static draw::surface current_surface;
-draw::surface*	draw::canvas = &current_surface;
-static bool		line_antialiasing = true;
-static bool		break_modal;
-static int		break_result;
+draw::renderplugin*	draw::renderplugin::first;
+draw::surface*		draw::canvas = &current_surface;
+static bool			line_antialiasing = true;
+static bool			break_modal;
+static int			break_result;
 // Drag
-static int		drag_id;
-static drag_part_s drag_part;
-point			draw::drag::mouse;
-int				draw::drag::value;
+static int			drag_id;
+static drag_part_s	drag_part;
+point				draw::drag::mouse;
+int					draw::drag::value;
 // Metrics
-rect			metrics::edit = {4, 4, -4, -4};
-sprite*			metrics::font = (sprite*)loadb("art/fonts/font.pma");
-sprite*			metrics::h1 = (sprite*)loadb("art/fonts/h1.pma");
-sprite*			metrics::h2 = (sprite*)loadb("art/fonts/h2.pma");
-sprite*			metrics::h3 = (sprite*)loadb("art/fonts/h3.pma");
-sprite*			metrics::icons = (sprite*)loadb("art/icons.pma");
-int				metrics::scroll = 16;
+rect				metrics::edit = {4, 4, -4, -4};
+sprite*				metrics::font = (sprite*)loadb("art/fonts/font.pma");
+sprite*				metrics::h1 = (sprite*)loadb("art/fonts/h1.pma");
+sprite*				metrics::h2 = (sprite*)loadb("art/fonts/h2.pma");
+sprite*				metrics::h3 = (sprite*)loadb("art/fonts/h3.pma");
+sprite*				metrics::icons = (sprite*)loadb("art/icons.pma");
+int					metrics::scroll = 16;
 
 float sqrt(const float x) {
 	const float xhalf = 0.5f*x;
@@ -821,7 +821,8 @@ draw::state::state() :
 	font(draw::font),
 	linw(draw::linw),
 	canvas(draw::canvas),
-	clip(clipping) {}
+	clip(clipping) {
+}
 
 draw::state::~state() {
 	draw::font = this->font;
@@ -1100,9 +1101,9 @@ void draw::spline(point* original_points, int n) {
 }
 
 void draw::line(int x0, int y0, int x1, int y1, color c1) {
-	draw::state push;
-	fore = c1;
+	auto push_fore = fore; fore = c1;
 	line(x0, y0, x1, y1);
+	fore = push_fore;
 }
 
 void draw::linet(int x0, int y0, int x1, int y1) {
@@ -1127,9 +1128,9 @@ void draw::rectb(rect rc) {
 }
 
 void draw::rectb(rect rc, color c1) {
-	draw::state push;
-	fore = c1;
+	auto push_fore = fore; fore = c1;
 	rectb(rc);
+	fore = push_fore;
 }
 
 void draw::rectf(rect rc) {
@@ -1144,8 +1145,7 @@ void draw::rectf(rect rc) {
 }
 
 void draw::rectf(rect rc, color c1) {
-	auto push_fore = fore;
-	fore = c1;
+	auto push_fore = fore; fore = c1;
 	rectf(rc);
 	fore = push_fore;
 }
@@ -1281,9 +1281,9 @@ void draw::circle(int xm, int ym, int r) {
 }
 
 void draw::circle(int x, int y, int r, const color c1) {
-	state push;
-	fore = c1;
+	auto fore_push = fore; fore = c1;
 	circle(x, y, r);
+	fore = fore_push;
 }
 
 void draw::setclip(rect rcn) {
@@ -1877,9 +1877,10 @@ void draw::image(int x, int y, const sprite* e, int id, int flags, unsigned char
 }
 
 void draw::image(int x, int y, const sprite* e, int id, int flags, unsigned char alpha, color* pal) {
-	draw::state push;
+	auto pal_push = draw::palt;
 	draw::palt = pal;
 	image(x, y, e, id, flags | ImagePallette, alpha);
+	draw::palt = pal_push;
 }
 
 void draw::stroke(int x, int y, const sprite* e, int id, int flags, unsigned char thin, unsigned char* koeff) {
@@ -2022,39 +2023,6 @@ void draw::blit(surface& dest, int x, int y, int width, int height, unsigned fla
 		source.ptr(x_source, y_source) + ox * 4, source.scanline, width_source, height_source);
 }
 
-void draw::initialize() {
-	command_app_initialize->execute();
-	// Set default window colors
-	hot::cursor = CursorArrow;
-	draw::font = metrics::font;
-	draw::fore = colors::text;
-	draw::fore_stroke = colors::blue;
-}
-
-bool draw::ismodal() {
-	if(!break_modal)
-		return true;
-	break_modal = false;
-	return false;
-}
-
-void draw::breakmodal(int result) {
-	break_modal = true;
-	break_result = result;
-}
-
-void draw::buttoncancel() {
-	breakmodal(0);
-}
-
-void draw::buttonok() {
-	breakmodal(1);
-}
-
-int draw::getresult() {
-	return break_result;
-}
-
 const pma* pma::getheader(const char* id) const {
 	auto p = this;
 	while(p->name[0]) {
@@ -2133,4 +2101,53 @@ rect sprite::frame::getrect(int x, int y, unsigned flags) const {
 		y2 = y + sy;
 	}
 	return{x, y, x2, y2};
+}
+
+draw::renderplugin::renderplugin() : next(0) {
+	if(!first)
+		first = this;
+	else {
+		auto p = first;
+		while(p->next)
+			p = p->next;
+		p->next = this;
+	}
+}
+
+void draw::initialize() {
+	// Initilaize all plugins
+	for(auto p = renderplugin::first; p; p = p->next)
+		p->initialize();
+	// Set default window colors
+	draw::font = metrics::font;
+	draw::fore = colors::text;
+	draw::fore_stroke = colors::blue;
+}
+
+bool draw::ismodal() {
+	// Before plugin events
+	for(auto p = renderplugin::first; p; p = p->next)
+		p->before();
+	// Break modal loop
+	if(!break_modal)
+		return true;
+	break_modal = false;
+	return false;
+}
+
+void draw::breakmodal(int result) {
+	break_modal = true;
+	break_result = result;
+}
+
+void draw::buttoncancel() {
+	breakmodal(0);
+}
+
+void draw::buttonok() {
+	breakmodal(1);
+}
+
+int draw::getresult() {
+	return break_result;
 }

@@ -185,6 +185,15 @@ struct textplugin {
 	textplugin(const char* name, proc e);
 	static textplugin*	find(const char* name);
 };
+struct renderplugin {
+	renderplugin*		next;
+	static renderplugin* first;
+	renderplugin();
+	virtual void		after() {}
+	virtual void		before() {}
+	virtual void		initialize() {}
+	virtual bool		translate(int id) { return false; }
+};
 typedef int(*widgetproc)(int x, int y, int width, unsigned flags, const char* label, int value, void* data, const char* tips);
 extern rect				clipping; // Clipping area
 extern color			fore; // Foreground color (curently selected color)
@@ -284,5 +293,5 @@ void					scrollv(int id, const rect& scroll, int& origin, int count, int maximum
 void					tooltips(int x, int y, int width, const char* format, ...);
 }
 int						distance(point p1, point p2);
-int						isqrt(int num);
+int						isqrt(int value);
 char*					key2str(char* result, int key);
