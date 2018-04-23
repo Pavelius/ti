@@ -7,15 +7,14 @@ using namespace draw::controls;
 
 void test_list() {
 	const int pixel_per_line = 24;
-	const int list_height = pixel_per_line * 4 + 1;
 	army a1; a1.count = select(a1.data, endofs(a1.data), 0, TheEmiratesOfHacan);
 	unitlist e1(a1);
 	unitlist e2(a1);
 	e1.show_grid_lines = false;
 	while(ismodal()) {
 		rectf({0, 0, getwidth(), getheight()}, colors::window);
-		e1.view({100, 100, 300, 100 + list_height});
-		e2.view({310, 100, 600, 100 + list_height});
+		e1.view({100, 100, 300, 100 + pixel_per_line*5});
+		e2.view({310, 100, 600, 100 + pixel_per_line*10 + 1});
 		input();
 	}
 }
