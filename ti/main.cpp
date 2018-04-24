@@ -30,7 +30,8 @@ void test_list() {
 		rectf({0, 0, getwidth(), getheight()}, colors::window);
 		e2.view({100, 100, 300, 100 + pixel_per_line * 8 + 1});
 		e1.view({310, 100, 600, 100 + pixel_per_line * 5});
-		input();
+		auto id = input();
+		defproc(id);
 	}
 }
 

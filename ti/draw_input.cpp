@@ -161,12 +161,12 @@ void draw::execute(void(*proc)(), int param) {
 
 int draw::input(bool redraw) {
 	if(current_command) {
+		if(current_execute) {
+			current_execute();
+			hot::key = InputUpdate;
+			return hot::key;
+		}
 		hot::key = current_command;
-		return hot::key;
-	}
-	if(current_execute) {
-		current_execute();
-		hot::key = InputUpdate;
 		return hot::key;
 	}
 	// After render plugin events
@@ -179,9 +179,5 @@ int draw::input(bool redraw) {
 		hot::key = draw::rawinput();
 	if(!hot::key)
 		exit(0);
-	for(auto p = renderplugin::first; p; p = p->next) {
-		if(p->translate(hot::key))
-			break;
-	}
 	return hot::key;
 }
