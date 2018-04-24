@@ -70,6 +70,7 @@ struct unit {
 	unit*				parent;
 	bool				used;
 	constexpr unit() : type(NoUnit), player(NoPlayer), parent(0), used(false) {}
+	constexpr unit(unit_s type) : type(type), player(NoPlayer), parent(0), used(false) {}
 	constexpr unit(unit_s type, unit* parent, player_s player) : type(type), player(player), parent(parent), used(false) {}
 	explicit operator bool() const { return type != NoUnit; }
 	void* operator new(unsigned size);

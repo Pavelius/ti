@@ -18,9 +18,11 @@ struct column {
 	unsigned		flags;
 	int				(unit::*get_num)() const;
 	const char*		(unit::*get_txt)() const;
-	constexpr column() : name(0), width(0), get_num(0), get_txt(0), flags(0) {}
-	constexpr column(const char* name, int (unit::*get)() const, int width = 32, unsigned flags = AlignRight) : name(name), width(width), get_num(get), get_txt(0), flags(flags) {}
-	constexpr column(const char* name, const char* (unit::*get)() const, int width = 128, unsigned flags = AlignLeft) : name(name), width(width), get_num(0), get_txt(get), flags(flags) {}
+	const char*		(unit::*get_prn)(char* result, const char* result_max) const;
+	constexpr column() : name(0), width(0), get_num(0), get_txt(0), get_prn(0), flags(0) {}
+	constexpr column(const char* name, int (unit::*get)() const, int width = 32, unsigned flags = AlignRight) : name(name), width(width), get_num(get), get_txt(0), get_prn(0), flags(flags) {}
+	constexpr column(const char* name, const char* (unit::*get)() const, int width = 128, unsigned flags = AlignLeft) : name(name), width(width), get_num(0), get_txt(get), get_prn(0), flags(flags) {}
+	constexpr column(const char* name, const char* (unit::*get)(char* result, const char* result_max) const, int width = 128, unsigned flags = AlignLeft) : name(name), width(width), get_num(0), get_txt(0), get_prn(get), flags(flags) {}
 	explicit operator bool() const { return name != 0; }
 };
 namespace controls {
