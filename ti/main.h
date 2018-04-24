@@ -89,6 +89,7 @@ struct unit {
 	int					getmovement() const;
 	virtual const char*	getname() const;
 	static int			getproduction(unit_s type);
+	int					getproduction() const { return getproduction(type); }
 	virtual int			getresource() const;
 	weapon				getweapon() const;
 	weapon				getweapon(bool attacker, player_s opponent, char round) const;

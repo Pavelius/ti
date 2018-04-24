@@ -12,6 +12,17 @@ struct gui_info {
 extern gui_info gui_data;
 
 namespace draw {
+struct column {
+	const char*		name;
+	int				width;
+	unsigned		flags;
+	int				(unit::*get_num)() const;
+	const char*		(unit::*get_txt)() const;
+	constexpr column() : name(0), width(0), get_num(0), get_txt(0), flags(0) {}
+	constexpr column(const char* name, int (unit::*get)() const, int width = 32, unsigned flags = AlignRight) : name(name), width(width), get_num(get), get_txt(0), flags(flags) {}
+	constexpr column(const char* name, const char* (unit::*get)() const, int width = 128, unsigned flags = AlignLeft) : name(name), width(width), get_num(0), get_txt(get), flags(flags) {}
+	explicit operator bool() const { return name != 0; }
+};
 namespace controls {
 struct list : control {
 	int				origin, current, current_hilite;
@@ -19,7 +30,6 @@ struct list : control {
 	int				lines_per_page, pixels_per_line;
 	bool			show_grid_lines;
 	list();
-	void			cell(rect rc, int line, int column) const;
 	void			correction();
 	void			ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
 	static int		getrowheight(); // Get default row height for any List Control
@@ -40,9 +50,11 @@ struct list : control {
 	void			view(rect rc) override;
 };
 struct unitlist : list {
-	unitlist(army& source) : source(source) {}
+	const column*	columns;
+	unitlist(army& source, const column* columns) : source(source), columns(columns) {}
 	int				getmaximum() const override { return source.count; }
 	const char*		getname(char* result, const char* result_max, int line, int column) const override;
+	virtual void	row(rect rc, int index) const; // Draw single row - part of list
 private:
 	army&			source;
 };
