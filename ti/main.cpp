@@ -43,23 +43,6 @@ void test_list() {
 	}
 }
 
-void test_hexagonal() {
-	point hex_indecies[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}};
-	while(ismodal()) {
-		rectf({0, 0, getwidth(), getheight()}, colors::window);
-		for(auto h : hex_indecies) {
-			auto pt = h2p(h);
-			pt = pt + 260;
-			hexagon(pt);
-			char temp[64];
-			szprints(temp, endofs(temp), "%1i, %2i", h.x, h.y);
-			text(pt.x, pt.y, temp);
-		}
-		auto id = input();
-		defproc(id);
-	}
-}
-
 int main() {
 	sys_optimize_mouse_move = true;
 	srand(clock());
@@ -68,8 +51,8 @@ int main() {
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Twilight Imperium 3ed");
 	//test_list();
-	test_hexagonal();
-	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
+	//draw::board();
+	draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
 	return 0;
 }
 

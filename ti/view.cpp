@@ -164,7 +164,7 @@ static void background() {
 
 void draw::report(const char* format) {
 	while(ismodal()) {
-		background();
+		board();
 		draw::window(gui_data.border * 2, gui_data.border * 2, gui_data.window_width, format);
 		auto id = input();
 		if(control_board(id))
