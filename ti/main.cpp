@@ -33,8 +33,9 @@ void test_list() {
 	while(ismodal()) {
 		const int production_width = 400;
 		const int table_height = 8;
-		rectf({0, 0, getwidth(), getheight()}, colors::window);
-		auto x = 10, y = 10;
+		board();
+		auto x = 20, y = 20;
+		window({x, y, x + production_width + 200, y + pixel_per_line * table_height + 25});
 		e2.view({x, y, x + production_width, y + pixel_per_line * table_height + 1});
 		x += production_width + 10;
 		e1.view({x, y, x + 120, y + pixel_per_line * table_height + 1});
@@ -50,9 +51,9 @@ int main() {
 	players[TheL1z1xMindnet].initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Twilight Imperium 3ed");
-	//test_list();
+	test_list();
 	//draw::board();
-	draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
+	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
 	return 0;
 }
 
