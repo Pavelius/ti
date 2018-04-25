@@ -49,8 +49,8 @@ void test_hexagonal() {
 		rectf({0, 0, getwidth(), getheight()}, colors::window);
 		for(auto h : hex_indecies) {
 			auto pt = h2p(h);
-			pt = pt + 192;
-			circlef(pt.x, pt.y, 8, colors::blue);
+			pt = pt + 260;
+			hexagon(pt);
 			char temp[64];
 			szprints(temp, endofs(temp), "%1i, %2i", h.x, h.y);
 			text(pt.x, pt.y, temp);

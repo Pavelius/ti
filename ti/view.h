@@ -41,6 +41,7 @@ private:
 int					buttonr(int x, int y, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);
 int					getbuttonheight();
 point				h2p(point hex);
+void				hexagon(point pt);
 void				report(const char* format);
 areas				window(rect rc, bool disabled = false, bool hilight = false, int border = 0);
 int					window(int x, int y, int width, const char* string);
