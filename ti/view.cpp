@@ -198,10 +198,10 @@ int	draw::buttonr(int x, int y, int id, unsigned flags, const char* label, const
 }
 
 const char* unitlist::getname(char* result, const char* result_max, int line, int column) const {
-	if(columns[column].get_num)
-		szprints(result, result_max, "%1i", (source.data[line]->*columns[column].get_num)());
-	else
-		return (source.data[line]->*columns[column].get_txt)();
+	if(columns[column].gnum)
+		szprints(result, result_max, "%1i", (source.data[line]->*columns[column].gnum)());
+	else if(columns[column].gtxt)
+		return (source.data[line]->*columns[column].gtxt)();
 	return result;
 }
 
@@ -213,8 +213,9 @@ void unitlist::row(rect rc, int index) const {
 		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
 	rc.offset(4, 4);
 	auto pu = source.data[index];
-	for(auto i = 0; columns[i]; i++) {
+	for(auto i = 0; columns[i].title; i++) {
 		rect rt = {rc.x1, rc.y1, rc.x1 + columns[i].width - 4, rc.y2};
+		temp[0] = 0;
 		auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, i);
 		if(p)
 			draw::text(rt, p, columns[i].flags);

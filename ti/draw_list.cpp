@@ -46,11 +46,12 @@ void list::hilight(rect rc) const {
 }
 
 void list::row(rect rc, int index) const {
+	char temp[260];
 	if(index == current)
 		hilight(rc);
 	else if(index == current_hilite)
 		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
-	char temp[260];
+	temp[0] = 0;
 	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
 	if(p)
 		draw::textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, p);

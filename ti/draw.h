@@ -26,6 +26,14 @@ enum draw_event_s {
 	Ctrl = 0x00010000,
 	Alt = 0x00020000,
 	Shift = 0x00040000,
+	// common controls
+	Text = 0x00000000,
+	Number = 0x00100000,
+	Check = 0x00200000,
+	Radio = 0x00300000,
+	Button = 0x00400000,
+	Image = 0x00500000,
+	ControlMask = 0x00F00000,
 	// control visual flags
 	NoBorder = 0x01000000,
 	NoBackground = 0x02000000,
@@ -254,6 +262,7 @@ void					execute(int id, int value = 0);
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
 color					getcolor(rect rc, color normal, color hilite, unsigned flags);
+inline draw_event_s		getcontrol(unsigned flags) { return (draw_event_s)(flags&ControlMask); }
 int						getfocus();
 int						getheight();
 int						getnext(int id, int key);
@@ -339,6 +348,31 @@ struct control {
 	virtual void		mouseleftdbl(point position) {}
 	virtual void		mousewheel(point position, int step) {}
 	virtual void		view(rect rc);
+};
+struct list : control {
+	int					origin, current, current_hilite;
+	int					maximum_width, origin_width;
+	int					lines_per_page, pixels_per_line;
+	bool				show_grid_lines;
+	list();
+	void				correction();
+	void				ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
+	static int			getrowheight(); // Get default row height for any List Control
+	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
+	virtual int			getmaximum() const { return 0; }
+	void				hilight(rect rc) const;
+	void				keydown() override;
+	void				keyend() override;
+	void				keyenter() override;
+	void				keyhome() override;
+	void				keypageup() override;
+	void				keypagedown() override;
+	void				keyup() override;
+	void				mouseleftdbl(point position) override;
+	void				mousewheel(point position, int step) override;
+	void				select(int index);
+	virtual void		row(rect rc, int index) const; // Draw single row - part of list
+	void				view(rect rc) override;
 };
 }
 int						button(int x, int y, int width, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);

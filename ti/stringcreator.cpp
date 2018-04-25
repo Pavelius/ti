@@ -69,7 +69,7 @@ char* stringcreator::parsenumber(char* dst, const char* result_max, unsigned val
 		temp[i++] = (value % radix);
 		value /= radix;
 	}
-	while(precision-- > i) {
+	while(precision-- >= i) {
 		if(dst<result_max)
 			*dst++ = '0';
 	}

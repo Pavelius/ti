@@ -2168,7 +2168,7 @@ draw::renderplugin::renderplugin() : next(0) {
 }
 
 bool draw::defproc(int id) {
-	for(auto p = renderplugin::first; p; p = p->next) {
+	for(auto p = draw::renderplugin::first; p; p = p->next) {
 		if(p->translate(id))
 			return true;
 	}

@@ -92,6 +92,7 @@ struct unit {
 	static int			getproduction(unit_s type);
 	int					getproduction() const { return getproduction(type); }
 	virtual int			getresource() const;
+	int					getstrenght() const { return getweapon().chance; }
 	weapon				getweapon() const;
 	weapon				getweapon(bool attacker, player_s opponent, char round) const;
 	int					getweight() const;
