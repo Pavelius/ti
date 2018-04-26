@@ -117,9 +117,6 @@
     <ClCompile Include="surface_serial.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="view.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
     <ClCompile Include="bstream.cpp">
       <Filter>collections</Filter>
     </ClCompile>
@@ -160,6 +157,15 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="view_board.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="view_dialogs.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_table.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="view_window.cpp">
       <Filter>ui</Filter>
     </ClCompile>
   </ItemGroup>

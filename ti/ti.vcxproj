@@ -152,6 +152,7 @@
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
     <ClCompile Include="draw_scroll.cpp" />
+    <ClCompile Include="draw_table.cpp" />
     <ClCompile Include="draw_text.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="grid.cpp" />
@@ -166,8 +167,9 @@
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="uicommand.cpp" />
     <ClCompile Include="unit.cpp" />
-    <ClCompile Include="view.cpp" />
+    <ClCompile Include="view_window.cpp" />
     <ClCompile Include="view_board.cpp" />
+    <ClCompile Include="view_dialogs.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />

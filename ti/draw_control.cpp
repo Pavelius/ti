@@ -5,6 +5,8 @@ using namespace draw::controls;
 static control*	current_hilite;
 static control*	current_focus;
 static control*	current_command;
+static void (control::*current_execute)();
+static control* current_execute_control;
 
 static struct control_plugin : draw::renderplugin {
 
@@ -12,6 +14,8 @@ static struct control_plugin : draw::renderplugin {
 		current_hilite = 0;
 		current_focus = 0;
 		current_command = 0;
+		current_execute = 0;
+		current_execute_control = 0;
 	}
 
 	bool translate(int id) override {
@@ -42,7 +46,6 @@ static struct control_plugin : draw::renderplugin {
 } control_plugin_instance;
 
 control::control() : show_border(true) {
-
 }
 
 bool control::ishilited() const {
@@ -55,6 +58,16 @@ bool control::isfocused() const {
 
 void control::mouseleft(point position) {
 	setfocus((int)this, true);
+}
+
+static void control_execute() {
+	(current_execute_control->*current_execute)();
+}
+
+void control::execute(void (control::*proc)()) const {
+	current_execute_control = (control*)this;
+	current_execute = proc;
+	draw::execute(control_execute);
 }
 
 void control::view(rect rc) {

@@ -6,6 +6,7 @@
 #define TEXTPLUGIN(control_name) static int control_name(int x, int y, int width, const char* id, int value, const char* label, const char* tips);\
 static textplugin control_name##_plugin(#control_name, control_name);\
 static int control_name(int x, int y, int width, const char* id, int value, const char* label, const char* tips)
+extern "C" int strcmp(const char* s1, const char* s2); // Compare two strings
 
 enum draw_event_s {
 	// input events
@@ -38,6 +39,7 @@ enum draw_event_s {
 	NoBorder = 0x01000000,
 	NoBackground = 0x02000000,
 	NoToolbar = 0x04000000,
+	HideZero = 0x04000000,
 	NoFocus = 0x08000000,
 	// state flags
 	Focused = 0x10000000, // Control has keyboard input and can change visual form.
@@ -224,9 +226,10 @@ struct textplugin {
 	static textplugin*	find(const char* name);
 };
 struct renderplugin {
+	int					priority;
 	renderplugin*		next;
 	static renderplugin* first;
-	renderplugin();
+	renderplugin(int priority = 10);
 	virtual void		after() {}
 	virtual void		before() {}
 	virtual void		initialize() {}
@@ -330,9 +333,20 @@ void					write(const char* url, unsigned char* bits, int width, int height, int 
 }
 namespace draw {
 namespace controls {
+struct column {
+	unsigned			flags;
+	const char*			id;
+	const char*			title;
+	int					width;
+	bool operator==(const char* value) const { return value && strcmp(id, value) == 0; }
+	explicit operator bool() const { return id != 0; }
+	draw_event_s		getcontol() const { return (draw_event_s)(flags&ControlMask); }
+};
 struct control {
+	typedef void		(control::*callback)();
 	bool				show_border;
 	control();
+	void				execute(void (control::*proc)()) const;
 	virtual bool		isfocusable() const { return true; }
 	bool				isfocused() const;
 	bool				ishilited() const;
@@ -374,6 +388,18 @@ struct list : control {
 	void				select(int index);
 	virtual void		row(rect rc, int index) const; // Draw single row - part of list
 	void				view(rect rc) override;
+};
+struct table : list {
+	const column*		columns;
+	bool				show_totals;
+	table(const column* columns) : columns(columns), show_totals(false) {}
+	virtual void		custom(char* buffer, const char* buffer_maximum, rect rc, int line, int column) const {}
+	virtual int			getnumber(int line, int column) const { return 0; }
+	virtual int			gettotal(int column) const { return 0; }
+	virtual const char*	gettotal(char* result, const char* result_maximum, int column) const { return 0; }
+	virtual void		row(rect rc, int index) const; // Draw single row - part of list
+	void				view(rect rc) override;
+	void				viewtotal(rect rc) const;
 };
 }
 int						button(int x, int y, int width, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);

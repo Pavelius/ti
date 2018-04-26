@@ -2156,13 +2156,14 @@ void draw::surface::convert(int new_bpp, color* pallette) {
 	bpp = iabs(new_bpp);
 }
 
-draw::renderplugin::renderplugin() : next(0) {
+draw::renderplugin::renderplugin(int priority) : next(0), priority(priority) {
 	if(!first)
 		first = this;
 	else {
 		auto p = first;
-		while(p->next)
+		while(p->next && p->next->priority<priority)
 			p = p->next;
+		this->next = p->next;
 		p->next = this;
 	}
 }
