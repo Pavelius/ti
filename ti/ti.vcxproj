@@ -137,6 +137,7 @@
     <ClInclude Include="win.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="action.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="collection.cpp" />

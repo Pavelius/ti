@@ -97,6 +97,7 @@ struct unit {
 	weapon				getweapon(bool attacker, player_s opponent, char round) const;
 	int					getweight() const;
 	bool				iscarrier() const { return getcapacity() != 0; }
+	bool				isculture(player_s type) const;
 	bool				isinvaders() const;
 	bool				isplanetary() const { return isplanetary(type); }
 	static bool			isplanetary(unit_s type);

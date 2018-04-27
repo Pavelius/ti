@@ -9,22 +9,11 @@ namespace std {
 		typedef unsigned size_type;
 		typedef const T* iterator;
 		typedef const T* const_iterator;
-		constexpr initializer_list() noexcept
-			: first(0), last(0) {	// empty list
-		}
-		constexpr initializer_list(const T *first_arg,
-			const T *last_arg) noexcept
-			: first(first_arg), last(last_arg) {	// construct with pointers
-		}
-		constexpr const T *begin() const noexcept {	// get beginning of list
-			return first;
-		}
-		constexpr const T *end() const noexcept {	// get end of list
-			return last;
-		}
-		constexpr unsigned size() const noexcept {	// get length of list
-			return last - first;
-		}
+		constexpr initializer_list() noexcept : first(0), last(0) {}
+		constexpr initializer_list(const T *first_arg, const T *last_arg) noexcept : first(first_arg), last(last_arg) {}
+		constexpr const T *begin() const noexcept { return first; }
+		constexpr const T *end() const noexcept { return last; }
+		constexpr unsigned size() const noexcept { return last - first; }
 	private:
 		const T *first;
 		const T *last;

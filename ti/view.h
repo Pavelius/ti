@@ -10,23 +10,23 @@ enum property_s : unsigned char { NoProperty,
 struct gui_info {
 	unsigned char	border;
 	unsigned char	opacity, opacity_disabled, opacity_hilighted;
-	short			button_width, window_width, tips_width, control_border;
+	short			button_width, window_width, window_height, tips_width, control_border;
 	short			padding;
 };
 extern gui_info gui_data;
 
 namespace draw {
-namespace dialogs {
-bool				production(int production_limit);
-}
 void				board();
 int					buttonr(int x, int y, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);
+player_s			chooseplayer();
 int					getbuttonheight();
 point				h2p(point hex);
 void				hexagon(point pt);
 point				p2h(point pt);
 void				report(const char* format);
+bool				production(int production_limit);
 areas				window(rect rc, bool disabled = false, bool hilight = false, int border = 0);
+rect				window(const char* header);
 int					window(int x, int y, int width, const char* string);
 int					windowb(int x, int y, int width, const char* string, int id, int param, int border = 0);
 }

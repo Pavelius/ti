@@ -168,6 +168,9 @@
     <ClCompile Include="view_window.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="action.cpp">
+      <Filter>logic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="library">

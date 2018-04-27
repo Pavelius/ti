@@ -49,7 +49,8 @@ static struct view_plugin : draw::renderplugin {
 		gui_data.button_width = 120;
 		gui_data.opacity = 128;
 		gui_data.opacity_disabled = 192;
-		gui_data.window_width = 320;
+		gui_data.window_width = 360;
+		gui_data.window_height = 420;
 	}
 
 	void after() override {
@@ -126,6 +127,17 @@ areas draw::window(rect rc, bool disabled, bool hilight, int border) {
 	draw::rectf(rc, c, op);
 	draw::rectb(rc, c);
 	return rs;
+}
+
+rect draw::window(const char* header) {
+	draw::state push_state;
+	font = metrics::h1;
+	rect rc = {10, 10, 10 + gui_data.window_width, 10 + gui_data.window_height};
+	auto height = draw::texth() + 4 * 2;
+	window(rc, false, false, 0);
+	text({rc.x1, rc.y1, rc.x2, rc.y1 + height}, header, AlignCenter);
+	rc.y1 += height;
+	return rc;
 }
 
 int draw::window(int x, int y, int width, const char* string) {

@@ -3,6 +3,8 @@
 using namespace draw;
 using namespace draw::controls;
 
+const int pixel_per_line = 24;
+
 class control_unit_production : public table {
 
 	player_s player;
@@ -31,10 +33,8 @@ class control_unit_production : public table {
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 128},
 		{Number | AlignRight | TextBold, "resource", "Ресурсы", 32},
-		{Number | AlignRight, "production", "Количество", 32},
 		{Number | AlignRight, "strenght", "Сила", 32},
 		{Number | AlignRight, "move", "Движение", 32},
-		{Number | AlignRight, "hits", "Хиты", 32},
 		{Number | AlignRight, "capacity", "Вместимость", 32},
 		{Number | AlignRight, "order", "Заказ", 32},
 		{Button | AlignRight, "order_buttons", "", 28},
@@ -131,18 +131,54 @@ public:
 
 };
 
-bool draw::dialogs::production(int production_limit) {
+class control_planets : table {
+
+	column* getcolumns() const {
+		return 0;
+	}
+
+public:
+	control_planets() : table(getcolumns()) {
+	}
+};
+
+static int horizontal(control& e, const rect& rc, int height) {
+	rect rc1 = {rc.x1, rc.y1, rc.x2, rc.y1 + height};
+	e.view(rc1);
+	return rc1.height();
+}
+
+player_s draw::chooseplayer() {
+	struct control_choose : public list {
+		adat<player_s, 6> source;
+		int getmaximum() const override {
+			return source.count;
+		}
+		const char* getname(char* result, const char* result_maximum, int line, int column) const {
+			return getstr(source[line]);
+		}
+	};
+	control_choose e1;
+	while(ismodal()) {
+		board();
+		rect rc;
+		rc.x1 = 12; rc.y1 = 14; rc.x2 = rc.x1 + 200; rc.y2 = rc.y1 + pixel_per_line * 6;
+		rc.y1 += window(rc, "Укажите игрока");
+		rc.y1 += horizontal(e1, rc, pixel_per_line * 6);
+		auto id = input();
+		defproc(id);
+	}
+	return NoPlayer;
+}
+
+bool draw::production(int production_limit) {
 	control_unit_production e2(SardakkNOrr, production_limit);
-	const int pixel_per_line = 24;
 	while(ismodal()) {
 		const int production_width = 400;
 		const int table_height = 9;
 		board();
-		auto x = 20, y = 20;
-		window({x, y, x + production_width + 200, y + pixel_per_line * table_height + 25});
-		e2.view({x, y, x + production_width, y + pixel_per_line * table_height + 1});
-		x += production_width + 10;
-		//e1.view({x, y, x + 120, y + pixel_per_line * table_height + 1});
+		auto rc = window("Производство");
+		rc.y1 += horizontal(e2, rc, pixel_per_line * table_height);
 		auto id = input();
 		defproc(id);
 	}
