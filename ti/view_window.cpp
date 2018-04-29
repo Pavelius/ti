@@ -13,6 +13,14 @@ static char		tooltips_text[4096];
 extern rect		sys_static_area;
 gui_info		gui_data;
 
+static void choose_accept() {
+	draw::breakmodal(AcceptButton);
+}
+
+static void choose_no() {
+	draw::breakmodal(0);
+}
+
 static struct view_plugin : draw::renderplugin {
 
 	static void debug_mouse() {
@@ -140,6 +148,23 @@ rect draw::window(const char* header) {
 	return rc;
 }
 
+rect draw::window(const char* header, command_s id) {
+	auto rc = window(header);
+	auto x1 = rc.x2;
+	rc.y2 -= getbuttonheight();
+	switch(id) {
+	case AcceptButton:
+		x1 -= buttonr(x1, rc.y2, AcceptButton, 0, getstr(AcceptButton), 0, choose_accept) + gui_data.padding;
+		break;
+	case YesButton:
+		x1 -= buttonr(x1, rc.y2, YesButton, 0, getstr(YesButton), 0, choose_accept) + gui_data.padding;
+		x1 -= buttonr(x1, rc.y2, NoButton, 0, getstr(NoButton), 0, choose_no) + gui_data.padding;
+		break;
+	}
+	rc.y2 -= gui_data.border;
+	return rc;
+}
+
 int draw::window(int x, int y, int width, const char* string) {
 	rect rc = {x, y, x + width, y};
 	draw::state push;
@@ -207,14 +232,6 @@ int	draw::buttonr(int x, int y, int id, unsigned flags, const char* label, const
 		width = 64;
 	button(x - width, y, width, id, flags, label, tips, callback);
 	return width;
-}
-
-static void choose_accept() {
-	draw::breakmodal(AcceptButton);
-}
-
-static void choose_no() {
-	draw::breakmodal(0);
 }
 
 TEXTPLUGIN(accept) {

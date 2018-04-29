@@ -16,6 +16,7 @@ enum player_s : unsigned char {
 	TheEmiratesOfHacan,
 	UniversitiesOfJolNar,
 	SardakkNOrr,
+	FirstPlayer = TheXxchaKingdom,
 	LastPlayer = SardakkNOrr,
 };
 enum tech_s : unsigned char {

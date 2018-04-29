@@ -24,9 +24,10 @@ point				h2p(point hex);
 void				hexagon(point pt);
 point				p2h(point pt);
 void				report(const char* format);
-bool				production(int production_limit);
+bool				production(player_s player, int production_limit);
 areas				window(rect rc, bool disabled = false, bool hilight = false, int border = 0);
 rect				window(const char* header);
+rect				window(const char* header, command_s id);
 int					window(int x, int y, int width, const char* string);
 int					windowb(int x, int y, int width, const char* string, int id, int param, int border = 0);
 }

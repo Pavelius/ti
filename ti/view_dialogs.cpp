@@ -142,12 +142,6 @@ public:
 	}
 };
 
-static int horizontal(control& e, const rect& rc, int height) {
-	rect rc1 = {rc.x1, rc.y1, rc.x2, rc.y1 + height};
-	e.view(rc1);
-	return rc1.height();
-}
-
 player_s draw::chooseplayer() {
 	struct control_choose : public list {
 		adat<player_s, 6> source;
@@ -157,28 +151,48 @@ player_s draw::chooseplayer() {
 		const char* getname(char* result, const char* result_maximum, int line, int column) const {
 			return getstr(source[line]);
 		}
+		player_s getvalue() const {
+			return source[current];
+		}
+		control_choose() {
+			for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
+				if(players[i].ingame)
+					source.add(i);
+			}
+		}
 	};
-	control_choose e1;
+	control_choose mv;
+	setfocus(0, true);
 	while(ismodal()) {
 		board();
-		rect rc;
-		rc.x1 = 12; rc.y1 = 14; rc.x2 = rc.x1 + 200; rc.y2 = rc.y1 + pixel_per_line * 6;
-		rc.y1 += window(rc, "Укажите игрока");
-		rc.y1 += horizontal(e1, rc, pixel_per_line * 6);
+		auto rc = window("Укажите игрока", AcceptButton);
+		if(true) {
+			draw::state push;
+			draw::font = metrics::h3;
+			mv.view(rc);
+		}
 		auto id = input();
+		switch(id) {
+		case KeyEnter:
+			breakmodal(AcceptButton);
+			break;
+		}
 		defproc(id);
 	}
+	if(getresult())
+		return mv.getvalue();
 	return NoPlayer;
 }
 
-bool draw::production(int production_limit) {
-	control_unit_production e2(SardakkNOrr, production_limit);
+bool draw::production(player_s player, int production_limit) {
+	control_unit_production mv(player, production_limit);
+	setfocus(0, true);
 	while(ismodal()) {
 		const int production_width = 400;
 		const int table_height = 10;
 		board();
 		auto rc = window("Производство");
-		rc.y1 += horizontal(e2, rc, pixel_per_line * table_height);
+		mv.view(rc);
 		auto id = input();
 		defproc(id);
 	}

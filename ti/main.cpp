@@ -10,9 +10,12 @@ int main() {
 	srand(clock());
 	players[TheEmiratesOfHacan].initialize();
 	players[TheL1z1xMindnet].initialize();
+	players[TheBaronyOfLetnev].initialize();
+	players[FederationOfSol].initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Twilight Imperium 3ed");
-	draw::production(5);
+	auto player = draw::chooseplayer();
+	draw::production(player, 5);
 	//draw::board();
 	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
 	return 0;
