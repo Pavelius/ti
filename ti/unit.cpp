@@ -134,17 +134,17 @@ int unit::getmaxhits() const {
 
 weapon unit::getweapon() const {
 	auto w = unit_data[type].combat;
-	if(isculture(SardakkNOrr))
+	if(is(SardakkNOrr))
 		w.bonus++;
-	if(isculture(TheL1z1xMindnet)) {
+	if(is(TheL1z1xMindnet)) {
 		if(type == Dreadnought)
 			w.bonus++;
 	}
-	if(isculture(TheNaaluCollective)) {
+	if(is(TheNaaluCollective)) {
 		if(type == Fighters)
 			w.bonus++;
 	}
-	if(isculture(UniversitiesOfJolNar))
+	if(is(UniversitiesOfJolNar))
 		w.bonus--;
 	auto& pi = players[player];
 	switch(type) {
@@ -175,11 +175,11 @@ weapon unit::getweapon() const {
 
 weapon unit::getweapon(bool attacker, player_s opponent, char round) const {
 	auto w = getweapon();
-	if(isculture(TheL1z1xMindnet)) {
+	if(is(TheL1z1xMindnet)) {
 		if(type == GroundForces && attacker)
 			w.bonus++;
 	}
-	if(opponent == TheXxchaKingdom && round == 1)
+	if(players[opponent].is(TheXxchaKingdom) && round == 1)
 		w.bonus--;
 	return w;
 }
@@ -193,10 +193,6 @@ bool unit::isinvaders() const {
 	default:
 		return false;
 	}
-}
-
-bool unit::isculture(player_s value) const {
-	return player == value;
 }
 
 bool unit::isplanetary(unit_s type) {

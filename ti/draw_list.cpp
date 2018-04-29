@@ -4,7 +4,10 @@ using namespace draw::controls;
 
 list::list() : origin(0), current(0), current_hilite(-1),
 maximum_width(0), origin_width(0),
-lines_per_page(0), pixels_per_line(0) {
+lines_per_page(0), pixels_per_line(0),
+show_grid_lines(false),
+show_selection(true),
+hilite_odd_lines(true) {
 }
 
 void list::ensurevisible() {
@@ -45,13 +48,26 @@ void list::hilight(rect rc) const {
 		rectx(rc, colors::text.mix(colors::form, 200));
 }
 
+void list::rowhilite(rect rc, int index) const {
+	if(show_selection) {
+		area(rc);
+		if(index == current)
+			hilight(rc);
+		else if(index == current_hilite)
+			rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
+		else if(hilite_odd_lines) {
+			if(index & 1)
+				rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit, 64);
+		}
+	} else if(hilite_odd_lines) {
+		if(index & 1)
+			rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit, 64);
+	}
+}
+
 void list::row(rect rc, int index) const {
-	char temp[260];
-	if(index == current)
-		hilight(rc);
-	else if(index == current_hilite)
-		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
-	temp[0] = 0;
+	char temp[260]; temp[0] = 0;
+	rowhilite(rc, index);
 	auto p = getname(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, index, 0);
 	if(p)
 		draw::textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, p);
@@ -105,7 +121,7 @@ void list::view(rect rcorigin) {
 			rect rcm = {x1 - origin_width, y1, rc.x1 + rw, y1 + pixels_per_line};
 			if(show_grid_lines)
 				line(rcm.x1, rcm.y2 - 1, rcm.x2, rcm.y2 - 1, colors::border);
-			area(rcm); row(rcm, ix);
+			row(rcm, ix);
 			y1 += pixels_per_line;
 			ix++;
 		}

@@ -24,6 +24,7 @@ point				h2p(point hex);
 void				hexagon(point pt);
 point				p2h(point pt);
 void				report(const char* format);
+void				statistic();
 bool				production(player_s player, int production_limit);
 areas				window(rect rc, bool disabled = false, bool hilight = false, int border = 0);
 rect				window(const char* header);

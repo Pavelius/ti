@@ -57,13 +57,28 @@ static int compare_planets(const void* p1, const void* p2) {
 	return e2->resource - e1->resource;
 }
 
+bool player::is(player_s value) const {
+	return (this - players) == value;
+}
+
+int player::getfleet() const {
+	auto result = fleet;
+	if(is(TheBaronyOfLetnev))
+		result++;
+	return result;
+}
+
+unit* player::create(unit_s id, unit* planet) {
+	return new unit(id, planet, getindex());
+}
+
 void player::initialize() {
 	auto player = getindex();
 	auto& pi = player_data[player];
 	interactive = false;
 	ingame = true;
 	technologies.data = pi.start_tech.data;
-	//
+	// Game setup: step 10
 	auto solar_system = solars + player;
 	adat<planet*, 8> planets;
 	planets.count = select(planets.data, endofs(planets.data), solar_system);
@@ -71,7 +86,7 @@ void player::initialize() {
 		return;
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
-	new unit(SpaceDock, base_planet, player);
+	create(SpaceDock, base_planet);
 	for(auto e : pi.start_units) {
 		if(!e)
 			break;
@@ -82,8 +97,12 @@ void player::initialize() {
 			base = base_planet;
 			break;
 		}
-		new unit(e, base, player);
+		create(e, base);
 	}
+	// Game setup: step 11
+	fleet = 3;
+	command = 3;
+	strategy = 2;
 }
 
 player_s player::getindex() const {

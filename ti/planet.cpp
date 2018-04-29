@@ -72,6 +72,14 @@ static planet planets[] = {{"Archon Ren", TheXxchaKingdom, 2, 3},
 {"Xxehan", 12, 1, 1, Green},
 };
 
+int	planet::getinfluence() const {
+	return influence;
+}
+
+int	planet::getresource() const {
+	return resource;
+}
+
 unsigned select(planet** result, planet** result_max, unit* parent) {
 	auto p = result;
 	for(auto& e : planets) {
@@ -81,6 +89,16 @@ unsigned select(planet** result, planet** result_max, unit* parent) {
 			*p++ = &e;
 	}
 	return p - result;
+}
+
+int planet::get(player_s player, int(planet::*getproc)() const) {
+	auto result = 0;
+	for(auto& e : planets) {
+		if(e.player != player)
+			continue;
+		result += (e.*getproc)();
+	}
+	return result;
 }
 
 void planet::refresh() {

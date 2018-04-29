@@ -3,7 +3,76 @@
 using namespace draw;
 using namespace draw::controls;
 
-const int pixel_per_line = 24;
+struct control_player_list : public list {
+	adat<player_s, 6> source;
+	int getmaximum() const override {
+		return source.count;
+	}
+	const char* getname(char* result, const char* result_maximum, int line, int column) const {
+		return getstr(source[line]);
+	}
+	player_s getvalue() const {
+		return source[current];
+	}
+	control_player_list() {
+		for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
+			if(players[i].ingame)
+				source.add(i);
+		}
+	}
+};
+
+struct control_player_table : public table {
+	adat<player_s, 6> source;
+	int getmaximum() const override {
+		return source.count;
+	}
+	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
+		if(columns[column] == "name")
+			return getstr(source[line]);
+		return 0;
+	}
+	int getnumber(int line, int column) const override {
+		if(columns[column] == "resource")
+			return planet::get(source[line], &planet::getresource);
+		else if(columns[column] == "influence")
+			return planet::get(source[line], &planet::getinfluence);
+		else if(columns[column] == "planet_count")
+			return planet::get(source[line], &planet::getone);
+		else if(columns[column] == "fleet")
+			return players[source[line]].getfleet();
+		else if(columns[column] == "command")
+			return players[source[line]].getcommand();
+		else if(columns[column] == "strategy")
+			return players[source[line]].getstrategy();
+		return 0;
+	}
+	player_s getvalue() const {
+		return source[current];
+	}
+	static const column* getcolumns() {
+		static constexpr column columns[] = {{Text, "name", "Наименование", 128},
+		{Number | AlignRight, "resource", "Ресурсы", 52},
+		{Number | AlignRight, "influence", "Влияние", 48},
+		{Number | AlignRight, "planet_count", "Количество", 56},
+		{Number | AlignRight, "fleet", "Флот", 32},
+		{Number | AlignRight, "command", "Команды", 32},
+		{Number | AlignRight, "strategy", "Стратегия", 32},
+		{}
+		};
+		return columns;
+	}
+	void initialize() {
+		source.clear();
+		for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
+			if(players[i].ingame)
+				source.add(i);
+		}
+	}
+	control_player_table() : table(getcolumns()) {
+		initialize();
+	}
+};
 
 class control_unit_production : public table {
 
@@ -138,30 +207,48 @@ class control_planets : table {
 	}
 
 public:
-	control_planets() : table(getcolumns()) {
+	control_planets() : table(getcolumns()) {}
+};
+
+class control_player_statistic : public control_player_table {
+	bool isfocusable() const override {
+		return false;
+	}
+public:
+	control_player_statistic() {
+		show_selection = false;
+		show_border = false;
 	}
 };
 
+static bool info_point(int x, int& y) {
+	rect rc = {x - 16, y - 16, x + 16, y + 16};
+	draw::circlef(x, y, 16, colors::form, 128);
+	draw::circle(x, y, 16);
+	return areb(rc);
+}
+
+static void show_statistic() {
+	rect rc;
+	control_player_statistic mv;
+	mv.current = -1;
+	rc.x1 = getwidth() - 500;
+	rc.y1 = gui_data.border * 2;
+	rc.x2 = getwidth() - 32 - gui_data.border*3;
+	rc.y2 = rc.y1 + mv.getrowheight() * (mv.source.getcount() + 1);
+	draw::window(rc, false, false);
+	mv.view(rc);
+}
+
+static void show_right_buttoms() {
+	auto x = getwidth() - 16 - gui_data.border;
+	auto y = 16 + gui_data.border;
+	if(info_point(x, y))
+		show_statistic();
+}
+
 player_s draw::chooseplayer() {
-	struct control_choose : public list {
-		adat<player_s, 6> source;
-		int getmaximum() const override {
-			return source.count;
-		}
-		const char* getname(char* result, const char* result_maximum, int line, int column) const {
-			return getstr(source[line]);
-		}
-		player_s getvalue() const {
-			return source[current];
-		}
-		control_choose() {
-			for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
-				if(players[i].ingame)
-					source.add(i);
-			}
-		}
-	};
-	control_choose mv;
+	control_player_list mv;
 	setfocus(0, true);
 	while(ismodal()) {
 		board();
@@ -171,6 +258,7 @@ player_s draw::chooseplayer() {
 			draw::font = metrics::h3;
 			mv.view(rc);
 		}
+		show_right_buttoms();
 		auto id = input();
 		switch(id) {
 		case KeyEnter:
@@ -193,8 +281,22 @@ bool draw::production(player_s player, int production_limit) {
 		board();
 		auto rc = window("Производство");
 		mv.view(rc);
+		show_right_buttoms();
 		auto id = input();
 		defproc(id);
 	}
 	return true;
+}
+
+void draw::statistic() {
+	control_player_table mv;
+	setfocus(0, true);
+	while(ismodal()) {
+		board();
+		auto rc = window("Статистика");
+		mv.view(rc);
+		show_right_buttoms();
+		auto id = input();
+		defproc(id);
+	}
 }

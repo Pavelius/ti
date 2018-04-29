@@ -369,6 +369,8 @@ struct list : control {
 	int					maximum_width, origin_width;
 	int					lines_per_page, pixels_per_line;
 	bool				show_grid_lines;
+	bool				show_selection;
+	bool				hilite_odd_lines;
 	list();
 	void				correction();
 	void				ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
@@ -387,6 +389,7 @@ struct list : control {
 	void				mousewheel(point position, int step) override;
 	void				select(int index);
 	virtual void		row(rect rc, int index) const; // Draw single row - part of list
+	virtual void		rowhilite(rect rc, int index) const;
 	void				view(rect rc) override;
 };
 struct table : list {
@@ -400,7 +403,7 @@ struct table : list {
 	virtual int			gettotal(int column) const { return 0; }
 	virtual const char*	gettotal(char* result, const char* result_maximum, int column) const { return 0; }
 	virtual void		row(rect rc, int index) const; // Draw single row - part of list
-	virtual int			rowheader(rect rc) const; // Draw single row - part of list
+	virtual int			rowheader(rect rc) const; // Draw header row
 	void				view(rect rc) override;
 	void				viewtotal(rect rc) const;
 };

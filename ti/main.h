@@ -62,9 +62,16 @@ struct player {
 	bool				ingame;
 	bool				interactive;
 	//
+	unit*				create(unit_s id, unit* planet);
 	void				initialize();
+	bool				is(player_s value) const;
+	int					getcommand() const { return command; }
+	int					getfleet() const;
 	player_s			getindex() const;
+	int					getstrategy() const { return strategy; }
+	int					getgoods() const { return goods; }
 };
+extern player			players[SardakkNOrr + 1];
 struct unit {
 	unit_s				type;
 	player_s			player;
@@ -86,6 +93,7 @@ struct unit {
 	int					getcarried() const;
 	static int			getcount(unit_s type, player_s player, unit* location = 0);
 	int					getfightersupport();
+	virtual int			getinfluence() const { return 0; }
 	int					getjoincount(unit_s object) const;
 	int					getmaxhits() const;
 	int					getmovement() const;
@@ -97,8 +105,8 @@ struct unit {
 	weapon				getweapon() const;
 	weapon				getweapon(bool attacker, player_s opponent, char round) const;
 	int					getweight() const;
+	bool				is(player_s type) const { return players[player].is(type); }
 	bool				iscarrier() const { return getcapacity() != 0; }
-	bool				isculture(player_s type) const;
 	bool				isinvaders() const;
 	bool				isplanetary() const { return isplanetary(type); }
 	static bool			isplanetary(unit_s type);
@@ -114,16 +122,19 @@ struct planet : unit {
 		tech_color_s tech_color = NoTech,
 		wormhole_s wormhole = NoHole);
 	constexpr planet(const char* name, player_s player, char resource, char influence);
+	static int			get(player_s player, int(planet::*getproc)() const);
 	virtual const char*	getname() const override { return name; }
+	virtual int			getinfluence() const override;
+	int					getone() const { return 1; }
+	virtual int			getresource() const override;
 	static void			refresh();
 };
+extern unit				solars[38];
+extern adat<unit, 256>	units;
 struct army : adat<unit*, 32> {
 	void				removecasualty(player_s player);
 	void				sort(int (unit::*proc)() const);
 };
 unit*					getminimal(unit** result, unsigned count, int (unit::*get)() const);
-extern player			players[SardakkNOrr + 1];
 unsigned				select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);
 unsigned				select(planet** result, planet** result_max, unit* parent);
-extern unit				solars[38];
-extern adat<unit, 256>	units;

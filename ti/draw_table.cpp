@@ -8,6 +8,7 @@ int table::rowheader(rect rc) const {
 	fore = colors::special;
 	char temp[260];
 	auto height = getrowheight();
+	rc.offset(1, 1);
 	rc.offset(4, 4);
 	for(auto i = 0; columns[i]; i++) {
 		temp[0] = 0;
@@ -21,10 +22,7 @@ int table::rowheader(rect rc) const {
 
 void table::row(rect rc, int index) const {
 	char temp[260];
-	if(index == current)
-		hilight(rc);
-	else if(index == current_hilite)
-		rectf({rc.x1, rc.y1, rc.x2, rc.y2 - 1}, colors::edit.mix(colors::window, 96));
+	rowhilite(rc, index);
 	rc.offset(4, 4);
 	for(auto i = 0; columns[i]; i++) {
 		rect rt = {rc.x1, rc.y1, rc.x1 + columns[i].width - 4, rc.y2};
