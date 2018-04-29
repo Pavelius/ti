@@ -3,6 +3,22 @@
 
 using namespace draw::controls;
 
+int table::rowheader(rect rc) const {
+	draw::state push;
+	fore = colors::special;
+	char temp[260];
+	auto height = getrowheight();
+	rc.offset(4, 4);
+	for(auto i = 0; columns[i]; i++) {
+		temp[0] = 0;
+		auto p = getheader(temp, temp + sizeof(temp) / sizeof(temp[0]) - 1, i);
+		if(p)
+			draw::textc(rc.x1, rc.y1, columns[i].width, p, -1, columns[i].flags);
+		rc.x1 += columns[i].width;
+	}
+	return height;
+}
+
 void table::row(rect rc, int index) const {
 	char temp[260];
 	if(index == current)
@@ -57,6 +73,8 @@ void table::viewtotal(rect rc) const {
 }
 
 void table::view(rect rc) {
+	if(show_header)
+		rc.y1 += rowheader(rc);
 	if(show_totals) {
 		list::view({rc.x1, rc.y1, rc.x2, rc.y2 - getrowheight()});
 		viewtotal({rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2});

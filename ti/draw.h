@@ -392,12 +392,15 @@ struct list : control {
 struct table : list {
 	const column*		columns;
 	bool				show_totals;
-	table(const column* columns) : columns(columns), show_totals(false) {}
+	bool				show_header;
+	table(const column* columns) : columns(columns), show_totals(false), show_header(true) {}
 	virtual void		custom(char* buffer, const char* buffer_maximum, rect rc, int line, int column) const {}
+	virtual const char*	getheader(char* result, const char* result_maximum, int column) const { return columns[column].title; }
 	virtual int			getnumber(int line, int column) const { return 0; }
 	virtual int			gettotal(int column) const { return 0; }
 	virtual const char*	gettotal(char* result, const char* result_maximum, int column) const { return 0; }
 	virtual void		row(rect rc, int index) const; // Draw single row - part of list
+	virtual int			rowheader(rect rc) const; // Draw single row - part of list
 	void				view(rect rc) override;
 	void				viewtotal(rect rc) const;
 };

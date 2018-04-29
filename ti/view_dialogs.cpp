@@ -36,8 +36,8 @@ class control_unit_production : public table {
 		{Number | AlignRight, "strenght", "Сила", 32},
 		{Number | AlignRight, "move", "Движение", 32},
 		{Number | AlignRight, "capacity", "Вместимость", 32},
-		{Number | AlignRight, "order", "Заказ", 32},
-		{Button | AlignRight, "order_buttons", "", 28},
+		{Number | AlignRight, "order", "", 32},
+		{Button | AlignRight, "order_buttons", "Заказ", 48},
 		{}
 		};
 		return columns;
@@ -175,7 +175,7 @@ bool draw::production(int production_limit) {
 	control_unit_production e2(SardakkNOrr, production_limit);
 	while(ismodal()) {
 		const int production_width = 400;
-		const int table_height = 9;
+		const int table_height = 10;
 		board();
 		auto rc = window("Производство");
 		rc.y1 += horizontal(e2, rc, pixel_per_line * table_height);
