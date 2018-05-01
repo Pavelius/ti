@@ -19,6 +19,10 @@ enum player_s : unsigned char {
 	FirstPlayer = TheXxchaKingdom,
 	LastPlayer = SardakkNOrr,
 };
+enum politic_s : unsigned char {
+	Initiative, Diplomacy, Political, Logistics,
+	Trade, Warfare, Technology, Imperial,
+};
 enum tech_s : unsigned char {
 	AdvancedFighters, AntimassDeflectors, FleetLogistics, LightWaveDeflector, TypeIVDrive, XRDTransporters,
 	Cybernetics, DacxiveAnimators, GenSynthesis, NeuralMotivator, StasisCapsules, X89BacterialWeapon,

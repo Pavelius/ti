@@ -163,6 +163,7 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="politic.cpp" />
     <ClCompile Include="stringcreator.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
