@@ -108,3 +108,10 @@ void player::initialize() {
 player_s player::getindex() const {
 	return (player_s)(this - players);
 }
+
+int	player::getinitiative() const {
+	auto result = getinitiative(politic);
+	if(is(TheNaaluCollective))
+		result = 0;
+	return result;
+}

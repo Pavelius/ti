@@ -20,6 +20,7 @@ enum player_s : unsigned char {
 	LastPlayer = SardakkNOrr,
 };
 enum politic_s : unsigned char {
+	NoPolitic,
 	Initiative, Diplomacy, Political, Logistics,
 	Trade, Warfare, Technology, Imperial,
 };
@@ -63,6 +64,7 @@ struct weapon {
 struct player {
 	char				command, strategy, fleet, goods;
 	cflags<tech_s>		technologies;
+	politic_s			politic;
 	bool				ingame;
 	bool				interactive;
 	//
@@ -72,6 +74,8 @@ struct player {
 	int					getcommand() const { return command; }
 	int					getfleet() const;
 	player_s			getindex() const;
+	int					getinitiative() const;
+	static int			getinitiative(politic_s value);
 	int					getstrategy() const { return strategy; }
 	int					getgoods() const { return goods; }
 };

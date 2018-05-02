@@ -22,6 +22,31 @@ struct control_player_list : public list {
 	}
 };
 
+struct control_politic_list : public list {
+	adat<politic_s, 8> source;
+	int getmaximum() const override {
+		return source.count;
+	}
+	const char* getname(char* result, const char* result_maximum, int line, int column) const {
+		szprints(result, result_maximum, "%1 политика", getstr(source[line]));
+		return result;
+	}
+	politic_s getvalue() const {
+		return source[current];
+	}
+	static int compare(const void* v1, const void* v2) {
+		return strcmp(getstr(*((politic_s*)v1)), getstr(*((politic_s*)v2)));
+	}
+	control_politic_list() {
+		for(auto i = Initiative; i <= Imperial; i = (politic_s)(i + 1)) {
+			if(players[i].politic == i)
+				continue;
+			source.add(i);
+		}
+		qsort(source.data, source.count, sizeof(source.data[0]), compare);
+	}
+};
+
 struct control_player_table : public table {
 	adat<player_s, 6> source;
 	int getmaximum() const override {
@@ -286,6 +311,31 @@ bool draw::production(player_s player, int production_limit) {
 		defproc(id);
 	}
 	return true;
+}
+
+politic_s draw::choosepolitic() {
+	control_politic_list mv;
+	setfocus(0, true);
+	while(ismodal()) {
+		board();
+		auto rc = window("Укажите политику", AcceptButton);
+		if(true) {
+			draw::state push;
+			draw::font = metrics::h3;
+			mv.view(rc);
+		}
+		show_right_buttoms();
+		auto id = input();
+		switch(id) {
+		case KeyEnter:
+			breakmodal(AcceptButton);
+			break;
+		}
+		defproc(id);
+	}
+	if(getresult())
+		return mv.getvalue();
+	return NoPolitic;
 }
 
 void draw::statistic() {
