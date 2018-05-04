@@ -143,6 +143,16 @@ struct army : adat<unit*, 32> {
 	void				removecasualty(player_s player);
 	void				sort(int (unit::*proc)() const);
 };
+struct gameplayers : adat<player_s, 6> {
+	gameplayers();
+	gameplayers(player_s speaker);
+};
+struct game {
+	player_s			speaker;
+	void				choosepolitic();
+	void				strategic();
+	player_s			randomplayer();
+};
 unit*					getminimal(unit** result, unsigned count, int (unit::*get)() const);
 unsigned				select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);
 unsigned				select(planet** result, planet** result_max, unit* parent);

@@ -15,7 +15,9 @@ int main() {
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Twilight Imperium 3ed");
 	//auto player = draw::chooseplayer();
-	auto politic = draw::choosepolitic();
+	game current;
+	current.speaker = current.randomplayer();
+	current.strategic();
 	//draw::production(player, 5);
 	//draw::board();
 	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");

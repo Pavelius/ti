@@ -4,7 +4,7 @@ static struct politic {
 	const char*	id;
 	const char*	name;
 	char		initiative;
-} politic_data[] = {{"No Politics", "Нет политики"},
+} politic_data[] = {{"", ""},
 {"Initiative", "Инициативная"},
 {"Diplomacy", "Дипломатическая"},
 {"Political", "Политическая"},

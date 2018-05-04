@@ -37,9 +37,18 @@ struct control_politic_list : public list {
 	static int compare(const void* v1, const void* v2) {
 		return strcmp(getstr(*((politic_s*)v1)), getstr(*((politic_s*)v2)));
 	}
+	bool used(politic_s value) const {
+		for(auto& e : players) {
+			if(!e.ingame)
+				continue;
+			if(e.politic == value)
+				return true;
+		}
+		return false;
+	}
 	control_politic_list() {
 		for(auto i = Initiative; i <= Imperial; i = (politic_s)(i + 1)) {
-			if(players[i].politic == i)
+			if(used(i))
 				continue;
 			source.add(i);
 		}
@@ -55,6 +64,8 @@ struct control_player_table : public table {
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
 			return getstr(source[line]);
+		else if(columns[column] == "politic")
+			return getstr(players[source[line]].politic);
 		return 0;
 	}
 	int getnumber(int line, int column) const override {
@@ -76,7 +87,8 @@ struct control_player_table : public table {
 		return source[current];
 	}
 	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 128},
+		static constexpr column columns[] = {{Text, "name", "Наименование", 160},
+		{Text, "politic", "Политика", 100},
 		{Number | AlignRight, "resource", "Ресурсы", 52},
 		{Number | AlignRight, "influence", "Влияние", 48},
 		{Number | AlignRight, "planet_count", "Количество", 56},
@@ -100,30 +112,24 @@ struct control_player_table : public table {
 };
 
 class control_unit_production : public table {
-
 	player_s player;
 	unit units_production[WarSun - GroundForces + 1];
 	char units_count[WarSun - GroundForces + 1];
 	int production_limit;
-
 	int getmaximum() const override {
 		return sizeof(units_production) / sizeof(units_production[0]);
 	}
-
 	void decrease() {
 		units_count[current]--;
 		if(units_count[current] <= 0)
 			units_count[current] = 0;
 	}
-
 	void increase() {
 		units_count[current]++;
 	}
-
 	int getfocused(int line) const {
 		return isfocused() && (current == line);
 	}
-
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 128},
 		{Number | AlignRight | TextBold, "resource", "Ресурсы", 32},
@@ -136,7 +142,6 @@ class control_unit_production : public table {
 		};
 		return columns;
 	}
-
 	void custom(char* temp, const char* temp_maximum, rect rc, int line, int column) const override {
 		auto height = rc.height();
 		auto width = height;
@@ -152,13 +157,11 @@ class control_unit_production : public table {
 			rc.x1 += height + 4;
 		}
 	}
-
 	const char* getname(char* result, const char* result_maximum, int line, int column) const {
 		if(columns[column] == "name")
 			return units_production[line].getname();
 		return result;
 	}
-
 	int getnumber(int line, int column) const override {
 		if(columns[column] == "production")
 			return units_production[line].getproduction();
@@ -176,20 +179,17 @@ class control_unit_production : public table {
 			return units_production[line].getmaxhits();
 		return 0;
 	}
-
 	const char* gettotal(char* result, const char* result_maximum, int column) const override {
 		if(columns[column] == "name")
 			return "Итого:";
 		return 0;
 	}
-
 	int getproductionlimit() const {
 		auto result = 0;
 		for(auto i = GroundForces; i <= WarSun; i = (unit_s)(i + 1))
 			result += getcount(i);
 		return result;
 	}
-
 	int gettotal(int column) const override {
 		if(columns[column] == "order") {
 			return getproductionlimit();
@@ -201,9 +201,7 @@ class control_unit_production : public table {
 		}
 		return 0;
 	}
-
 public:
-
 	control_unit_production(player_s player, int production_limit) : table(getcolumns()), player(player), production_limit(production_limit) {
 		for(auto i = GroundForces; i <= WarSun; i = (unit_s)(i + 1)) {
 			units_production[i - GroundForces] = unit(i, 0, player);
@@ -211,18 +209,15 @@ public:
 		}
 		show_totals = true;
 	}
-
 	int get(unit_s id) const {
 		if(id >= GroundForces && id <= WarSun)
 			return units_count[id - GroundForces];
 		else
 			return 0;
 	}
-
 	int getcount(unit_s id) const {
 		return units_count[id - GroundForces] * units_production[id - GroundForces].getproduction();
 	}
-
 };
 
 class control_planets : table {
@@ -257,7 +252,7 @@ static void show_statistic() {
 	rect rc;
 	control_player_statistic mv;
 	mv.current = -1;
-	rc.x1 = getwidth() - 500;
+	rc.x1 = getwidth() - 780;
 	rc.y1 = gui_data.border * 2;
 	rc.x2 = getwidth() - 32 - gui_data.border*3;
 	rc.y2 = rc.y1 + mv.getrowheight() * (mv.source.getcount() + 1);
