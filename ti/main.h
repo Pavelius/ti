@@ -1,4 +1,5 @@
 #include "adat.h"
+#include "aref.h"
 #include "crt.h"
 #include "cflags.h"
 
@@ -143,15 +144,16 @@ struct army : adat<unit*, 32> {
 	void				removecasualty(player_s player);
 	void				sort(int (unit::*proc)() const);
 };
-struct gameplayers : adat<player_s, 6> {
-	gameplayers();
-	gameplayers(player_s speaker);
+struct querry : adat<unsigned char, 256> {
+	querry() {}
+	querry(unsigned char i1, unsigned char i2, bool(*select)(unsigned char index)) { add(i1, i2, select); }
+	void				add(unsigned char i1, unsigned char i2, bool(*select)(unsigned char index));
+	void				sort(int(*compare)(const void* p1, const void* p2));
+	template<class T> aref<T> col() { return aref<T>((T*)data, count); }
 };
-struct game {
-	player_s			speaker;
-	void				choosepolitic();
-	void				strategic();
-	player_s			randomplayer();
+namespace game {
+unsigned char			choose(player_s player, unsigned char i1, unsigned char i2, const char* title, bool(*select)(unsigned char index), const char* (*source_getname)(unsigned char index), int(*compare)(const void* p1, const void* p2));
+void					strategic();
 };
 unit*					getminimal(unit** result, unsigned count, int (unit::*get)() const);
 unsigned				select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);

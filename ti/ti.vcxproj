@@ -120,6 +120,7 @@
   <ItemGroup>
     <ClInclude Include="adat.h" />
     <ClInclude Include="amap.h" />
+    <ClInclude Include="aref.h" />
     <ClInclude Include="bstream.h" />
     <ClInclude Include="cflags.h" />
     <ClInclude Include="collection.h" />
@@ -138,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="action.cpp" />
+    <ClCompile Include="querry.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="collection.cpp" />
@@ -157,7 +159,6 @@
     <ClCompile Include="draw_text.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="gameplayers.cpp" />
     <ClCompile Include="grid.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />

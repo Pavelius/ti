@@ -18,8 +18,8 @@ extern gui_info gui_data;
 namespace draw {
 void				board();
 int					buttonr(int x, int y, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);
+unsigned char		choose(querry& source, const char* title, const char* (*source_getname)(unsigned char index));
 player_s			chooseplayer();
-politic_s			choosepolitic();
 int					getbuttonheight();
 point				h2p(point hex);
 void				hexagon(point pt);

@@ -55,8 +55,8 @@ static struct view_plugin : draw::renderplugin {
 		gui_data.control_border = 4;
 		gui_data.padding = 2;
 		gui_data.button_width = 120;
-		gui_data.opacity = 128;
-		gui_data.opacity_disabled = 192;
+		gui_data.opacity = 232;
+		gui_data.opacity_disabled = 128;
 		gui_data.window_width = 360;
 		gui_data.window_height = 420;
 	}

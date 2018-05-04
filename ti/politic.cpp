@@ -5,14 +5,14 @@ static struct politic {
 	const char*	name;
 	char		initiative;
 } politic_data[] = {{"", ""},
-{"Initiative", "Инициативная"},
-{"Diplomacy", "Дипломатическая"},
-{"Political", "Политическая"},
-{"Logistics", "Логистическая"},
-{"Trade", "Торговая"},
-{"Warfare", "Военная"},
-{"Technology", "Технологическая"},
-{"Imperial", "Империалистическая"},
+{"Initiative", "Инициативная", 1},
+{"Diplomacy", "Дипломатическая", 2},
+{"Political", "Политическая", 3},
+{"Logistics", "Логистическая", 4},
+{"Trade", "Торговая", 5},
+{"Warfare", "Военная", 6},
+{"Technology", "Технологическая", 7},
+{"Imperial", "Империалистическая", 8},
 };
 getstr_enum(politic);
 

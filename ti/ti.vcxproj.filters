@@ -52,6 +52,9 @@
     <ClInclude Include="win.h">
       <Filter>platform\win</Filter>
     </ClInclude>
+    <ClInclude Include="aref.h">
+      <Filter>collections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt.cpp">
@@ -177,7 +180,7 @@
     <ClCompile Include="game.cpp">
       <Filter>logic</Filter>
     </ClCompile>
-    <ClCompile Include="gameplayers.cpp">
+    <ClCompile Include="querry.cpp">
       <Filter>logic</Filter>
     </ClCompile>
   </ItemGroup>

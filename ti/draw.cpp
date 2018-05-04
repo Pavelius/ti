@@ -1457,7 +1457,7 @@ void draw::text(int x, int y, const char* string, int count, unsigned flags) {
 int draw::textc(int x, int y, int width, const char* string, int count, unsigned flags) {
 	state push;
 	setclip({x, y, x + width, y + texth()});
-	text(x, y, string, count, flags);
+	text(draw::aligned(x, width, flags, textw(string, count)), y, string, count, flags);
 	return texth();
 }
 

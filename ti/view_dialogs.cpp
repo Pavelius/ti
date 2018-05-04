@@ -3,22 +3,16 @@
 using namespace draw;
 using namespace draw::controls;
 
-struct control_player_list : public list {
-	adat<player_s, 6> source;
+struct control_querry_list : public list {
+	querry&	source;
+	const char* (*source_getname)(unsigned char value);
 	int getmaximum() const override {
 		return source.count;
 	}
 	const char* getname(char* result, const char* result_maximum, int line, int column) const {
-		return getstr(source[line]);
+		return source_getname(source[line]);
 	}
-	player_s getvalue() const {
-		return source[current];
-	}
-	control_player_list() {
-		for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
-			if(players[i].ingame)
-				source.add(i);
-		}
+	control_querry_list(querry& source, const char* (*source_getname)(unsigned char index)) : source(source), source_getname(source_getname) {
 	}
 };
 
@@ -89,15 +83,23 @@ struct control_player_table : public table {
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 160},
 		{Text, "politic", "Политика", 100},
-		{Number | AlignRight, "resource", "Ресурсы", 52},
-		{Number | AlignRight, "influence", "Влияние", 48},
-		{Number | AlignRight, "planet_count", "Количество", 56},
+		{Number | AlignRight, "resource", "Рс", 32},
+		{Number | AlignRight, "influence", "Вл", 32},
+		{Number | AlignRight, "planet_count", "Пл", 32},
 		{Number | AlignRight, "fleet", "Флот", 32},
-		{Number | AlignRight, "command", "Команды", 32},
-		{Number | AlignRight, "strategy", "Стратегия", 32},
+		{Number | AlignRight, "command", "Ком", 32},
+		{Number | AlignRight, "strategy", "Стр", 32},
 		{}
 		};
 		return columns;
+	}
+	static int compare(const void* p1, const void* p2) {
+		auto i1 = *((player_s*)p1);
+		auto i2 = *((player_s*)p2);
+		auto d = players[i1].getinitiative() - players[i2].getinitiative();
+		if(d==0)
+			return strcmp(getstr(i1), getstr(i2));
+		return d;
 	}
 	void initialize() {
 		source.clear();
@@ -105,6 +107,7 @@ struct control_player_table : public table {
 			if(players[i].ingame)
 				source.add(i);
 		}
+		qsort(source.data, source.count, sizeof(source.data[0]), compare);
 	}
 	control_player_table() : table(getcolumns()) {
 		initialize();
@@ -254,7 +257,7 @@ static void show_statistic() {
 	mv.current = -1;
 	rc.x1 = getwidth() - 780;
 	rc.y1 = gui_data.border * 2;
-	rc.x2 = getwidth() - 32 - gui_data.border*3;
+	rc.x2 = getwidth() - 32 - gui_data.border * 3;
 	rc.y2 = rc.y1 + mv.getrowheight() * (mv.source.getcount() + 1);
 	draw::window(rc, false, false);
 	mv.view(rc);
@@ -265,31 +268,6 @@ static void show_right_buttoms() {
 	auto y = 16 + gui_data.border;
 	if(info_point(x, y))
 		show_statistic();
-}
-
-player_s draw::chooseplayer() {
-	control_player_list mv;
-	setfocus(0, true);
-	while(ismodal()) {
-		board();
-		auto rc = window("Укажите игрока", AcceptButton);
-		if(true) {
-			draw::state push;
-			draw::font = metrics::h3;
-			mv.view(rc);
-		}
-		show_right_buttoms();
-		auto id = input();
-		switch(id) {
-		case KeyEnter:
-			breakmodal(AcceptButton);
-			break;
-		}
-		defproc(id);
-	}
-	if(getresult())
-		return mv.getvalue();
-	return NoPlayer;
 }
 
 bool draw::production(player_s player, int production_limit) {
@@ -308,12 +286,12 @@ bool draw::production(player_s player, int production_limit) {
 	return true;
 }
 
-politic_s draw::choosepolitic() {
-	control_politic_list mv;
+unsigned char draw::choose(querry& source, const char* title, const char* (*source_getname)(unsigned char index)) {
+	control_querry_list mv(source, source_getname);
 	setfocus(0, true);
 	while(ismodal()) {
 		board();
-		auto rc = window("Укажите политику", AcceptButton);
+		auto rc = window(title, AcceptButton);
 		if(true) {
 			draw::state push;
 			draw::font = metrics::h3;
@@ -329,19 +307,6 @@ politic_s draw::choosepolitic() {
 		defproc(id);
 	}
 	if(getresult())
-		return mv.getvalue();
-	return NoPolitic;
-}
-
-void draw::statistic() {
-	control_player_table mv;
-	setfocus(0, true);
-	while(ismodal()) {
-		board();
-		auto rc = window("Статистика");
-		mv.view(rc);
-		show_right_buttoms();
-		auto id = input();
-		defproc(id);
-	}
+		return mv.source[mv.current];
+	return 0;
 }
