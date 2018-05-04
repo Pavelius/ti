@@ -3,7 +3,7 @@
 using namespace draw;
 using namespace draw::controls;
 
-struct control_querry_list : public list {
+class control_querry_list : public list {
 	querry&	source;
 	const char* (*source_getname)(unsigned char value);
 	int getmaximum() const override {
@@ -12,41 +12,11 @@ struct control_querry_list : public list {
 	const char* getname(char* result, const char* result_maximum, int line, int column) const {
 		return source_getname(source[line]);
 	}
-	control_querry_list(querry& source, const char* (*source_getname)(unsigned char index)) : source(source), source_getname(source_getname) {
-	}
-};
-
-struct control_politic_list : public list {
-	adat<politic_s, 8> source;
-	int getmaximum() const override {
-		return source.count;
-	}
-	const char* getname(char* result, const char* result_maximum, int line, int column) const {
-		szprints(result, result_maximum, "%1 политика", getstr(source[line]));
-		return result;
-	}
-	politic_s getvalue() const {
+public:
+	int getvalue() const {
 		return source[current];
 	}
-	static int compare(const void* v1, const void* v2) {
-		return strcmp(getstr(*((politic_s*)v1)), getstr(*((politic_s*)v2)));
-	}
-	bool used(politic_s value) const {
-		for(auto& e : players) {
-			if(!e.ingame)
-				continue;
-			if(e.politic == value)
-				return true;
-		}
-		return false;
-	}
-	control_politic_list() {
-		for(auto i = Initiative; i <= Imperial; i = (politic_s)(i + 1)) {
-			if(used(i))
-				continue;
-			source.add(i);
-		}
-		qsort(source.data, source.count, sizeof(source.data[0]), compare);
+	control_querry_list(querry& source, const char* (*source_getname)(unsigned char index)) : source(source), source_getname(source_getname) {
 	}
 };
 
@@ -111,6 +81,17 @@ struct control_player_table : public table {
 	}
 	control_player_table() : table(getcolumns()) {
 		initialize();
+	}
+};
+
+class control_player_statistic : public control_player_table {
+	bool isfocusable() const override {
+		return false;
+	}
+public:
+	control_player_statistic() {
+		show_selection = false;
+		show_border = false;
 	}
 };
 
@@ -233,17 +214,6 @@ public:
 	control_planets() : table(getcolumns()) {}
 };
 
-class control_player_statistic : public control_player_table {
-	bool isfocusable() const override {
-		return false;
-	}
-public:
-	control_player_statistic() {
-		show_selection = false;
-		show_border = false;
-	}
-};
-
 static bool info_point(int x, int& y) {
 	rect rc = {x - 16, y - 16, x + 16, y + 16};
 	draw::circlef(x, y, 16, colors::form, 128);
@@ -307,6 +277,6 @@ unsigned char draw::choose(querry& source, const char* title, const char* (*sour
 		defproc(id);
 	}
 	if(getresult())
-		return mv.source[mv.current];
+		return mv.getvalue();
 	return 0;
 }

@@ -34,6 +34,7 @@ enum draw_event_s {
 	Radio = 0x00300000,
 	Button = 0x00400000,
 	Image = 0x00500000,
+	Tabs = 0x00600000,
 	ControlMask = 0x00F00000,
 	// control visual flags
 	NoBorder = 0x01000000,
@@ -61,7 +62,7 @@ enum areas {
 	AreaHilited, // Area have mouse
 	AreaHilitedPressed, // Area have mouse and mouse button is pressed
 };
-enum iflags {
+enum image_flag_s {
 	ImageMirrorV = 0x0001,
 	ImageMirrorH = 0x0002,
 	ImageGrayscale = 0x0004,
