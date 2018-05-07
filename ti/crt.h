@@ -2,7 +2,7 @@
 
 #define xva_start(v) ((const char*)&v + sizeof(v))
 #ifdef _DEBUG
-#define assert(e) if(!(e)) { dlgerr("Assertion failed", "File: %1\nLine: %2i", __FILE__, __LINE__); exit(255); }
+#define assert(e) if(!(e)) { abort(); }
 #else
 #define assert(e)
 #endif
@@ -34,20 +34,10 @@ enum crterrors {
 namespace metrics {
 const codepages						code = CP1251;
 }
-unsigned							dayb(unsigned d); // Get begin of day (time 00:00)
-unsigned							daye(unsigned d); // Get end of day (time 23:59)
-unsigned							getdate(); // Get current date
-int									getday(unsigned d); // Get day of month (1..31)
 int									getdigitscount(unsigned number); // Get digits count of number. For example if number=100, result be 3.
 inline int							gethour(unsigned d) { return (d / 60) % 24; } // Get hour
 inline int							getminute(unsigned d) { return (d % 60); } // Get minute
-int									getmonth(unsigned d); // Get month (1..12)
-int									getmonthdaymax(int month, int year); // Return maximum day of month (28..31)
-int									getsid(const char* text); // Get string identifier
-const char*							getstr(int e); // Template to return string of small class
 template<class T> const char*		getstr(T e); // Template to return string of small class
-const char*							getstrfdat(char* result, unsigned d, bool show_time = true);
-int									getyear(unsigned d); // Get year from date
 bool								ischa(unsigned u); // is alphabetical character?
 bool								issignature(const char name[4], const char* s); // Is name equal to string s?
 inline bool							isnum(unsigned u) { return u >= '0' && u <= '9'; } // is numeric character?
@@ -56,9 +46,6 @@ char*								loadt(const char* url, int* size = 0); // Load text file and decode
 void								logmsg(const char* format, ...);
 void								logmsgv(const char* format, const char* arguments);
 bool								matchuc(const char* name, const char* filter);
-unsigned							mkdate(int year, int month, int day, int hour = 0, int minute = 0); // Get date from parameters
-unsigned							monthb(unsigned d); // Return start of month
-unsigned							monthe(unsigned d); // Return end of month
 void								printc(const char* format, ...); // Analog prinf() but use format of this library
 void								printcnf(const char* text); // Write to console this text
 bool								dlgask(const char* title, const char* text); // Yes/No system dialog
@@ -66,7 +53,6 @@ void								dlgerr(const char* title, const char* format, ...); // Show error.
 void								dlginf(const char* title, const char* text); // System message dialog
 void								dlgmsg(const char* title, const char* text); // System message dialog
 const char*							psidn(const char* p, char* result, char* result_end); // safe parse identifier name from string
-inline const char*					psidn(const char* p, char* result) { return psidn(p, result, result + 128); }
 const char*							psnum(const char* p, int& value); // Parse number from string
 const char*							psstr(const char* p, char* value, char end_symbol = '\"'); // Parse string from string (like c format "Some\nstring")
 void								setsignature(char name[4], const char* s); // Set signature to name
@@ -105,7 +91,6 @@ unsigned							szupper(unsigned u);
 char*								szupper(char* p, int count = 1); // to upper reg
 char*								szurl(char* p, const char* path, const char* name, const char* ext = 0, const char* suffix = 0);
 char*								szurlc(char* p1);
-unsigned							weekb(unsigned d);
 inline int							xrand(int n1, int n2) { return n1 + rand() % (n2 - n1 + 1); }
 inline int							xroll(int c, int d, int b = 0) { while(c--) b += 1 + (rand() % d); return b; }
 // Common used templates

@@ -81,7 +81,7 @@ void player::initialize() {
 	// Game setup: step 10
 	auto solar_system = solars + player;
 	adat<planet*, 8> planets;
-	planets.count = select(planets.data, endofs(planets.data), solar_system);
+	planets.count = select(planets.data, planets.data + planets.getmaximum(), solar_system);
 	if(!planets.count)
 		return;
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
