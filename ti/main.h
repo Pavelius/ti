@@ -138,8 +138,6 @@ struct planet : unit {
 	virtual int			getresource() const override;
 	static void			refresh();
 };
-extern unit				solars[38];
-extern adat<unit, 256>	units;
 struct army : adat<unit*, 32> {
 	void				removecasualty(player_s player);
 	void				sort(int (unit::*proc)() const);
@@ -158,3 +156,5 @@ void					strategic();
 unit*					getminimal(unit** result, unsigned count, int (unit::*get)() const);
 unsigned				select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);
 unsigned				select(planet** result, planet** result_max, unit* parent);
+extern unit				solars[38];
+extern adat<unit, 256>	units;

@@ -30,6 +30,7 @@ static struct control_plugin : draw::renderplugin {
 			case KeyEnd: current_focus->keyend(); return true;
 			case KeyPageUp: current_focus->keypageup(); return true;
 			case KeyPageDown: current_focus->keypagedown(); return true;
+			case InputSymbol: current_focus->keysymbol(hot::param); break;
 			}
 		}
 		if(current_hilite) {

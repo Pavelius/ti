@@ -2,6 +2,9 @@
 
 using namespace draw::controls;
 
+static char		search_text[32];
+static unsigned	search_time;
+
 list::list() : origin(0), current(0), current_hilite(-1),
 maximum_width(0), origin_width(0),
 lines_per_page(0), pixels_per_line(0),
@@ -193,4 +196,40 @@ void list::mousewheel(point position, int step) {
 		origin = maximum - lines_per_page;
 	if(origin < 0)
 		origin = 0;
+}
+
+int list::find(int line, int column, const char* value, int lenght) const {
+	if(line < 0)
+		line = getline() + 1;
+	if(column == -1)
+		column = getcolumn();
+	if(lenght == -1)
+		lenght = zlen(value);
+	auto m = getmaximum();
+	while(line < m) {
+		char temp[260]; temp[0] = 0;
+		auto p = getname(temp, temp + sizeof(temp) - 1, line, column);
+		if(p && szcmpi(p, value, lenght)==0)
+			return line;
+		line++;
+	}
+	return -1;
+}
+
+void list::keysymbol(int symbol) {
+	if(!symbol || symbol < 0x20)
+		return;
+	auto time_clock = clock();
+	if(!search_time || (time_clock - search_time) >(2 * 1000))
+		search_text[0] = 0;
+	search_time = time_clock;
+	char* p = zend(search_text);
+	szput(&p, hot::param);
+	p[0] = 0;
+	int i1 = find(-1, -1, search_text);
+	if(i1 != -1) {
+		current = i1;
+		correction();
+		ensurevisible();
+	}
 }

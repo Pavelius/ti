@@ -359,6 +359,7 @@ struct control {
 	virtual void		keypageup() {}
 	virtual void		keypagedown() {}
 	virtual void		keyright() {}
+	virtual void		keysymbol(int symbol) {}
 	virtual void		keyup() {}
 	virtual void		mouseleft(point position); // Default behaivor set focus
 	virtual void		mouseleftdbl(point position) {}
@@ -375,9 +376,12 @@ struct list : control {
 	list();
 	void				correction();
 	void				ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
-	static int			getrowheight(); // Get default row height for any List Control
+	int					find(int line, int column, const char* name, int lenght = -1) const;
+	virtual int			getcolumn() const { return 0; } // get current column
+	virtual int			getline() const { return current; } // get current line
 	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
 	virtual int			getmaximum() const { return 0; }
+	static int			getrowheight(); // Get default row height for any List Control
 	void				hilight(rect rc) const;
 	void				keydown() override;
 	void				keyend() override;
@@ -385,6 +389,7 @@ struct list : control {
 	void				keyhome() override;
 	void				keypageup() override;
 	void				keypagedown() override;
+	void				keysymbol(int symbol) override;
 	void				keyup() override;
 	void				mouseleftdbl(point position) override;
 	void				mousewheel(point position, int step) override;
