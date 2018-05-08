@@ -220,12 +220,11 @@ void list::keysymbol(int symbol) {
 	if(!symbol || symbol < 0x20)
 		return;
 	auto time_clock = clock();
-	if(!search_time || (time_clock - search_time) >(2 * 1000))
+	if(!search_time || (time_clock - search_time) >1500)
 		search_text[0] = 0;
 	search_time = time_clock;
 	char* p = zend(search_text);
-	szput(&p, hot::param);
-	p[0] = 0;
+	szput(&p, hot::param); p[0] = 0;
 	int i1 = find(-1, -1, search_text);
 	if(i1 != -1) {
 		current = i1;

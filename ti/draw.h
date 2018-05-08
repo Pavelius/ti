@@ -36,6 +36,8 @@ enum draw_event_s {
 	Image = 0x00500000,
 	Tabs = 0x00600000,
 	ControlMask = 0x00F00000,
+	// columns flags
+	SmallHilite = 0x00010000,
 	// control visual flags
 	NoBorder = 0x01000000,
 	NoBackground = 0x02000000,
@@ -164,7 +166,6 @@ extern sprite*			font;
 extern sprite*			h1;
 extern sprite*			h2;
 extern sprite*			h3;
-extern sprite*			icons;
 extern int				scroll;
 }
 namespace draw {
@@ -215,7 +216,6 @@ private:
 	const sprite*		font; // glyph font
 	surface*			canvas;
 	rect				clip;
-	bool				mouseinput;
 };
 struct textplugin {
 	typedef int(*proc)(int x, int y, int width, const char* id, int value, const char* label, const char* tips);
@@ -263,6 +263,7 @@ void					decortext(unsigned flags);
 bool					defproc(int id);
 void					execute(void(*callback)(), int value = 0);
 void					execute(int id, int value = 0);
+rect					getarea();
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
 color					getcolor(rect rc, color normal, color hilite, unsigned flags);
@@ -370,15 +371,14 @@ struct list : control {
 	int					origin, current, current_hilite;
 	int					maximum_width, origin_width;
 	int					lines_per_page, pixels_per_line;
-	bool				show_grid_lines;
-	bool				show_selection;
+	bool				show_grid_lines, show_selection;
 	bool				hilite_odd_lines;
 	list();
 	void				correction();
 	void				ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
 	int					find(int line, int column, const char* name, int lenght = -1) const;
 	virtual int			getcolumn() const { return 0; } // get current column
-	virtual int			getline() const { return current; } // get current line
+	inline int			getline() const { return current; } // get current line
 	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
 	virtual int			getmaximum() const { return 0; }
 	static int			getrowheight(); // Get default row height for any List Control

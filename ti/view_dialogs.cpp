@@ -251,7 +251,8 @@ bool draw::production(player_s player, int production_limit) {
 		mv.view(rc);
 		show_right_buttoms();
 		auto id = input();
-		defproc(id);
+		if(!boardkeys(id))
+			defproc(id);
 	}
 	return true;
 }
@@ -268,13 +269,18 @@ unsigned char draw::choose(querry& source, const char* title, const char* (*sour
 			mv.view(rc);
 		}
 		show_right_buttoms();
+		icon(200, 200, GroundForces, 2);
+		icon(220, 200, PDS, 1);
 		auto id = input();
 		switch(id) {
 		case KeyEnter:
 			breakmodal(AcceptButton);
 			break;
 		}
-		defproc(id);
+		if(defproc(id))
+			continue;
+		if(boardkeys(id))
+			continue;
 	}
 	if(getresult())
 		return mv.getvalue();

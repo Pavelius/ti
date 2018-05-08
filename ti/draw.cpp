@@ -60,7 +60,6 @@ sprite*				metrics::font = (sprite*)loadb("art/fonts/font.pma");
 sprite*				metrics::h1 = (sprite*)loadb("art/fonts/h1.pma");
 sprite*				metrics::h2 = (sprite*)loadb("art/fonts/h2.pma");
 sprite*				metrics::h3 = (sprite*)loadb("art/fonts/h3.pma");
-sprite*				metrics::icons = (sprite*)loadb("art/icons.pma");
 int					metrics::scroll = 16;
 
 void* rmreserve(void* ptr, unsigned size);
@@ -815,9 +814,7 @@ static void cpy32t(unsigned char* d, int d_scan, unsigned char* s, int s_scan, i
 	} while(--height);
 }
 
-
 draw::state::state() :
-	mouseinput(draw::mouseinput),
 	fore(draw::fore),
 	fore_stroke(draw::fore_stroke),
 	font(draw::font),
@@ -828,12 +825,15 @@ draw::state::state() :
 
 draw::state::~state() {
 	draw::font = this->font;
-	draw::mouseinput = this->mouseinput;
 	draw::fore = this->fore;
 	draw::fore_stroke = this->fore_stroke;
 	draw::linw = this->linw;
 	draw::clipping = this->clip;
 	draw::canvas = this->canvas;
+}
+
+rect draw::getarea() {
+	return sys_static_area;
 }
 
 void draw::drag::begin(int id, drag_part_s part) {

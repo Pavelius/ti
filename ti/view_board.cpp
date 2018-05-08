@@ -1,8 +1,11 @@
 #include "view.h"
 
-const short size = 192;
+const short size = 128;
+//const short size = 192;
 const double sqrt_3 = 1.732050807568877;
 const double cos_30 = 0.86602540378;
+static rect rc_board;
+static point camera;
 
 struct cube {
 	double x, y, z;
@@ -69,14 +72,49 @@ void draw::hexagon(point pt) {
 }
 
 void draw::board() {
-	point hex_indecies[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}};
-	rectf({0, 0, getwidth(), getheight()}, colors::window);
-	for(auto h : hex_indecies) {
-		auto pt = h2p(h);
-		pt = pt + 260;
-		hexagon(pt);
-		char temp[64];
-		szprints(temp, endofs(temp), "%1i, %2i", h.x, h.y);
-		text(pt.x, pt.y, temp);
+	rc_board = {0, 0, getwidth(), getheight()};
+	rectf(rc_board, colors::window);
+	area(rc_board);
+	for(auto y = 0; y < 8; y++) {
+		for(auto x = 0; x < 8; x++) {
+			auto pt = h2p({(short)x, (short)y}) + camera;
+			hexagon(pt);
+			char temp[64];
+			szprints(temp, endofs(temp), "%1i, %2i", x, y);
+			text(pt.x, pt.y, temp);
+		}
 	}
+}
+
+void draw::icon(int x, int y, unit_s type, int count) {
+	int r;
+	draw::state push;
+	fore = colors::red;
+	switch(type) {
+	case GroundForces:
+		r = 8;
+		circlef(x, y, r, fore, 96);
+		circle(x, y, r);
+		break;
+	case PDS:
+		r = 8;
+		rectf({x - r, y - r, x + r, y + r}, fore, 96);
+		rectb({x - r, y - r, x + r, y + r});
+		break;
+	}
+}
+
+bool draw::boardkeys(int id) {
+	const int dx = 16;
+	switch(id) {
+	case KeyLeft: camera.x -= dx; break;
+	case KeyUp: camera.y -= dx; break;
+	case KeyDown: camera.y += dx; break;
+	case KeyRight: camera.x += dx; break;
+	case MouseLeft:
+		break;
+	default:
+		return false;
+	}
+	return true;
 }
