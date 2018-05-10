@@ -87,21 +87,40 @@ void draw::board() {
 }
 
 void draw::icon(int x, int y, unit_s type, int count) {
-	int r;
+	char temp[32];
+	const int r = 12;
+	const int a = r/6;
+	const int h = r*3/2;
 	draw::state push;
 	fore = colors::red;
+	if(count > 1)
+		szprints(temp, endofs(temp), "%1i", count);
+	else
+		temp[0] = 0;
 	switch(type) {
 	case GroundForces:
-		r = 8;
 		circlef(x, y, r, fore, 96);
 		circle(x, y, r);
 		break;
 	case PDS:
-		r = 8;
 		rectf({x - r, y - r, x + r, y + r}, fore, 96);
 		rectb({x - r, y - r, x + r, y + r});
 		break;
+	case Fighters:
+		circlef(x, y, r, fore, 96);
+		circle(x, y, r);
+		line(x + r, y - r + a, x + r, y + r - a);
+		line(x + r + 1, y - r + a, x + r + 1, y + r - a);
+		line(x - r, y - r + a, x - r, y + r - a);
+		line(x - r - 1, y - r + a, x - r - 1, y + r - a);
+		break;
+	case Carrier:
+		rectf({x - h, y - r, x + h, y + r}, fore, 96);
+		rectb({x - h, y - r, x + h, y + r});
+		break;
 	}
+	fore = colors::white;
+	text(x - textw(temp) / 2, y - texth()/2, temp);
 }
 
 bool draw::boardkeys(int id) {

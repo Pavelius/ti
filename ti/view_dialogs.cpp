@@ -270,7 +270,9 @@ unsigned char draw::choose(querry& source, const char* title, const char* (*sour
 		}
 		show_right_buttoms();
 		icon(200, 200, GroundForces, 2);
-		icon(220, 200, PDS, 1);
+		icon(230, 200, PDS, 1);
+		icon(270, 200, Fighters, 1);
+		icon(310, 200, Carrier, 1);
 		auto id = input();
 		switch(id) {
 		case KeyEnter:
