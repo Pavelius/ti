@@ -19,6 +19,10 @@ static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size /
 {0, -size},
 };
 
+static const point planets_n2[] = {{(short)(size / 4), (short)(-size / 3)},
+{(short)(-size / 4), (short)(size / 3)}
+};
+
 point draw::h2p(point hex) {
 	short x = short(size * sqrt_3) * hex.x + (short(size * sqrt_3) / 2) * hex.y;
 	short y = size * 3 / 2 * hex.y;
@@ -71,6 +75,19 @@ void draw::hexagon(point pt) {
 	draw::line(pt + hexagon_offset[5], pt + hexagon_offset[0], colors::border);
 }
 
+static void draw_planet(point pt, int r, color c) {
+	draw::circlef(pt.x, pt.y, r, c, 128);
+	draw::circle(pt.x, pt.y, r, c);
+}
+
+static void draw_planet(point pt, int n, int m, int r, color c) {
+	switch(m) {
+	case 2:
+		draw_planet(pt + planets_n2[n], r, c);
+		break;
+	}
+}
+
 void draw::board() {
 	rc_board = {0, 0, getwidth(), getheight()};
 	rectf(rc_board, colors::window);
@@ -79,6 +96,8 @@ void draw::board() {
 		for(auto x = 0; x < 8; x++) {
 			auto pt = h2p({(short)x, (short)y}) + camera;
 			hexagon(pt);
+			draw_planet(pt, 0, 2, 16, colors::blue);
+			draw_planet(pt, 1, 2, 20, colors::blue);
 			char temp[64];
 			szprints(temp, endofs(temp), "%1i, %2i", x, y);
 			text(pt.x, pt.y, temp);
@@ -89,8 +108,8 @@ void draw::board() {
 void draw::icon(int x, int y, unit_s type, int count) {
 	char temp[32];
 	const int r = 12;
-	const int a = r/6;
-	const int h = r*3/2;
+	const int a = r / 6;
+	const int h = r * 3 / 2;
 	draw::state push;
 	fore = colors::red;
 	if(count > 1)
@@ -120,7 +139,7 @@ void draw::icon(int x, int y, unit_s type, int count) {
 		break;
 	}
 	fore = colors::white;
-	text(x - textw(temp) / 2, y - texth()/2, temp);
+	text(x - textw(temp) / 2, y - texth() / 2, temp);
 }
 
 bool draw::boardkeys(int id) {
