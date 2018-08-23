@@ -144,9 +144,6 @@
     <ClCompile Include="win_io_file.cpp">
       <Filter>platform\win</Filter>
     </ClCompile>
-    <ClCompile Include="crt_memory.cpp">
-      <Filter>library</Filter>
-    </ClCompile>
     <ClCompile Include="crt_parse.cpp">
       <Filter>library</Filter>
     </ClCompile>

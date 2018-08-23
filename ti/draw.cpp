@@ -6,6 +6,12 @@
 #pragma optimize("t", on)
 #endif
 
+extern "C" void* malloc(unsigned size);
+extern "C" void* realloc(void *ptr, unsigned size);
+extern "C" void	free(void* pointer);
+
+using namespace draw;
+
 // Default theme colors
 color colors::active;
 color colors::button;
@@ -62,12 +68,10 @@ sprite*				metrics::h2 = (sprite*)loadb("art/fonts/h2.pma");
 sprite*				metrics::h3 = (sprite*)loadb("art/fonts/h3.pma");
 int					metrics::scroll = 16;
 
-void* rmreserve(void* ptr, unsigned size);
-
 float sqrt(const float x) {
 	const float xhalf = 0.5f*x;
-	union // get bits for floating value
-	{
+	// get bits for floating value
+	union {
 		float x;
 		int i;
 	} u;
@@ -687,6 +691,73 @@ static void alc32(unsigned char* d, int d_scan, const unsigned char* s, int heig
 	}
 }
 
+static unsigned char* skip_v3(unsigned char* s, int h) {
+	const int		cbs = 1;
+	const int		cbd = 1;
+	if(!s || !h)
+		return s;
+	while(true) {
+		unsigned char c = *s++;
+		if(c == 0) {
+			if(--h == 0)
+				return s;
+		} else if(c <= 0x9F) {
+			if(c <= 0x7F)
+				s += c * cbs;
+			else {
+				if(c == 0x80)
+					c = *s++;
+				else
+					c -= 0x80;
+				s++;
+				s += c * cbs;
+			}
+		} else if(c == 0xA0)
+			s++;
+	}
+}
+
+static unsigned char* skip_rle32(unsigned char* s, int h) {
+	const int cbs = 3;
+	if(!s || !h)
+		return s;
+	while(true) {
+		unsigned char c = *s++;
+		if(c == 0) {
+			if(--h == 0)
+				return s;
+		} else if(c <= 0x9F) {
+			if(c <= 0x7F)
+				s += c * cbs;
+			else {
+				if(c == 0x80)
+					c = *s++;
+				else
+					c -= 0x80;
+				s++;
+				s += c * cbs;
+			}
+		} else if(c == 0xA0)
+			s++;
+	}
+}
+
+static unsigned char* skip_alc(unsigned char* s, int h) {
+	const int cbs = 3;
+	if(!s || !h)
+		return s;
+	while(true) {
+		unsigned char c = *s++;
+		if(c == 0) {
+			if(--h == 0)
+				return s;
+		} else if(c <= 0x7F)
+			s += c * cbs;
+		else if(c == 0x80)
+			s++;
+	}
+}
+
 static void scale_line_32(unsigned char* dst, unsigned char* src, int sw, int tw) {
 	const int cbd = 4;
 	int NumPixels = tw;
@@ -705,56 +776,34 @@ static void scale_line_32(unsigned char* dst, unsigned char* src, int sw, int tw
 	}
 }
 
+static bool corrects(const surface& dc, int& x, int& y, int& width, int& height) {
+	if(x + width > dc.width)
+		width = dc.width - x;
+	if(y + height > dc.height)
+		height = dc.height - y;
+	if(width <= 0 || height <= 0)
+		return false;
+	return true;
+}
+
+static bool correctb(int& x1, int& y1, int& w, int& h, int& ox) {
+	int x11 = x1;
+	int x2 = x1 + w;
+	int y2 = y1 + h;
+	if(!correct(x1, y1, x2, y2, draw::clipping))
+		return false;
+	ox = x1 - x11;
+	w = x2 - x1;
+	h = y2 - y1;
+	return true;
+}
+
 static void scale32(
 	unsigned char* d, int d_scan, int d_width, int d_height,
 	unsigned char* s, int s_scan, int s_width, int s_height) {
 	if(!d_width || !d_height || !s_width || !s_height)
 		return;
 	const int cbd = 4;
-	int NumPixels = d_height;
-	int IntPart = (s_height / d_height) * s_scan;
-	int FractPart = s_height % d_height;
-	int E = 0;
-	unsigned char* PrevSource = 0;
-	while(NumPixels-- > 0) {
-		if(s == PrevSource)
-			memcpy(d, d - d_scan, d_width*cbd);
-		else {
-			scale_line_32(d, s, s_width, d_width);
-			PrevSource = s;
-		}
-		d += d_scan;
-		s += IntPart;
-		E += FractPart;
-		if(E >= d_height) {
-			E -= d_height;
-			s += s_scan;
-		}
-	}
-}
-
-static void scale_line_8(unsigned char* dst, unsigned char* src, int sw, int tw) {
-	const int cbd = 1;
-	int NumPixels = tw;
-	int IntPart = (sw / tw)*cbd;
-	int FractPart = sw % tw;
-	int E = 0;
-	while(NumPixels-- > 0) {
-		*((unsigned char*)dst) = *((unsigned char*)src);
-		dst += cbd;
-		src += IntPart;
-		E += FractPart;
-		if(E >= tw) {
-			E -= tw;
-			src += cbd;
-		}
-	}
-}
-
-static void scale8(
-	unsigned char* d, int d_scan, int d_width, int d_height,
-	unsigned char* s, int s_width, int s_height, int s_scan) {
-	const int cbd = 1;
 	int NumPixels = d_height;
 	int IntPart = (s_height / d_height) * s_scan;
 	int FractPart = s_height % d_height;
@@ -1150,14 +1199,8 @@ void draw::rectf(rect rc, color c1, unsigned char alpha) {
 		return;
 	if(rc.x1 == rc.x2)
 		return;
-	switch(canvas->bpp) {
-	case 8:
-		break;
-	case 32:
-		set32(ptr(rc.x1, rc.y1), canvas->scanline,
-			rc.x2 - rc.x1, rc.y2 - rc.y1, c1, alpha);
-		break;
-	}
+	set32(ptr(rc.x1, rc.y1), canvas->scanline,
+		rc.x2 - rc.x1, rc.y2 - rc.y1, c1, alpha);
 }
 
 void draw::rectx(rect rc, color c1) {
@@ -1646,73 +1689,6 @@ int draw::hittest(rect rc, const char* string, unsigned state, point pt) {
 	return -1;
 }
 
-static unsigned char* skip_v3(unsigned char* s, int h) {
-	const int		cbs = 1;
-	const int		cbd = 1;
-	if(!s || !h)
-		return s;
-	while(true) {
-		unsigned char c = *s++;
-		if(c == 0) {
-			if(--h == 0)
-				return s;
-		} else if(c <= 0x9F) {
-			if(c <= 0x7F)
-				s += c * cbs;
-			else {
-				if(c == 0x80)
-					c = *s++;
-				else
-					c -= 0x80;
-				s++;
-				s += c * cbs;
-			}
-		} else if(c == 0xA0)
-			s++;
-	}
-}
-
-static unsigned char* skip_rle32(unsigned char* s, int h) {
-	const int cbs = 3;
-	if(!s || !h)
-		return s;
-	while(true) {
-		unsigned char c = *s++;
-		if(c == 0) {
-			if(--h == 0)
-				return s;
-		} else if(c <= 0x9F) {
-			if(c <= 0x7F)
-				s += c * cbs;
-			else {
-				if(c == 0x80)
-					c = *s++;
-				else
-					c -= 0x80;
-				s++;
-				s += c * cbs;
-			}
-		} else if(c == 0xA0)
-			s++;
-	}
-}
-
-static unsigned char* skip_alc(unsigned char* s, int h) {
-	const int cbs = 3;
-	if(!s || !h)
-		return s;
-	while(true) {
-		unsigned char c = *s++;
-		if(c == 0) {
-			if(--h == 0)
-				return s;
-		} else if(c <= 0x7F)
-			s += c * cbs;
-		else if(c == 0x80)
-			s++;
-	}
-}
-
 void draw::image(int x, int y, const sprite* e, int id, int flags, unsigned char alpha) {
 	const int cbd = 1;
 	int x2, y2;
@@ -1884,7 +1860,7 @@ void draw::stroke(int x, int y, const sprite* e, int id, int flags, unsigned cha
 	tr.b = 255;
 	auto fr = e->get(id);
 	rect rc = fr.getrect(x, y, flags);
-	draw::surface canvas(rc.width() + 2, rc.height() + 2, 32);
+	surface canvas(rc.width() + 2, rc.height() + 2, 32);
 	x--; y--;
 	if(true) {
 		draw::state push;
@@ -1957,29 +1933,7 @@ void draw::stroke(int x, int y, const sprite* e, int id, int flags, unsigned cha
 	}
 }
 
-static bool corrects(const draw::surface& dc, int& x, int& y, int& width, int& height) {
-	if(x + width > dc.width)
-		width = dc.width - x;
-	if(y + height > dc.height)
-		height = dc.height - y;
-	if(width <= 0 || height <= 0)
-		return false;
-	return true;
-}
-
-static bool correctb(int& x1, int& y1, int& w, int& h, int& ox) {
-	int x11 = x1;
-	int x2 = x1 + w;
-	int y2 = y1 + h;
-	if(!correct(x1, y1, x2, y2, draw::clipping))
-		return false;
-	ox = x1 - x11;
-	w = x2 - x1;
-	h = y2 - y1;
-	return true;
-}
-
-void draw::blit(surface& ds, int x1, int y1, int w, int h, unsigned flags, draw::surface& ss, int xs, int ys) {
+void draw::blit(surface& ds, int x1, int y1, int w, int h, unsigned flags, surface& ss, int xs, int ys) {
 	if(ss.bpp != ds.bpp)
 		return;
 	int ox;
@@ -2096,47 +2050,55 @@ rect sprite::frame::getrect(int x, int y, unsigned flags) const {
 	return{x, y, x2, y2};
 }
 
-draw::surface::surface() : width(0), height(0), scanline(0), bpp(32), bits(0) {
+surface::plugin* surface::plugin::first;
+
+surface::surface() : width(0), height(0), scanline(0), bpp(32), bits(0) {
 }
 
-draw::surface::surface(int width, int height, int bpp) : surface() {
+surface::surface(int width, int height, int bpp) : surface() {
 	resize(width, height, bpp, true);
 }
 
-draw::surface::plugin* draw::surface::plugin::first;
-
-draw::surface::plugin::plugin(const char* name, const char* filter) : name(name), filter(filter), next(0) {
+surface::plugin::plugin(const char* name, const char* filter) : name(name), filter(filter), next(0) {
 	seqlink(this);
 }
 
-unsigned char* draw::surface::ptr(int x, int y) {
+unsigned char* surface::ptr(int x, int y) {
 	return bits + y * scanline + x * (bpp / 8);
 }
 
-draw::surface::~surface() {
+surface::~surface() {
 	resize(0, 0, 0, true);
 }
 
-void draw::surface::resize(int width, int height, int bpp, bool alloc_memory) {
+unsigned char* surface::allocator(unsigned char* bits, unsigned size) {
+	if(!size) {
+		free(bits);
+		bits = 0;
+	}
+	if(!bits)
+		bits = (unsigned char*)malloc(size);
+	else
+		bits = (unsigned char*)realloc(bits, size);
+	return bits;
+}
+
+void surface::resize(int width, int height, int bpp, bool alloc_memory) {
 	if(this->width == width && this->height == height && this->bpp == bpp)
 		return;
 	this->bpp = bpp;
 	this->width = width;
 	this->height = height;
 	this->scanline = color::scanline(width, bpp);
-	if(width) {
-		unsigned size = (height + 1)*scanline;
-		if(alloc_memory)
-			bits = (unsigned char*)rmreserve(bits, size);
-	} else
-		bits = (unsigned char*)rmreserve(bits, 0);
+	if(alloc_memory)
+		bits = allocator(bits, (height + 1)*scanline);
 }
 
-void draw::surface::flipv() {
+void surface::flipv() {
 	color::flipv(bits, scanline, height);
 }
 
-void draw::surface::convert(int new_bpp, color* pallette) {
+void surface::convert(int new_bpp, color* pallette) {
 	if(bpp == new_bpp) {
 		bpp = iabs(new_bpp);
 		return;
@@ -2146,22 +2108,22 @@ void draw::surface::convert(int new_bpp, color* pallette) {
 	if(iabs(new_bpp) <= bpp)
 		color::convert(bits, width, height, new_bpp, 0, bits, bpp, pallette, old_scanline);
 	else {
-		unsigned char* new_bits = (unsigned char*)rmreserve(0, (height + 1)*scanline);
+		unsigned char* new_bits = (unsigned char*)allocator(0, (height + 1)*scanline);
 		color::convert(
 			new_bits, width, height, new_bpp, pallette,
 			bits, bpp, pallette, old_scanline);
-		rmreserve(bits, 0);
+		allocator(bits, 0);
 		bits = new_bits;
 	}
 	bpp = iabs(new_bpp);
 }
 
-draw::renderplugin::renderplugin(int priority) : next(0), priority(priority) {
+renderplugin::renderplugin(int priority) : next(0), priority(priority) {
 	if(!first)
 		first = this;
 	else {
 		auto p = first;
-		while(p->next && p->next->priority<priority)
+		while(p->next && p->next->priority < priority)
 			p = p->next;
 		this->next = p->next;
 		p->next = this;
@@ -2169,7 +2131,7 @@ draw::renderplugin::renderplugin(int priority) : next(0), priority(priority) {
 }
 
 bool draw::defproc(int id) {
-	for(auto p = draw::renderplugin::first; p; p = p->next) {
+	for(auto p = renderplugin::first; p; p = p->next) {
 		if(p->translate(id))
 			return true;
 	}

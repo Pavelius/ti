@@ -100,7 +100,7 @@ struct pma {
 	const pma*			getheader(const char* name) const;
 	const char*			getstring(int id) const;
 };
-struct sprite : public pma {
+struct sprite : pma {
 	enum flagse { NoIndex = 1 };
 	enum encodes { Auto, RAW, RLE, ALC, RAW8, RLE8 };
 	struct frame {
@@ -198,6 +198,7 @@ struct surface {
 	surface(const char* url, color* pallette = 0);
 	~surface();
 	operator bool() const { return bits != 0; }
+	static unsigned char* allocator(unsigned char* bits, unsigned size);
 	void				clear() { resize(0, 0, 0, true); }
 	void				convert(int bpp, color* pallette);
 	void				flipv();
@@ -206,8 +207,8 @@ struct surface {
 	void				resize(int width, int height, int bpp, bool alloc_memory);
 	void				write(const char* url, color* pallette);
 };
-struct state // Push state in stack
-{
+// Push state in stack
+struct state {
 	state();
 	~state();
 private:

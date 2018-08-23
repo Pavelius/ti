@@ -1,7 +1,8 @@
 #pragma once
 
-void* rmreserve(void* ptr, unsigned size);
-unsigned rmoptimal(unsigned need_count);
+extern "C" void* malloc(unsigned size);
+extern "C" void* realloc(void *ptr, unsigned size);
+extern "C" void	free(void* pointer);
 
 template <class T1, class T2>
 class amap {
@@ -12,17 +13,29 @@ class amap {
 	element* data;
 	unsigned count;
 	unsigned count_maximum;
+	static unsigned getoptimal(unsigned need_count) {
+		unsigned count_maximum = 64;
+		while(count_maximum < 256 * 256 * 256) {
+			if(need_count < count_maximum)
+				break;
+			count_maximum = count_maximum << 1;
+		}
+		return count_maximum;
+	}
 	void reserve() {
 		if(data && count_maximum >= count)
 			return;
-		count_maximum = rmoptimal(count + 1);
-		data = (element*)rmreserve(data, count_maximum*sizeof(element));
+		count_maximum = getoptimal(count+1);
+		if(!data)
+			data = (element*)malloc(count_maximum * sizeof(element));
+		else
+			data = (element*)realloc(data, count_maximum * sizeof(element));
 	}
 public:
 	typedef T1 key_type;
 	typedef T2 value_type;
 	constexpr amap() : data(0), count(0) {}
-	~amap() { if(data) rmreserve(data, 0); }
+	~amap() { if(data) free(data); }
 	constexpr element* begin() { return data; }
 	constexpr element* end() { return data + count; }
 	T2* add(T1 k) {
