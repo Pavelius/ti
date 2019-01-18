@@ -10,6 +10,9 @@ enum column_size_s : unsigned char {
 enum select_mode_s : unsigned char {
 	SelectCell, SelectText, SelectRow,
 };
+enum column_type_s : unsigned char {
+	Text, Number
+};
 struct runable {
 	virtual void			execute() const = 0;
 	virtual int				getid() const = 0;
@@ -84,6 +87,25 @@ struct list : control {
 	void					treemark(rect rc, int index, int level) const;
 	virtual bool			treemarking(bool run) { return true; }
 	void					view(const rect& rc) override;
+};
+struct column {
+	unsigned				flags;
+	const char*				id;
+	const char*				name;
+	int						width;
+	bool operator==(const char* id) const;
+	explicit operator bool() const { return id != 0; }
+	column_type_s			getcontol() const { return column_type_s(flags & 0xF); }
+	int						gettotalwidth() const;
+};
+struct table : list {
+	const column*			columns;
+	constexpr table(const column* columns) : columns(columns) {}
+	virtual const char*		getheader(char* result, const char* result_max, int column) const;
+	const char*				getname(char* result, const char* result_max, int line, int column) const override { return ""; }
+	virtual int				getnumber(int line, int column) const { return 0; }
+	void					row(const rect &rc, int index) override;
+	int						rowheader(const rect& rc) const;
 };
 }
 }

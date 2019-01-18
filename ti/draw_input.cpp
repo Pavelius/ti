@@ -661,11 +661,108 @@ static void rander_board() {
 	}
 }
 
+struct control_player_table : table {
+	adat<player_s, 6>		source;
+	bool					focusable;
+	int getmaximum() const override {
+		return source.count;
+	}
+	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
+		if(columns[column] == "name")
+			return getstr(source[line]);
+		else if(columns[column] == "politic")
+			return getstr(players[source[line]].politic);
+		return 0;
+	}
+	int getnumber(int line, int column) const override {
+		if(columns[column] == "resource")
+			return planet::get(source[line], &planet::getresource);
+		else if(columns[column] == "influence")
+			return planet::get(source[line], &planet::getinfluence);
+		else if(columns[column] == "planet_count")
+			return planet::get(source[line], &planet::getone);
+		else if(columns[column] == "fleet")
+			return players[source[line]].getfleet();
+		else if(columns[column] == "command")
+			return players[source[line]].getcommand();
+		else if(columns[column] == "strategy")
+			return players[source[line]].getstrategy();
+		return 0;
+	}
+	player_s getvalue() const {
+		return source[current];
+	}
+	static const column* getcolumns() {
+		static constexpr column columns[] = {{Text, "name", "Наименование", 160},
+		{Text, "politic", "Политика", 100},
+		{Number | AlignRight, "resource", "Рс", 32},
+		{Number | AlignRight, "influence", "Вл", 32},
+		{Number | AlignRight, "planet_count", "Пл", 32},
+		{Number | AlignRight, "fleet", "Флот", 32},
+		{Number | AlignRight, "command", "Ком", 32},
+		{Number | AlignRight, "strategy", "Стр", 32},
+		{}};
+		return columns;
+	}
+	static int compare(const void* p1, const void* p2) {
+		auto i1 = *((player_s*)p1);
+		auto i2 = *((player_s*)p2);
+		auto d = players[i1].getinitiative() - players[i2].getinitiative();
+		if(d == 0)
+			return strcmp(getstr(i1), getstr(i2));
+		return d;
+	}
+	void initialize() {
+		source.clear();
+		for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
+			if(players[i].ingame)
+				source.add(i);
+		}
+		qsort(source.data, source.count, sizeof(source.data[0]), compare);
+	}
+	bool isfocusable() const {
+		return focusable;
+	}
+	control_player_table() : table(getcolumns()), focusable(false) {
+		initialize();
+	}
+};
+
+static bool player_info_tips(int x, int y, int radius) {
+	rect rc = {x - radius, y - radius, x + radius, y + radius};
+	draw::circlef(x, y, radius, colors::form, 128);
+	draw::circle(x, y, radius);
+	return areb(rc);
+}
+
+static void show_statistic() {
+	rect rc;
+	control_player_table mv;
+	mv.current = -1;
+	rc.x1 = gui.border * 2;
+	rc.y1 = gui.border * 2;
+	rc.x2 = rc.x1 + mv.columns->gettotalwidth();
+	rc.y2 = rc.y1 + mv.getrowheight() * (mv.source.getcount() + 1);
+	window(rc, false, false);
+	mv.show_border = false;
+	mv.show_selection = false;
+	mv.view(rc);
+}
+
+static int show_right_buttoms() {
+	auto radius = 16;
+	auto x = getwidth() - radius - gui.border;
+	auto y = gui.padding + gui.border + radius;
+	if(player_info_tips(x, y, radius))
+		show_statistic();
+	return y + radius * 2;
+}
+
 int	answer_info::choose(bool cancel_button) const {
 	while(ismodal()) {
-		auto x = getwidth() - gui.right_width - gui.border - gui.padding;
-		auto y = gui.padding + gui.border;
 		rander_board();
+		auto x = getwidth() - gui.right_width - gui.border - gui.padding;
+		auto y = show_right_buttoms();
 		for(auto& e : elements)
 			y += windowb(x, y, gui.right_width, e.getname(), cmd(breakparam, e.param));
 		if(cancel_button)
