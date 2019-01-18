@@ -50,41 +50,41 @@ enum command_s {
 };
 struct unit;
 struct weapon {
-	char				chance;
-	char				count;
-	char				bonus;
-	char				reroll;
+	char						chance;
+	char						count;
+	char						bonus;
+	char						reroll;
 	constexpr weapon() : chance(0), count(1), bonus(0), reroll(0) {}
 	constexpr weapon(char chance) : chance(chance), count(1), bonus(0), reroll(0) {}
 	constexpr weapon(char chance, char count) : chance(chance), count(count), bonus(0), reroll(0) {}
 	explicit operator bool() const { return chance != 0; }
-	void				clear();
-	int					roll() const;
+	void						clear();
+	int							roll() const;
 };
 struct player {
-	char				command, strategy, fleet, goods;
-	cflags<tech_s>		technologies;
-	politic_s			politic;
-	bool				ingame;
-	bool				interactive;
+	char						command, strategy, fleet, goods;
+	cflags<tech_s>				technologies;
+	politic_s					politic;
+	bool						ingame;
+	bool						interactive;
 	//
-	unit*				create(unit_s id, unit* planet);
-	void				initialize();
-	bool				is(player_s value) const;
-	int					getcommand() const { return command; }
-	int					getfleet() const;
-	player_s			getindex() const;
-	int					getinitiative() const;
-	static int			getinitiative(politic_s value);
-	int					getstrategy() const { return strategy; }
-	int					getgoods() const { return goods; }
+	unit*						create(unit_s id, unit* planet);
+	void						initialize();
+	bool						is(player_s value) const;
+	int							getcommand() const { return command; }
+	int							getfleet() const;
+	player_s					getindex() const;
+	int							getinitiative() const;
+	static int					getinitiative(politic_s value);
+	int							getstrategy() const { return strategy; }
+	int							getgoods() const { return goods; }
 };
-extern player			players[SardakkNOrr + 1];
+extern player					players[SardakkNOrr + 1];
 struct unit {
-	unit_s				type;
-	player_s			player;
-	unit*				parent;
-	bool				used;
+	unit_s						type;
+	player_s					player;
+	unit*						parent;
+	bool						used;
 	constexpr unit() : type(NoUnit), player(NoPlayer), parent(0), used(false) {}
 	constexpr unit(unit_s type) : type(type), player(NoPlayer), parent(0), used(false) {}
 	constexpr unit(unit_s type, unit* parent, player_s player) : type(type), player(player), parent(parent), used(false) {}
@@ -92,68 +92,65 @@ struct unit {
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
 	~unit();
-	bool				build(unit_s object, bool run);
-	void				destroy();
-	unit*				get(unit_s parent_type);
-	static int			getavailable(unit_s type);
-	int					getcapacity() const;
-	unit_s				getcapacitylimit() const;
-	int					getcarried() const;
-	static int			getcount(unit_s type, player_s player, unit* location = 0);
-	int					getfightersupport();
-	virtual int			getinfluence() const { return 0; }
-	int					getjoincount(unit_s object) const;
-	int					getmaxhits() const;
-	int					getmovement() const;
-	virtual const char*	getname() const;
-	static int			getproduction(unit_s type);
-	int					getproduction() const { return getproduction(type); }
-	virtual int			getresource() const;
-	int					getstrenght() const { return getweapon().chance; }
-	weapon				getweapon() const;
-	weapon				getweapon(bool attacker, player_s opponent, char round) const;
-	int					getweight() const;
-	bool				is(player_s type) const { return players[player].is(type); }
-	bool				iscarrier() const { return getcapacity() != 0; }
-	bool				isinvaders() const;
-	bool				isplanetary() const { return isplanetary(type); }
-	static bool			isplanetary(unit_s type);
-	bool				in(const unit* parent) const;
+	bool						build(unit_s object, bool run);
+	void						destroy();
+	unit*						get(unit_s parent_type);
+	static int					getavailable(unit_s type);
+	int							getcapacity() const;
+	unit_s						getcapacitylimit() const;
+	int							getcarried() const;
+	static int					getcount(unit_s type, player_s player, unit* location = 0);
+	int							getfightersupport();
+	virtual int					getinfluence() const { return 0; }
+	int							getjoincount(unit_s object) const;
+	int							getmaxhits() const;
+	int							getmovement() const;
+	virtual const char*			getname() const;
+	static int					getproduction(unit_s type);
+	int							getproduction() const { return getproduction(type); }
+	virtual int					getresource() const;
+	int							getstrenght() const { return getweapon().chance; }
+	weapon						getweapon() const;
+	weapon						getweapon(bool attacker, player_s opponent, char round) const;
+	int							getweight() const;
+	bool						is(player_s type) const { return players[player].is(type); }
+	bool						iscarrier() const { return getcapacity() != 0; }
+	bool						isinvaders() const;
+	bool						isplanetary() const { return isplanetary(type); }
+	static bool					isplanetary(unit_s type);
+	bool						in(const unit* parent) const;
 };
 struct planet : unit {
-	const char*			name;
-	tech_color_s		tech_color;
-	wormhole_s			wormhole;
-	char				resource;
-	char				influence;
+	const char*					name;
+	tech_color_s				tech_color;
+	wormhole_s					wormhole;
+	char						resource;
+	char						influence;
 	constexpr planet(const char* name, char solar, char resource, char influence,
 		tech_color_s tech_color = NoTech,
 		wormhole_s wormhole = NoHole);
 	constexpr planet(const char* name, player_s player, char resource, char influence);
-	static int			get(player_s player, int(planet::*getproc)() const);
-	virtual const char*	getname() const override { return name; }
-	virtual int			getinfluence() const override;
-	int					getone() const { return 1; }
-	virtual int			getresource() const override;
-	static void			refresh();
+	static int					get(player_s player, int(planet::*getproc)() const);
+	virtual const char*			getname() const override { return name; }
+	virtual int					getinfluence() const override;
+	int							getone() const { return 1; }
+	virtual int					getresource() const override;
+	static void					refresh();
 };
 struct army : adat<unit*, 32> {
-	void				removecasualty(player_s player);
-	void				sort(int (unit::*proc)() const);
+	void						removecasualty(player_s player);
+	void						sort(int (unit::*proc)() const);
 };
 struct gui_info {
-	unsigned char		border;
-	unsigned char		opacity, opacity_disabled, opacity_hilighted;
-	short				button_width, window_width, window_height, tips_width, control_border;
-	short				padding;
-	void				initialize();
+	unsigned char				border;
+	unsigned char				opacity, opacity_disabled, opacity_hilighted;
+	short						button_width, window_width, window_height, tips_width, control_border;
+	short						padding;
+	void						initialize();
 };
 struct string : stringcreator {
 	string();
 	void						addidentifier(const char* identifier) override;
-	void						addcost();
-	void						addplayerincome();
-	void						addstrenght();
 private:
 	const struct army*			army;
 	char						buffer[8192];

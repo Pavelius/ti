@@ -118,11 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="adat.h" />
-    <ClInclude Include="amap.h" />
-    <ClInclude Include="aref.h" />
     <ClInclude Include="bstream.h" />
-    <ClInclude Include="cflags.h" />
     <ClInclude Include="collection.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="converter.h" />
@@ -142,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="action.cpp" />
+    <ClCompile Include="answer.cpp" />
     <ClCompile Include="querry.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
