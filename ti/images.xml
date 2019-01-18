@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<convert output="art" input="d:\projects\ti\art">
+  <library output="...\fonts\font">
+    <font input="Segoe UI" height="16"/>
+  </library>
+  <library output="...\fonts\h1">
+    <font input="Segoe UI" height="22"/>
+  </library>
+  <library output="...\fonts\h2">
+    <font input="Segoe UI" height="18"/>
+  </library>
+  <library output="...\fonts\h3">
+    <font input="Segoe UI" height="16"/>
+  </library>
+  <library output="...\sprites\portraits" count="18">
+    <group input="...\portraits">
+      <png input="...\arborec"/>
+      <png input="...\barony"/>
+      <png input="...\creus"/>
+      <png input="...\hacan"/>
+      <png input="...\jelnar"/>
+      <png input="...\lazax"/>
+      <png input="...\mentax"/>
+      <png input="...\mindnet"/>
+      <png input="...\muaat"/>
+      <png input="...\naalu"/>
+      <png input="...\necro"/>
+      <png input="...\norr"/>
+      <png input="...\saar"/>
+      <png input="...\sol"/>
+      <png input="...\winnu"/>
+      <png input="...\xxcha"/>
+      <png input="...\yin"/>
+      <png input="...\yssaril"/>
+    </group>
+  </library>
+</convert>

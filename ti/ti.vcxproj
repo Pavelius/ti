@@ -136,6 +136,7 @@
   <ItemGroup>
     <ClCompile Include="action.cpp" />
     <ClCompile Include="answer.cpp" />
+    <ClCompile Include="png.cpp" />
     <ClCompile Include="querry.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -167,7 +168,6 @@
     <ClCompile Include="string_value.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
-    <ClCompile Include="uicommand.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="view_dialogs.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -176,6 +176,15 @@
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />
     <ClCompile Include="win_io_file.cpp" />
+    <ClCompile Include="zip.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="images.xml">
+      <SubType>Designer</SubType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)xmlimg.exe "$(SolutionDir)ti\images.xml"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)art\fonts\font.pma</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

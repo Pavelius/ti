@@ -81,9 +81,6 @@
     <ClCompile Include="army.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="uicommand.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="color.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
@@ -159,6 +156,12 @@
     <ClCompile Include="answer.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="png.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="zip.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">
@@ -179,5 +182,10 @@
     <Filter Include="Логика">
       <UniqueIdentifier>{26bba49b-c4ee-4110-9c33-163b7b09dbcf}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="images.xml">
+      <Filter>Графика</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

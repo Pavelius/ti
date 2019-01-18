@@ -26,3 +26,7 @@ void answer_info::addv(int param, const char* format, const char* format_param) 
 void answer_info::add(int param, const char* format, ...) {
 	addv(param, format, xva_start(format));
 }
+
+int	answer_info::choose(bool cancel_button, const char* format, ...) const {
+	return choosev(cancel_button, 0, "art/portraits/mentax.png", format, xva_start(format));
+}

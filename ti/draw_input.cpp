@@ -44,24 +44,33 @@ static control*			current_focus_control;
 static control*			current_execute_control;
 extern rect				sys_static_area;
 int						distance(point p1, point p2);
-gui_info				gui;
 const short				size = 192;
 //const short size = 192;
 const double			sqrt_3 = 1.732050807568877;
 const double			cos_30 = 0.86602540378;
 
-void gui_info::initialize() {
-	memset(this, 0, sizeof(*this));
-	opacity = 220;
-	opacity_disabled = 50;
-	border = 8;
-	padding = 4;
-	window_width = 400;
-	right_width = 220;
-	tips_width = 200;
-	button_width = 64;
-	opacity_hilighted = 200;
-}
+struct gui_info {
+	unsigned char		border;
+	unsigned char		opacity, opacity_disabled, opacity_hilighted;
+	short				button_width, window_width, window_height, hero_width;
+	short				tips_width, control_border, right_width;
+	short				padding;
+
+	void initialize() {
+		memset(this, 0, sizeof(*this));
+		opacity = 220;
+		opacity_disabled = 50;
+		border = 8;
+		padding = 4;
+		window_width = 400;
+		hero_width = 64;
+		right_width = 220;
+		tips_width = 200;
+		button_width = 64;
+		opacity_hilighted = 200;
+	}
+
+} gui;
 
 static void set_focus_callback() {
 	auto id = getnext(draw::getfocus(), hot.param);
@@ -304,8 +313,11 @@ static areas window(rect rc, bool disabled = false, bool hilight = true, int bor
 	auto op = gui.opacity;
 	if(disabled)
 		op = op / 2;
-	else if(hilight && (rs == AreaHilited || rs == AreaHilitedPressed))
-		op = gui.opacity_hilighted;
+	else if(hilight && (rs == AreaHilited || rs == AreaHilitedPressed)) {
+		draw::rectf(rc, colors::button);
+		draw::rectb(rc, b);
+		return rs;
+	}
 	draw::rectf(rc, c, op);
 	draw::rectb(rc, b);
 	return rs;
@@ -330,7 +342,7 @@ static int windowf(int x, int y, int width, const char* string) {
 	return height + gui.border * 2 + gui.padding;
 }
 
-static int window(int x, int y, int width, const char* string, int right_width = 0) {
+static int window(int x, int y, int width, const char* string, int right_width = 0, areas* pa = 0) {
 	auto right_side = (right_width != 0);
 	rect rc = {x, y, x + width, y};
 	draw::state push;
@@ -342,9 +354,43 @@ static int window(int x, int y, int width, const char* string, int right_width =
 		rc.x1 = x;
 		rc.x2 = rc.x1 + w1;
 	}
-	window(rc, false, false);
+	auto a = window(rc, false, false);
+	if(pa)
+		*pa = a;
 	render_text(x, y, rc.width(), string);
-	return height + gui.border * 2 + gui.padding;
+	return height + gui.border * 2;
+}
+
+static void render_picture(int x, int y, const char* id) {
+	static amap<const char*, surface> avatars;
+	auto p = avatars.find(id);
+	if(!p) {
+		p = avatars.add(id, surface());
+		p->value.resize(gui.hero_width, gui.hero_width, 32, true);
+		surface e(id, 0);
+		if(e)
+			blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
+	}
+	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
+	rectb({x, y, x + gui.hero_width, y + gui.hero_width}, colors::border);
+}
+
+static int windowp(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
+	x -= width_picture;
+	auto width = width_picture + width_text;
+	rect rc = {x, y, x + width, y};
+	rect rc1 = {x + width_picture + gui.padding, y, x + width, y};
+	draw::state push;
+	draw::font = metrics::font;
+	auto height = textf(rc1, string);
+	if(height < width_picture)
+		height = width_picture;
+	auto a = window({x, y, x + width, y + height}, false, false);
+	if(pa)
+		*pa = a;
+	render_picture(x, y, picture);
+	render_text(x + width_picture + gui.padding, y, width_text, string);
+	return height + gui.border * 2;
 }
 
 static int windowb(int x, int y, int width, const char* string, const runable& e, int border = 0, unsigned key = 0, const char* tips = 0) {
@@ -647,13 +693,17 @@ static void draw_planet(point pt, int n, int m, int r, color c) {
 	}
 }
 
-static void rander_board() {
+static void render_board() {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
 	area(last_board);
 	for(auto y = 0; y < 8; y++) {
 		for(auto x = 0; x < 8; x++) {
 			auto pt = h2p({(short)x, (short)y}) - camera;
+			rect rcp = {pt.x - size, pt.y - size, pt.x + size, pt.y + size};
+			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
+				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
+				continue;
 			hexagon(pt);
 			draw_planet(pt, 0, 2, 16, colors::blue);
 			draw_planet(pt, 1, 2, 20, colors::blue);
@@ -758,11 +808,23 @@ static int show_right_buttoms() {
 	return y + radius * 2;
 }
 
-int	answer_info::choose(bool cancel_button) const {
+int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format, const char* format_param) const {
+	int x, y;
+	string sb;
 	while(ismodal()) {
-		rander_board();
-		auto x = getwidth() - gui.right_width - gui.border - gui.padding;
-		auto y = show_right_buttoms();
+		render_board();
+		x = getwidth() - gui.window_width - gui.border * 2;
+		y = gui.border * 2;
+		if(format) {
+			sb.clear();
+			sb.addv(format, format_param);
+			if(picture)
+				y += windowp(x, y, gui.hero_width, gui.window_width, picture, sb);
+			else
+				y += window(x, y, gui.window_width, sb, gui.window_width);
+			y += gui.padding;
+		}
+		x = getwidth() - gui.right_width - gui.border * 2;
 		for(auto& e : elements)
 			y += windowb(x, y, gui.right_width, e.getname(), cmd(breakparam, e.param));
 		if(cancel_button)

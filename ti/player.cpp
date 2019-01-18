@@ -1,11 +1,11 @@
 #include "main.h"
 
-struct player_info {
+struct player_statistic {
 	const char*			name;
 	unit_s				start_units[16];
 	cflags<tech_s>		start_tech;
 };
-static constexpr player_info player_data[] = {{""},
+static constexpr player_statistic player_data[] = {{""},
 {"The Xxcha Kingdom",
 {Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
 {AntimassDeflectors, EnviroCompensator}
@@ -49,7 +49,7 @@ static constexpr player_info player_data[] = {{""},
 };
 getstr_enum(player);
 
-player players[SardakkNOrr + 1];
+player_info players[SardakkNOrr + 1];
 
 static int compare_planets(const void* p1, const void* p2) {
 	auto e1 = *((planet**)p1);
@@ -57,22 +57,22 @@ static int compare_planets(const void* p1, const void* p2) {
 	return e2->resource - e1->resource;
 }
 
-bool player::is(player_s value) const {
+bool player_info::is(player_s value) const {
 	return (this - players) == value;
 }
 
-int player::getfleet() const {
+int player_info::getfleet() const {
 	auto result = fleet;
 	if(is(TheBaronyOfLetnev))
 		result++;
 	return result;
 }
 
-unit* player::create(unit_s id, unit* planet) {
+unit* player_info::create(unit_s id, unit* planet) {
 	return new unit(id, planet, getindex());
 }
 
-void player::initialize() {
+void player_info::initialize() {
 	auto player = getindex();
 	auto& pi = player_data[player];
 	interactive = false;
@@ -105,13 +105,50 @@ void player::initialize() {
 	strategy = 2;
 }
 
-player_s player::getindex() const {
+player_s player_info::getindex() const {
 	return (player_s)(this - players);
 }
 
-int	player::getinitiative() const {
+int	player_info::getinitiative() const {
 	auto result = getinitiative(politic);
 	if(is(TheNaaluCollective))
 		result = 0;
 	return result;
+}
+
+static unsigned select(player_info** source, unsigned maximum) {
+	auto ps = source;
+	auto pe = ps + maximum;
+	for(auto& e : players) {
+		if(!e)
+			continue;
+		if(ps < pe)
+			*ps++ = &e;
+	}
+	return ps - source;
+}
+
+static void strategic_phase() {
+	adat<player_info*, 32> source;
+	source.count = select(source.data, source.getmaximum());
+	for(auto p : source)
+		p->politic = NoPolitic;
+	adat<politic_s, Imperial + 1> politics;
+	for(auto i = Initiative; i <= Imperial; i = (politic_s)(i + 1))
+		politics.add(i);
+	for(auto p : source) {
+		if(!p->iscomputer()) {
+			answer_info ai;
+			for(auto i : politics)
+				ai.add(i, getstr(i));
+			ai.sort();
+			p->politic = (politic_s)ai.choose(false, "Эта стратегическая фаза. Вам нужно выбрать **одну** политику, которую будете использовать на этот ход. Будьте внимательны. Ваши враги также выбирают одну политику из этого же списка.");
+		} else
+			p->politic = politics.data[rand() % politics.getcount()];
+		politics.remove(p->politic);
+	}
+}
+
+void player_info::make_move() {
+	strategic_phase();
 }

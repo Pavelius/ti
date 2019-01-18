@@ -16,6 +16,6 @@ static struct politic_info {
 };
 getstr_enum(politic);
 
-int player::getinitiative(politic_s value) {
+int player_info::getinitiative(politic_s value) {
 	return politic_data[value].initiative;
 }

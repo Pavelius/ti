@@ -44,10 +44,6 @@ enum unit_s : unsigned char {
 	GroundForces, Fighters, PDS,
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
 };
-enum command_s {
-	NoCommand,
-	AcceptButton, YesButton, NoButton, CancelButton
-};
 struct unit;
 struct weapon {
 	char						chance;
@@ -61,16 +57,18 @@ struct weapon {
 	void						clear();
 	int							roll() const;
 };
-struct player {
+struct player_info {
 	char						command, strategy, fleet, goods;
 	cflags<tech_s>				technologies;
 	politic_s					politic;
 	bool						ingame;
 	bool						interactive;
+	explicit operator bool() const { return ingame; }
 	//
 	unit*						create(unit_s id, unit* planet);
 	void						initialize();
 	bool						is(player_s value) const;
+	bool						iscomputer() const { return !interactive; }
 	int							getcommand() const { return command; }
 	int							getfleet() const;
 	player_s					getindex() const;
@@ -78,8 +76,9 @@ struct player {
 	static int					getinitiative(politic_s value);
 	int							getstrategy() const { return strategy; }
 	int							getgoods() const { return goods; }
+	static void					make_move();
 };
-extern player					players[SardakkNOrr + 1];
+extern player_info				players[SardakkNOrr + 1];
 struct unit {
 	unit_s						type;
 	player_s					player;
@@ -141,13 +140,6 @@ struct army : adat<unit*, 32> {
 	void						removecasualty(player_s player);
 	void						sort(int (unit::*proc)() const);
 };
-struct gui_info {
-	unsigned char				border;
-	unsigned char				opacity, opacity_disabled, opacity_hilighted;
-	short						button_width, window_width, window_height, tips_width, control_border, right_width;
-	short						padding;
-	void						initialize();
-};
 struct string : stringcreator {
 	string();
 	void						addidentifier(const char* identifier) override;
@@ -161,14 +153,14 @@ struct answer_info : string {
 		const char*				text;
 		const char*				getname() const { return text; }
 	};
-	typedef void(*tips_type)(stringcreator& sb, const element& e);
+	typedef void(*tips_proc)(stringcreator& sb, const element& e);
 	adat<element, 8>			elements;
 	constexpr explicit operator bool() const { return elements.count != 0; }
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(bool cancel_button = false) const;
+	int							choose(bool cancel_button, const char* format, ...) const;
+	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format, const char* format_param) const;
 	void						sort();
 };
-extern gui_info					gui_data;
 extern unit						solars[38];
 extern adat<unit, 256>			units;
