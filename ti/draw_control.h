@@ -10,8 +10,9 @@ enum column_size_s : unsigned char {
 enum select_mode_s : unsigned char {
 	SelectCell, SelectText, SelectRow,
 };
-enum column_type_s : unsigned char {
-	Text, Number
+enum column_type_s {
+	Text = 0x00000, Number = 0x10000,
+	ControlMask = 0xF0000
 };
 struct runable {
 	virtual void			execute() const = 0;
@@ -95,7 +96,7 @@ struct column {
 	int						width;
 	bool operator==(const char* id) const;
 	explicit operator bool() const { return id != 0; }
-	column_type_s			getcontol() const { return column_type_s(flags & 0xF); }
+	column_type_s			getcontol() const { return column_type_s(flags & ControlMask); }
 	int						gettotalwidth() const;
 };
 struct table : list {
