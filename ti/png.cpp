@@ -407,35 +407,35 @@ static struct png_bitmap_plugin : public draw::surface::plugin {
 
 	png_bitmap_plugin() : plugin("png", "PNG images\0*.png\0") {}
 
-	bool decode(unsigned char* output, const unsigned char* input, unsigned size, int& output_scanline) override {
+	bool decode(unsigned char* output, int output_bpp, const unsigned char* input, unsigned input_size) override {
 		//return decode_test(output, input, size);
-		int image_width, image_height, bpp, image_size;
+		int image_width, image_height, input_bpp, image_size;
 		if(!output)
 			return false;
-		if(!inspect(image_width, image_height, bpp, input, size))
+		if(!inspect(image_width, image_height, input_bpp, input, input_size))
 			return false;
+		auto bpp = iabs(input_bpp);
 		// Get encoder plugin
 		auto zlib = converter::find("zip"); assert(zlib);
-		//auto colortype = (colortypes)input[25];
-		//auto compression = input[26];
-		//auto filter = input[27];
+		auto colortype = (colortypes)input[25];
+		auto compression = input[26];
+		auto filter = input[27];
 		auto interlace = input[28];
 		input += 33;
 		// retrevie size
 		const unsigned char* single_input;
-		int size_compressed = read_idat(0, input, input + size, &single_input);
+		int size_compressed = read_idat(0, input, input + input_size, &single_input);
 		if(!size_compressed)
 			return false;
 		// decompress image data
 		// try to optimize input if only one 'idat' section
 		image_size = image_width * image_height*(bpp / 8);
-		output_scanline = image_width * (bpp / 8);
 		if(single_input) {
 			if(!zlib->decode(output, image_size, single_input, size_compressed))
 				return false;
 		} else {
 			unsigned char* ptemp = new unsigned char[size_compressed];
-			if(!read_idat(ptemp, input, input + size, 0)) {
+			if(!read_idat(ptemp, input, input + input_size, 0)) {
 				delete ptemp;
 				return false;
 			}
@@ -447,6 +447,7 @@ static struct png_bitmap_plugin : public draw::surface::plugin {
 			delete ptemp;
 		}
 		postprocess_scanlines(output, output, image_width, image_height, bpp, interlace);
+		color::convert(output, image_width, image_height, output_bpp, 0, output, input_bpp, 0);
 		return true;
 	}
 
@@ -460,7 +461,7 @@ static struct png_bitmap_plugin : public draw::surface::plugin {
 		int bit_depth = input[24];
 		w = read32(input + 16);
 		h = read32(input + 20);
-		bpp = get_bpp(colortype, bit_depth);
+		bpp = -get_bpp(colortype, bit_depth);
 		return true;
 	}
 

@@ -11,7 +11,7 @@ namespace std {
 		typedef const T* const_iterator;
 		constexpr initializer_list() noexcept : first(0), last(0) {}
 		constexpr initializer_list(const T *first_arg, const T *last_arg) noexcept : first(first_arg), last(last_arg) {}
-		constexpr const T *begin() const noexcept { return first; }
+		constexpr const T *begin() const noexcept {	return first; }
 		constexpr const T *end() const noexcept { return last; }
 		constexpr unsigned size() const noexcept { return last - first; }
 	private:

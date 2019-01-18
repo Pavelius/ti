@@ -1,51 +1,68 @@
-#include "crt.h"
-#include "draw.h"
+#include "main.h"
+#include "draw_control.h"
 
+using namespace draw;
+using namespace draw::controls;
+
+enum ui_command_s {
+	NoUICommand, ChooseLeft, ChooseRight, ChooseList,
+};
+struct cmdid {
+	callback_proc		proc;
+	int					param;
+	void clear() { memset(this, 0, sizeof(*this)); }
+};
 struct focusable_element {
 	int				id;
 	rect			rc;
 	operator bool() const { return id != 0; }
 };
-static int			current_command;
-static int			current_focus;
-static void			(*current_execute)();
-extern rect			sys_static_area;
 static focusable_element	elements[96];
 static focusable_element*	render_control;
+static int				current_focus;
+static cmdid			current_execute;
+static bool				keep_hot;
+static hotinfo			keep_hot_value;
+static bool				break_modal;
+static int				break_result;
+static point			camera;
+static point			camera_drag;
+static rect				last_board;
+static point			tooltips_point;
+static short			tooltips_width;
+static char				tooltips_text[4096];
+static surface			map_image;
+static sprite*			sprite_shields;
+static rect				hilite_rect;
+const int				map_normal = 1000;
+static int				map_scale = map_normal;
+static control*			current_hilite;
+static control*			current_focus_control;
+static control*			current_execute_control;
+extern rect				sys_static_area;
+int						distance(point p1, point p2);
+gui_info				gui;
 
-static struct input_plugin : draw::renderplugin {
+void gui_info::initialize() {
+	memset(this, 0, sizeof(*this));
+	opacity = 220;
+	opacity_disabled = 50;
+	border = 8;
+	padding = 4;
+	window_width = 400;
+	tips_width = 200;
+	button_width = 64;
+	opacity_hilighted = 200;
+}
 
-	void before() override {
-		render_control = elements;
-		current_command = 0;
-		current_execute = 0;
-		hot::cursor = CursorArrow;
-		if(hot::mouse.x < 0 || hot::mouse.y < 0)
-			sys_static_area.clear();
-		else
-			sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
-	}
-
-	//void after() override {
-	//	draw::rectf(sys_static_area, colors::blue, 128);
-	//}
-
-	bool translate(int id) override {
-		int focus;
-		switch(id) {
-		case KeyTab:
-			focus = draw::getfocus();
-			focus = draw::getnext(focus, KeyTab);
-			draw::setfocus(focus, true);
-			return true;
-		}
-		return false;
-	}
-
-} input_plugin_instance;
+static void set_focus_callback() {
+	auto id = getnext(draw::getfocus(), hot.param);
+	if(id)
+		setfocus(id, true);
+}
 
 static void setfocus_callback() {
-	current_focus = hot::param;
+	current_focus = hot.param;
 }
 
 static focusable_element* getby(int id) {
@@ -140,7 +157,7 @@ int draw::getnext(int id, int key) {
 void draw::setfocus(int id, bool instant) {
 	if(instant)
 		current_focus = id;
-	else if(current_focus!=id)
+	else if(current_focus != id)
 		execute(setfocus_callback, id);
 }
 
@@ -148,36 +165,361 @@ int draw::getfocus() {
 	return current_focus;
 }
 
-void draw::execute(int id, int param) {
-	current_command = id;
-	hot::key = 0;
-	hot::param = param;
-}
-
 void draw::execute(void(*proc)(), int param) {
-	execute(InputExecute, param);
-	current_execute = proc;
+	current_execute.proc = proc;
+	current_execute.param = param;
 }
 
-int draw::input(bool redraw) {
-	if(current_command) {
-		if(current_execute) {
-			current_execute();
-			hot::key = InputUpdate;
-			return hot::key;
-		}
-		hot::key = current_command;
-		return hot::key;
+void draw::execute(const hotinfo& value) {
+	keep_hot = true;
+	keep_hot_value = value;
+	hot.key = InputUpdate;
+}
+
+void draw::breakmodal(int result) {
+	break_modal = true;
+	break_result = result;
+}
+
+void draw::buttoncancel() {
+	breakmodal(0);
+}
+
+void draw::buttonok() {
+	breakmodal(1);
+}
+
+int draw::getresult() {
+	return break_result;
+}
+
+bool control::ishilited() const {
+	return current_hilite == this;
+}
+
+bool control::isfocused() const {
+	return current_focus_control == this;
+}
+
+void control::view(const rect& rc) {
+	if(isfocusable()) {
+		addelement((int)this, rc);
+		if(!getfocus())
+			setfocus((int)this, true);
 	}
-	// After render plugin events
-	for(auto p = renderplugin::first; p; p = p->next)
-		p->after();
-	hot::key = InputUpdate;
-	if(redraw)
-		draw::sysredraw();
-	else
-		hot::key = draw::rawinput();
-	if(!hot::key)
+	if(areb(rc))
+		current_hilite = this;
+	if((control*)getfocus() == this)
+		current_focus_control = this;
+	if(show_border)
+		rectb(rc, colors::border);
+}
+
+static bool control_focus() {
+	if(current_hilite) {
+		switch(hot.key & CommandMask) {
+		case MouseLeft:
+		case MouseRight:
+		case MouseLeftDBL:
+			current_hilite->mouseinput(hot.key, hot.mouse);
+			return true;
+		case MouseWheelDown:
+			current_hilite->mousewheel(hot.key, hot.mouse, 1);
+			return true;
+		case MouseWheelUp:
+			current_hilite->mousewheel(hot.key, hot.mouse, -1);
+			return true;
+		}
+	}
+	if(current_focus_control) {
+		if(current_focus_control->keyinput(hot.key))
+			return true;
+	}
+	int id;
+	switch(hot.key) {
+	case 0:
 		exit(0);
-	return hot::key;
+		return true;
+	case KeyTab:
+	case KeyTab | Shift:
+	case KeyTab | Ctrl:
+	case KeyTab | Ctrl | Shift:
+		id = getnext(draw::getfocus(), hot.key);
+		if(id)
+			setfocus(id, true);
+		return true;
+	}
+	return false;
+}
+
+static void before_render() {
+	hot.cursor = CursorArrow;
+	hot.hilite.clear();
+	render_control = elements;
+	current_execute.clear();
+	current_hilite = 0;
+	current_focus_control = 0;
+	if(hot.mouse.x < 0 || hot.mouse.y < 0)
+		sys_static_area.clear();
+	else
+		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
+}
+
+bool draw::ismodal() {
+	before_render();
+	if(!break_modal)
+		return true;
+	break_modal = false;
+	return false;
+}
+
+static areas hilite(rect rc) {
+	auto border = gui.border;
+	rc.offset(-border, -border);
+	color c = colors::form;
+	auto rs = draw::area(rc);
+	if(rs == AreaHilited) {
+		auto op = gui.opacity;
+		draw::rectf(rc, c, op);
+		draw::rectb(rc, c);
+	}
+	return rs;
+}
+
+static areas window(rect rc, bool disabled = false, bool hilight = true, int border = 0) {
+	if(border == 0)
+		border = gui.border;
+	rc.offset(-border, -border);
+	color c = colors::form;
+	color b = colors::form;
+	auto rs = draw::area(rc);
+	auto op = gui.opacity;
+	if(disabled)
+		op = op / 2;
+	else if(hilight && (rs == AreaHilited || rs == AreaHilitedPressed))
+		op = gui.opacity_hilighted;
+	draw::rectf(rc, c, op);
+	draw::rectb(rc, b);
+	return rs;
+}
+
+static int render_text(int x, int y, int width, const char* string) {
+	draw::link[0] = 0;
+	auto result = textf(x, y, width, string);
+	if(draw::link[0])
+		tooltips(x, y, width, draw::link);
+	return result;
+}
+
+static int windowf(int x, int y, int width, const char* string) {
+	rect rc = {x, y, x + width, y};
+	draw::state push;
+	draw::font = metrics::font;
+	auto height = textf(rc, string);
+	rc.x2 = rc.x1 + width;
+	window(rc, false);
+	render_text(x, y, rc.width(), string);
+	return height + gui.border * 2 + gui.padding;
+}
+
+static int window(int x, int y, int width, const char* string, int right_width = 0) {
+	auto right_side = (right_width != 0);
+	rect rc = {x, y, x + width, y};
+	draw::state push;
+	draw::font = metrics::font;
+	auto height = textf(rc, string);
+	if(right_side) {
+		auto w1 = rc.width();
+		x = x + right_width - w1;
+		rc.x1 = x;
+		rc.x2 = rc.x1 + w1;
+	}
+	window(rc, false, false);
+	render_text(x, y, rc.width(), string);
+	return height + gui.border * 2 + gui.padding;
+}
+
+static int windowb(int x, int y, int width, const char* string, const runable& e, int border = 0, unsigned key = 0, const char* tips = 0) {
+	draw::state push;
+	draw::font = metrics::font;
+	rect rc = {x, y, x + width, y + draw::texth()};
+	auto ra = window(rc, e.isdisabled(), true, border);
+	draw::text(rc, string, AlignCenterCenter);
+	if((ra == AreaHilited || ra == AreaHilitedPressed) && tips)
+		tooltips(x, y, rc.width(), tips);
+	if(!e.isdisabled()
+		&& ((ra == AreaHilitedPressed && hot.key == MouseLeft)
+			|| (key && key == hot.key)))
+		e.execute();
+	return rc.height() + gui.border * 2;
+}
+
+static point getscreen(const rect& rc, point pt) {
+	auto x = pt.x - camera.x + rc.x1 + rc.width() / 2;
+	auto y = pt.y - camera.y + rc.y1 + rc.height() / 2;
+	return {(short)x, (short)y};
+}
+
+static point getmappos(const rect& rc, point pt) {
+	auto x = pt.x + camera.x - rc.x1 - rc.width() / 2;
+	auto y = pt.y + camera.y - rc.y1 - rc.height() / 2;
+	return {(short)x, (short)y};
+}
+
+static void breakparam() {
+	breakmodal(hot.param);
+}
+
+static void keyparam() {
+	hot.key = hot.param;
+	hot.param = 0;
+}
+
+static bool control_board() {
+	const int step = 32;
+	switch(hot.key) {
+	case MouseWheelUp: map_scale += 50; break;
+	case MouseWheelDown: map_scale -= 50; break;
+	case KeyLeft: camera.x -= step; break;
+	case KeyRight: camera.x += step; break;
+	case KeyUp: camera.y -= step; break;
+	case KeyDown: camera.y += step; break;
+	case MouseLeft:
+		if(hot.pressed && last_board == hot.hilite) {
+			draw::drag::begin(last_board);
+			camera_drag = camera;
+		} else
+			return false;
+		break;
+	default:
+		if(draw::drag::active(last_board)) {
+			hot.cursor = CursorAll;
+			if(hot.mouse.x >= 0 && hot.mouse.y >= 0)
+				camera = camera_drag + (draw::drag::mouse - hot.mouse);
+			return true;
+		}
+		return false;
+	}
+	return true;
+}
+
+void control_standart() {
+	if(control_focus())
+		return;
+	if(control_board())
+		return;
+}
+
+static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id) {
+	static amap<const char*, draw::surface> source;
+	auto p = source.find(id);
+	if(!p) {
+		char temp[260];
+		p = source.add(id, surface());
+		memset(p, 0, sizeof(*p));
+		p->value.read(szurl(temp, "art/icons", id, "png"));
+	}
+	auto dy = draw::texth();
+	w = p->value.width;
+	if(x + w > x2) {
+		if(max_width)
+			*max_width = imax(*max_width, x - x0);
+		x = x0;
+		y += draw::texth();
+	}
+	draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
+}
+
+void draw::tooltips(int x1, int y1, int width, const char* format, ...) {
+	tooltips_point.x = x1;
+	tooltips_point.y = y1;
+	tooltips_width = width;
+	szprint(tooltips_text, tooltips_text + sizeof(tooltips_text) - 1, format, xva_start(format));
+}
+
+static void render_tooltips() {
+	if(!tooltips_text[0])
+		return;
+	draw::state push;
+	draw::font = metrics::font;
+	if(draw::font) {
+		rect rc;
+		rc.x1 = tooltips_point.x + tooltips_width + gui.border * 2 + gui.padding;
+		rc.y1 = tooltips_point.y;
+		rc.x2 = rc.x1 + gui.tips_width;
+		rc.y2 = rc.y1;
+		draw::textf(rc, tooltips_text);
+		if(rc.x2 > getwidth() - gui.border - gui.padding) {
+			auto w = rc.width();
+			rc.x1 = tooltips_point.x - gui.border * 2 - gui.padding - w;
+			rc.x2 = rc.x1 + w;
+		}
+		// Correct border
+		int height = draw::getheight();
+		int width = draw::getwidth();
+		if(rc.y2 >= height)
+			rc.move(0, height - 2 - rc.y2);
+		if(rc.x2 >= width)
+			rc.move(width - 2 - rc.x2, 0);
+		window(rc);
+		draw::fore = colors::tips::text;
+		draw::textf(rc.x1, rc.y1, rc.width(), tooltips_text);
+	}
+	tooltips_text[0] = 0;
+}
+
+void draw::initialize() {
+	colors::active = color::create(172, 128, 0);
+	colors::border = color::create(73, 73, 80);
+	colors::button = color::create(0, 122, 204);
+	colors::form = color::create(32, 32, 32);
+	colors::window = color::create(64, 64, 64);
+	colors::text = color::create(255, 255, 255);
+	colors::edit = color::create(38, 79, 120);
+	colors::special = color::create(255, 244, 32);
+	colors::border = colors::window.mix(colors::text, 128);
+	colors::tips::text = color::create(255, 255, 255);
+	colors::tips::back = color::create(100, 100, 120);
+	colors::tabs::back = color::create(255, 204, 0);
+	colors::tabs::text = colors::black;
+	colors::h1 = colors::text.mix(colors::edit, 64);
+	colors::h2 = colors::text.mix(colors::edit, 96);
+	colors::h3 = colors::text.mix(colors::edit, 128);
+	draw::font = metrics::font;
+	draw::fore = colors::text;
+	draw::fore_stroke = colors::blue;
+	set(draw_icon);
+}
+
+static bool read_sprite(sprite** result, const char* name) {
+	char temp[260];
+	if(*result)
+		delete *result;
+	*result = (sprite*)loadb(szurl(temp, "art/sprites", name, "pma"));
+	return (*result) != 0;
+}
+
+static void end_turn() {
+	breakmodal(0);
+}
+
+void draw::domodal() {
+	if(current_execute.proc) {
+		auto ev = current_execute;
+		before_render();
+		hot.key = InputUpdate;
+		hot.param = ev.param;
+		ev.proc();
+		before_render();
+		hot.key = InputUpdate;
+		return;
+	}
+	render_tooltips();
+	if(hot.key == InputUpdate && keep_hot) {
+		keep_hot = false;
+		hot = keep_hot_value;
+	} else
+		hot.key = draw::rawinput();
+	if(!hot.key)
+		exit(0);
 }

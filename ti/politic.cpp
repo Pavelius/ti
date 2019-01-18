@@ -1,6 +1,6 @@
 #include "main.h"
 
-static struct politic {
+static struct politic_info {
 	const char*	id;
 	const char*	name;
 	char		initiative;

@@ -11,8 +11,8 @@ int weapon::roll() const {
 	auto result = 0;
 	for(auto i = 0; i < count; i++) {
 		auto rr = reroll + 1;
-		while(rr-->0) {
-			if((d10()+bonus) >= chance) {
+		while(rr-- > 0) {
+			if(((1 + (rand() % 10)) + bonus) >= chance) {
 				result++;
 				break;
 			}

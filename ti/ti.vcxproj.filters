@@ -2,209 +2,200 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="crt.h">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClInclude>
     <ClInclude Include="adat.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="collection.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="io.h">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="stringcreator.h">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="cflags.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="initializer_list.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="color.h">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClInclude>
     <ClInclude Include="draw.h">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClInclude>
     <ClInclude Include="view.h">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClInclude>
     <ClInclude Include="amap.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="bstream.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="converter.h">
-      <Filter>library</Filter>
-    </ClInclude>
-    <ClInclude Include="point.h">
-      <Filter>geo</Filter>
-    </ClInclude>
-    <ClInclude Include="rect.h">
-      <Filter>geo</Filter>
+      <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="win.h">
-      <Filter>platform\win</Filter>
+      <Filter>Платформа\win</Filter>
     </ClInclude>
     <ClInclude Include="aref.h">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="draw_control.h">
+      <Filter>Графика</Filter>
+    </ClInclude>
+    <ClInclude Include="point.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="rect.h">
+      <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt.cpp">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="weapon.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="unit.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="collection.cpp">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClCompile>
     <ClCompile Include="io.cpp">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="szdup.cpp">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="stringcreator.cpp">
-      <Filter>library</Filter>
+      <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="planet.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="grid.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="army.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="uicommand.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="color.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_button.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
-    <ClCompile Include="draw_icons.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_input.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_text.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_textf.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="surface_serial.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="bstream.cpp">
-      <Filter>collections</Filter>
+      <Filter>Коллекция</Filter>
     </ClCompile>
     <ClCompile Include="converter.cpp">
-      <Filter>library</Filter>
-    </ClCompile>
-    <ClCompile Include="png.cpp">
-      <Filter>plugins</Filter>
-    </ClCompile>
-    <ClCompile Include="zip.cpp">
-      <Filter>plugins</Filter>
-    </ClCompile>
-    <ClCompile Include="point.cpp">
-      <Filter>geo</Filter>
+      <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="win_draw.cpp">
-      <Filter>platform\win</Filter>
+      <Filter>Платформа\win</Filter>
     </ClCompile>
     <ClCompile Include="win_draw_dlg.cpp">
-      <Filter>platform\win</Filter>
+      <Filter>Платформа\win</Filter>
     </ClCompile>
     <ClCompile Include="win_io_file.cpp">
-      <Filter>platform\win</Filter>
-    </ClCompile>
-    <ClCompile Include="crt_parse.cpp">
-      <Filter>library</Filter>
+      <Filter>Платформа\win</Filter>
     </ClCompile>
     <ClCompile Include="draw_list.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_scroll.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_control.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="view_board.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="view_dialogs.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_table.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="view_window.cpp">
-      <Filter>ui</Filter>
+      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="action.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="politic.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="game.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="querry.cpp">
-      <Filter>logic</Filter>
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="string_value.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="string.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="point.cpp">
+      <Filter>Поддержка</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="library">
-      <UniqueIdentifier>{f3e0601a-f65e-496e-9f60-755c4792c276}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="logic">
-      <UniqueIdentifier>{26bba49b-c4ee-4110-9c33-163b7b09dbcf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="collections">
+    <Filter Include="Коллекция">
       <UniqueIdentifier>{cf8757f3-d0db-4208-b2e8-f1f930fff89f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ui">
+    <Filter Include="Поддержка">
+      <UniqueIdentifier>{f3e0601a-f65e-496e-9f60-755c4792c276}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Графика">
       <UniqueIdentifier>{19de7f08-56ba-47ec-951e-bc77065d2a4b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="plugins">
-      <UniqueIdentifier>{8597a3b8-5060-4008-b60f-ff652b44d243}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="geo">
-      <UniqueIdentifier>{cff395d9-7aee-4a22-939a-ff9bf03a3d67}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="platform">
+    <Filter Include="Платформа">
       <UniqueIdentifier>{3c0de2ff-96f3-411c-a0b7-b4e449b0fbae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="platform\win">
+    <Filter Include="Платформа\win">
       <UniqueIdentifier>{95b5c33c-9f99-4b20-9ad9-849451679ab6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Логика">
+      <UniqueIdentifier>{26bba49b-c4ee-4110-9c33-163b7b09dbcf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

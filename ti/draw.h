@@ -9,8 +9,13 @@ static int control_name(int x, int y, int width, const char* id, int value, cons
 extern "C" int strcmp(const char* s1, const char* s2); // Compare two strings
 
 enum draw_event_s {
+	// common controls
+	NoField,
+	Label, Field, Check, Radio, Button, Image,
+	Tabs, Group,
+	ControlMask = 0xF,
 	// input events
-	InputSymbol = 0xED00, InputTimer, InputUpdate, InputNoUpdate, InputExecute,
+	InputSymbol = 0xED00, InputTimer, InputIdle, InputUpdate, InputNoUpdate, InputExecute,
 	// Keyboard and mouse input (can be overrided by flags)
 	MouseLeft = 0xEE00, MouseLeftDBL, MouseRight,
 	MouseMove, MouseWheelUp, MouseWheelDown,
@@ -27,23 +32,9 @@ enum draw_event_s {
 	Ctrl = 0x00010000,
 	Alt = 0x00020000,
 	Shift = 0x00040000,
-	// common controls
-	Text = 0x00000000,
-	Number = 0x00100000,
-	Check = 0x00200000,
-	Radio = 0x00300000,
-	Button = 0x00400000,
-	Image = 0x00500000,
-	Tabs = 0x00600000,
-	ControlMask = 0x00F00000,
 	// columns flags
 	SmallHilite = 0x00010000,
-	// control visual flags
-	NoBorder = 0x01000000,
-	NoBackground = 0x02000000,
-	NoToolbar = 0x04000000,
-	HideZero = 0x04000000,
-	NoFocus = 0x08000000,
+	HideZero = 0x00020000,
 	// state flags
 	Focused = 0x10000000, // Control has keyboard input and can change visual form.
 	Checked = 0x20000000, // Use in background virtual method.
@@ -90,7 +81,7 @@ enum image_flag_s {
 	AlignMask = 0xF000,
 };
 enum drag_part_s : unsigned char {
-	DragControl, DragScrollV, DragScrollH
+	DragControl, DragScrollV, DragScrollH, DragSplitV, DragSplitH, DragColumn,
 };
 struct pma {
 	char				name[4]; // Identifier of current block
@@ -104,8 +95,8 @@ struct sprite : pma {
 	enum flagse { NoIndex = 1 };
 	enum encodes { Auto, RAW, RLE, ALC, RAW8, RLE8 };
 	struct frame {
-		short int		sx, sy;
-		short int		ox, oy;
+		short 			sx, sy;
+		short			ox, oy;
 		encodes			encode;
 		unsigned		pallette;
 		unsigned		offset;
@@ -115,10 +106,8 @@ struct sprite : pma {
 		short unsigned	start;
 		short unsigned	count;
 	};
-	short int			width; // common width of all frames (if applicable)
-	short int			height; // common height of all frames (if applicable)
-	short int			ascend;
-	short int			descend;
+	short int			width, height; // common size of all frames (if applicable)
+	short int			ascend, descend; // top or down ascend
 	short unsigned		flags; // must be zero
 	unsigned			cicles; // count of anim structure
 	unsigned			cicles_offset;
@@ -127,23 +116,12 @@ struct sprite : pma {
 	const unsigned char* edata() const { return (const unsigned char*)this + sizeof(sprite) + sizeof(frame)*(count - 1); }
 	int					ganim(int index, int tick);
 	const frame&		get(int id) const { return frames[(id >= count) ? 0 : id]; }
-	inline cicle*		gcicle(int index) { return (cicle*)offs(cicles_offset) + index; }
-	inline int			gindex(int index) const { return *((short unsigned*)((cicle*)offs(cicles_offset) + cicles) + index); }
+	cicle*				gcicle(int index) { return (cicle*)ptr(cicles_offset) + index; }
+	inline int			gindex(int index) const { return *((short unsigned*)((cicle*)ptr(cicles_offset) + cicles) + index); }
 	int					glyph(unsigned sym) const;
-	const unsigned char* offs(unsigned o) const { return (unsigned char*)this + o; }
+	const unsigned char* ptr(unsigned o) const { return (unsigned char*)this + o; }
 };
-typedef const char* (*proctext)(char* result, void* object);
-namespace hot {
-typedef void(*proc)(); // Hot callback reaction
-extern int				animate; // Frame tick count
-extern cursors			cursor; // set this mouse cursor
-extern int				key; // [in] if pressed key or mouse this field has key
-extern point			mouse; // current mouse coordinates
-extern bool				pressed; // flag if any of mouse keys is pressed
-extern int				param; // Draw command context. Application can extend this structure
-extern rect				element; // Element coordinates
-extern rect				hilite; // Currently hilited rectangle
-}
+typedef const char* (*proctext)(char* result, const char* result_maximum, void* object);
 namespace colors {
 extern color			active;
 extern color			button;
@@ -166,16 +144,34 @@ extern sprite*			font;
 extern sprite*			h1;
 extern sprite*			h2;
 extern sprite*			h3;
+extern int				padding;
 extern int				scroll;
 }
 namespace draw {
+typedef void(*callback_proc)();
+namespace dialog {
+bool					color(struct color& result, struct color* custom = 0);
+bool					folder(const char* title, char* path);
+bool					open(const char* title, char* path, const char* filter, int filter_index = 0, const char* ext = 0);
+bool					save(const char* title, char* path, const char* filter, int filter_index = 0);
+}
 namespace drag {
-bool					active(int id, drag_part_s part = DragControl);
+bool					active(const rect& value);
 bool					active();
-void					begin(int id, drag_part_s part = DragControl);
+void					begin(const rect& value);
 extern point			mouse;
 extern int				value;
 }
+struct hotinfo {
+	cursors				cursor; // set this mouse cursor
+	unsigned			key; // if pressed key or mouse this field has key
+	point				mouse; // current mouse coordinates
+	rect				hilite; // last hilited area
+	bool				pressed; // flag if any of mouse keys is pressed
+	int					param; // command context or parameters
+	explicit operator bool() const { return key != 0; }
+};
+extern hotinfo			hot;
 struct surface {
 	struct plugin {
 		const char*		name;
@@ -185,7 +181,7 @@ struct surface {
 		//
 		plugin(const char* name, const char* filter);
 		//
-		virtual bool	decode(unsigned char* output, const unsigned char* input, unsigned size, int& output_scanline) = 0;
+		virtual bool	decode(unsigned char* output, int output_bpp, const unsigned char* input, unsigned input_size) = 0;
 		virtual bool	inspect(int& w, int& h, int& bpp, const unsigned char* input, unsigned size) = 0;
 	};
 	int					width;
@@ -227,25 +223,15 @@ struct textplugin {
 	textplugin(const char* name, proc e);
 	static textplugin*	find(const char* name);
 };
-struct renderplugin {
-	int					priority;
-	renderplugin*		next;
-	static renderplugin* first;
-	renderplugin(int priority = 10);
-	virtual void		after() {}
-	virtual void		before() {}
-	virtual void		initialize() {}
-	virtual bool		translate(int id) { return false; }
-};
 typedef int(*widgetproc)(int x, int y, int width, unsigned flags, const char* label, int value, void* data, const char* tips);
 extern rect				clipping; // Clipping area
 extern color			fore; // Foreground color (curently selected color)
 extern color			fore_stroke; // foreground stroke color
 extern const sprite*	font; // Currently selected font
 //
+void					addelement(int id, const rect& rc);
 int						aligned(int x, int width, unsigned state, int string_width);
 int						alignedh(const rect& rc, const char* string, unsigned state);
-void					addelement(int id, const rect& rc);
 areas					area(rect rc);
 bool					areb(rect rc);
 void					bezier(int x0, int y0, int x1, int y1, int x2, int y2);
@@ -261,9 +247,9 @@ void					circle(int x, int y, int radius, const color c1);
 void					circlef(int x, int y, int radius, const color c1, unsigned char alpha = 0xFF);
 void					create(int x, int y, int width, int height, unsigned flags, int bpp);
 void					decortext(unsigned flags);
-bool					defproc(int id);
+void					domodal();
 void					execute(void(*callback)(), int value = 0);
-void					execute(int id, int value = 0);
+void					execute(const hotinfo& value);
 rect					getarea();
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
@@ -274,9 +260,11 @@ int						getheight();
 int						getnext(int id, int key);
 int						getresult();
 int						getwidth();
+void					getwindowpos(point& pos, point& size);
 void					glyph(int x, int y, int sym, unsigned flags);
 void					gradv(rect rc, const color c1, const color c2, int skip = 0);
 void					gradh(rect rc, const color c1, const color c2, int skip = 0);
+const sprite*			gres(const char* name, const char* folder = 0);
 int						hittest(int x, int test_x, const char* string, int lenght);
 int						hittest(rect rc, const char* string, unsigned state, point mouse);
 inline bool				ischecked(unsigned flags) { return (flags&Checked) != 0; }
@@ -286,7 +274,7 @@ bool					ismodal();
 void					image(int x, int y, const sprite* e, int id, int flags, unsigned char alpha = 0xFF);
 void					image(int x, int y, const sprite* e, int id, int flags, unsigned char alpha, color* pal);
 void					initialize();
-int						input(bool redraw = false);
+char*					key2str(char* result, int key);
 void					line(int x1, int y1, int x2, int y2); // Draw line
 void					line(int x1, int y1, int x2, int y2, color c1); // Draw line
 inline void				line(point p1, point p2, color c1) { line(p1.x, p1.y, p2.x, p2.y, c1); }
@@ -323,8 +311,9 @@ int						textc(int x, int y, int width, const char* string, int count = -1, unsi
 int						textbc(const char* string, int width);
 int						textlb(const char* string, int index, int width, int* line_index = 0, int* line_count = 0);
 int						texte(rect rc, const char* string, unsigned flags, int i1, int i2);
-int						textf(int x, int y, int width, const char* text, int* max_width = 0, int min_height = 0, int* cashe_height = 0, const char** cashe_string = 0, int tab_width = 0);
+int						textf(int x, int y, int width, const char* text, int* max_width = 0, int min_height = 0, int* cashe_height = 0, const char** cashe_string = 0, int tab_width = 0, unsigned text_flags = 0);
 int						textf(rect& rc, const char* string, int tab_width = 0);
+int						textfw(const char* string, int tab_width = 0);
 int						texth();
 int						texth(const char* string, int width);
 int						textw(int sym);
@@ -335,94 +324,12 @@ void					updatewindow();
 void					write(const char* url, unsigned char* bits, int width, int height, int bpp, int scanline, color* pallette);
 }
 namespace draw {
-namespace controls {
-struct column {
-	unsigned			flags;
-	const char*			id;
-	const char*			title;
-	int					width;
-	bool operator==(const char* value) const { return value && strcmp(id, value) == 0; }
-	explicit operator bool() const { return id != 0; }
-	draw_event_s		getcontol() const { return (draw_event_s)(flags&ControlMask); }
-};
-struct control {
-	typedef void		(control::*callback)();
-	bool				show_border;
-	control();
-	void				execute(void (control::*proc)()) const;
-	virtual bool		isfocusable() const { return true; }
-	bool				isfocused() const;
-	bool				ishilited() const;
-	virtual void		keydown() {}
-	virtual void		keyend() {}
-	virtual void		keyenter() {}
-	virtual void		keyleft() {}
-	virtual void		keyhome() {}
-	virtual void		keypageup() {}
-	virtual void		keypagedown() {}
-	virtual void		keyright() {}
-	virtual void		keysymbol(int symbol) {}
-	virtual void		keyup() {}
-	virtual void		mouseleft(point position); // Default behaivor set focus
-	virtual void		mouseleftdbl(point position) {}
-	virtual void		mousewheel(point position, int step) {}
-	virtual void		view(rect rc);
-};
-struct list : control {
-	int					origin, current, current_hilite;
-	int					maximum_width, origin_width;
-	int					lines_per_page, pixels_per_line;
-	bool				show_grid_lines, show_selection;
-	bool				hilite_odd_lines;
-	list();
-	void				correction();
-	void				ensurevisible(); // ensure that current selected item was visible on screen if current 'count' is count of items per line
-	int					find(int line, int column, const char* name, int lenght = -1) const;
-	virtual int			getcolumn() const { return 0; } // get current column
-	inline int			getline() const { return current; } // get current line
-	virtual const char* getname(char* result, const char* result_max, int line, int column) const { return 0; }
-	virtual int			getmaximum() const { return 0; }
-	static int			getrowheight(); // Get default row height for any List Control
-	void				hilight(rect rc) const;
-	void				keydown() override;
-	void				keyend() override;
-	void				keyenter() override;
-	void				keyhome() override;
-	void				keypageup() override;
-	void				keypagedown() override;
-	void				keysymbol(int symbol) override;
-	void				keyup() override;
-	void				mouseleftdbl(point position) override;
-	void				mousewheel(point position, int step) override;
-	void				select(int index);
-	virtual void		row(rect rc, int index) const; // Draw single row - part of list
-	virtual void		rowhilite(rect rc, int index) const;
-	void				view(rect rc) override;
-};
-struct table : list {
-	const column*		columns;
-	bool				show_totals;
-	bool				show_header;
-	table(const column* columns) : columns(columns), show_totals(false), show_header(true) {}
-	virtual void		custom(char* buffer, const char* buffer_maximum, rect rc, int line, int column) const {}
-	virtual const char*	getheader(char* result, const char* result_maximum, int column) const { return columns[column].title; }
-	virtual int			getnumber(int line, int column) const { return 0; }
-	virtual int			gettotal(int column) const { return 0; }
-	virtual const char*	gettotal(char* result, const char* result_maximum, int column) const { return 0; }
-	virtual void		row(rect rc, int index) const; // Draw single row - part of list
-	virtual int			rowheader(rect rc) const; // Draw header row
-	void				view(rect rc) override;
-	void				viewtotal(rect rc) const;
-};
-}
-int						button(int x, int y, int width, int id, unsigned flags, const char* label, const char* tips = 0, void(*callback)() = 0);
+int						addbutton(rect& rc, bool focused, const char* t1, int k1, const char* tt1, const char* t2, int k2, const char* tt2);
+bool					addbutton(rect& rc, bool focused, const char* t1, int k1, const char* tt1);
 bool					buttonh(rect rc, bool checked, bool focused, bool disabled, bool border, color value, const char* string, int key, bool press, const char* tips = 0);
 bool					buttonh(rect rc, bool checked, bool focused, bool disabled, bool border, const char* string, int key = 0, bool press = false, const char* tips = 0);
 bool					buttonv(rect rc, bool checked, bool focused, bool disabled, bool border, const char* string, int key = 0, bool press = false);
-void					scrollh(int id, const struct rect& scroll, int& origin, int count, int maximum, bool focused);
-void					scrollv(int id, const rect& scroll, int& origin, int count, int maximum, bool focused);
+void					scrollh(const struct rect& scroll, int& origin, int count, int maximum, bool focused);
+void					scrollv(const rect& scroll, int& origin, int count, int maximum, bool focused);
 void					tooltips(int x, int y, int width, const char* format, ...);
 }
-int						distance(point p1, point p2);
-int						isqrt(int value);
-char*					key2str(char* result, int key);

@@ -1,15 +1,46 @@
 #include "draw.h"
 
+char* key2str(char* result, int key);
+
+bool draw::addbutton(rect& rc, bool focused, const char* t1, int k1, const char* tt1) {
+	const int width = 18;
+	rc.x2 -= width;
+	auto result = draw::buttonh({rc.x2, rc.y1, rc.x2 + width, rc.y2},
+		false, focused, false, false,
+		t1, k1, true, tt1);
+	draw::line(rc.x2, rc.y1, rc.x2, rc.y2, colors::border);
+	return result;
+}
+
+int draw::addbutton(rect& rc, bool focused, const char* t1, int k1, const char* tt1, const char* t2, int k2, const char* tt2) {
+	const int width = 20;
+	rc.x2 -= width;
+	auto height = rc.height() / 2;
+	auto result = 0;
+	if(draw::buttonh({rc.x2, rc.y1, rc.x2 + width, rc.y1 + height},
+		false, focused, false, false,
+		t1, k1, true, tt1))
+		result = 1;
+	if(draw::buttonh({rc.x2, rc.y1 + height, rc.x2 + width, rc.y1 + height * 2},
+		false, focused, false, false,
+		t2, k2, true, tt2))
+		result = 2;
+	if((hot.key == k2 || hot.key == k1) && !focused)
+		result = 0;
+	draw::line(rc.x2, rc.y1, rc.x2, rc.y2, colors::border);
+	return result;
+}
+
 bool draw::buttonv(rect rc, bool checked, bool focused, bool disabled, bool border, const char* string, int key, bool press) {
 	bool result = false;
 	if(disabled) {
 		gradh(rc, colors::button.lighten(), colors::button.darken());
 		rectf(rc, colors::border.mix(colors::window));
 	} else {
-		if(focused && key && hot::key == key)
+		if(focused && key && hot.key == key)
 			result = true;
 		areas a = area(rc);
-		if((a == AreaHilited || a == AreaHilitedPressed) && hot::key == MouseLeft && hot::pressed == press)
+		if((a == AreaHilited || a == AreaHilitedPressed) && hot.key == MouseLeft && hot.pressed == press)
 			result = true;
 		if(checked)
 			a = AreaHilitedPressed;
@@ -37,7 +68,7 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 	draw::state push;
 	bool result = false;
 	struct rect rcb = {rc.x1 + 1, rc.y1 + 1, rc.x2, rc.y2};
-	areas a = area(rc);
+	areas a = area(rcb);
 	//fore = (value.gray().r > 32) ? colors::white : colors::black;
 	if(disabled) {
 		gradv(rcb, value.lighten(), value.darken());
@@ -45,9 +76,9 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 			rectb(rc, colors::border.mix(colors::window));
 		fore = fore.mix(value, 64);
 	} else {
-		if(focused && key && hot::key == key)
+		if(key && hot.key == key)
 			result = true;
-		if((a == AreaHilited || a == AreaHilitedPressed) && hot::key == MouseLeft && hot::pressed == press)
+		if((a == AreaHilited || a == AreaHilitedPressed) && hot.key == MouseLeft && hot.pressed == press)
 			result = true;
 		if(checked)
 			a = AreaHilitedPressed;
@@ -73,11 +104,10 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 	if(string)
 		text(rc, string, AlignCenterCenter);
 	if(tips && a == AreaHilited) {
-		char temp[32];
-		if(key)
-			tooltips(rc.x1, rc.y1, rc.width(), "%1 (%2)", tips, key2str(temp, key));
-		else
-			tooltips(rc.x1, rc.y1, rc.width(), tips);
+		//if(key)
+		//	tooltips("%1 (%2)", tips, key2str(temp, key));
+		//else
+		//	tooltips(tips);
 	}
 	return result;
 }

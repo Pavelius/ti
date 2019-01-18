@@ -1,27 +1,31 @@
 #pragma once
 
-// Macro for correct declaration string indentifier.
-#define PRINTPLG(name) static char* get_##name(char* result);\
-static stringcreator::plugin print_##name = {#name, get_##name};\
-static char* get_##name(char* result)
+#define xva_start(v) ((const char*)&v + sizeof(v))
 
 struct stringcreator {
-	// Custom print tokens set
-	struct plugin {
-		const char*		name;
-		char*			(*proc)(char* result);
-		plugin*			next;
-		static plugin*	first;
-		plugin(const char* name, char* (*proc)(char* result));
-		static plugin*	find(const char* name);
-	};
-	const char*			parseformat(char* result, const char* result_max, const char* format, const char* format_param);
-	virtual void		parseidentifier(char* result, const char* result_max, const char* identifier);
-	static char*		parseint(char* dst, const char* result_max, int value, int precision, const int radix);
-	static char*		parsenumber(char* dst, const char* result_max, unsigned value, int precision, const int radix);
-	virtual void		parsevariable(char* result, const char* result_max, const char** format);
-	void				printv(char* result, const char* result_max, const char* format, const char* format_param);
-	void				print(char* result, const char* format, ...);
-	void				printn(char* result, const char* format, ...);
-	void				println(char* result, const char* format, ...);
+	stringcreator(char* pb, const char* pe) : pb(pb), p(pb), pe(pe) { pb[0] = 0; }
+	template<unsigned N> stringcreator(char(&result)[N]) : stringcreator(result, result + N) {}
+	constexpr operator char*() const { return pb; }
+	void				add(const char* format, ...);
+	void				addicon(const char* id, int value);
+	virtual void		addidentifier(const char* identifier);
+	static char*		addint(char* result, const char* result_maximum, int value, int precision, const int radix);
+	void				addn(const char* format, ...);
+	void				adds(const char* format, ...);
+	void				addsz() { if(p < pe) *p++ = 0; }
+	void				addv(const char* format, const char* format_param);
+	void				addx(const char* separator, const char* format, const char* format_param);
+	static char*		adduint(char* result, const char* result_maximum, unsigned value, int precision, const int radix);
+	char*				begin() { return pb; }
+	const char*			begin() const { return pb; }
+	void				clear() { pb[0] = 0; p = pb; }
+	const char*			end() const { return pe; }
+	char*				get() const { return p; }
+	bool				ispos(const char* v) const { return p == v; }
+private:
+	char*				p;
+	char*				pb;
+	const char*			pe;
+	const char*			readformat(const char* format, const char* format_param);
+	const char*			readvariable(const char* format);
 };

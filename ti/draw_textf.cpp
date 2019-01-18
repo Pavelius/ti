@@ -4,7 +4,7 @@
 using namespace draw;
 
 textplugin*	draw::textplugin::first;
-static void (*draw_icon)(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* name);
+static void(*draw_icon)(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* name);
 
 void draw::set(void(*proc)(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id)) {
 	draw_icon = proc;
@@ -118,7 +118,7 @@ static const char* textspc(const char* p, int x0, int& x, int tab_width) {
 		case '\t':
 			p++;
 			if(!tab_width)
-				tb = draw::textw(' ') * 4;
+				tb = draw::textw('A') * 3;
 			else
 				tb = tab_width;
 			x = x0 + ((x - x0 + tb) / tb)*tb;
@@ -135,13 +135,13 @@ static const char* word(const char* text) {
 	return text;
 }
 
-static int textfln(int x0, int y0, int width, const char** string, color c1, int* max_width, int tab_width) {
+static int textfln(int x0, int y0, int width, const char** string, color c1, int* max_width, int tab_width, unsigned text_flags) {
 	char temp[4096];
 	int y = y0;
 	int x = x0;
 	int x2 = x0 + width;
 	const char* p = *string;
-	unsigned flags = 0;
+	unsigned flags = text_flags;
 	draw::fore = c1;
 	if(max_width)
 		*max_width = 0;
@@ -238,8 +238,8 @@ static int textfln(int x0, int y0, int width, const char** string, color c1, int
 			rect rc = {x4, y, x3, y2};
 			if(draw::areb(rc)) {
 				if(flags&TextUscope) {
-					hot::cursor = CursorHand;
-					if(temp[0] && hot::key == MouseLeft && !hot::pressed) {
+					hot.cursor = CursorHand;
+					if(temp[0] && hot.key == MouseLeft && !hot.pressed) {
 						zcpy(draw::link, temp, sizeof(draw::link) - 1);
 						//draw::execute(HtmlLink);
 					}
@@ -261,7 +261,7 @@ static int textfln(int x0, int y0, int width, const char** string, color c1, int
 }
 
 int draw::textf(int x, int y, int width, const char* string, int* max_width,
-	int min_height, int* cashe_height, const char** cashe_string, int tab_width) {
+	int min_height, int* cashe_height, const char** cashe_string, int tab_width, unsigned text_flags) {
 	state push;
 	color color_text = fore;
 	const char* p = string;
@@ -282,17 +282,17 @@ int draw::textf(int x, int y, int width, const char* string, int* max_width,
 		{
 			p = zskipsp(p);
 			font = metrics::h3;
-			y += textfln(x, y, width, &p, colors::h3, &mw2, tab_width);
+			y += textfln(x, y, width, &p, colors::h3, &mw2, tab_width, text_flags);
 		} else if(match(&p, "##")) // Header 2
 		{
 			p = zskipsp(p);
 			font = metrics::h2;
-			y += textfln(x, y, width, &p, colors::h2, &mw2, tab_width);
+			y += textfln(x, y, width, &p, colors::h2, &mw2, tab_width, text_flags);
 		} else if(match(&p, "#")) // Header 1
 		{
 			p = zskipsp(p);
 			font = metrics::h1;
-			y += textfln(x, y, width, &p, colors::h1, &mw2, tab_width);
+			y += textfln(x, y, width, &p, colors::h1, &mw2, tab_width, text_flags);
 		} else if(match(&p, "...")) // Без форматирования
 		{
 			p = szskipcr(p);
@@ -313,25 +313,18 @@ int draw::textf(int x, int y, int width, const char* string, int* max_width,
 					break;
 				}
 			}
-		} else if(match(&p, "* ")) // Список
-		{
+		} else if(match(&p, "* ")) {
+			// Список
 			int dx = texth() / 2;
 			int rd = texth() / 6;
 			circlef(x + dx + 2, y + dx, rd, color_text);
 			circle(x + dx + 2, y + dx, rd, color_text);
-			y += textfln(x + texth(), y, width - texth(), &p, color_text, &mw2, tab_width);
+			y += textfln(x + texth(), y, width - texth(), &p, color_text, &mw2, tab_width, text_flags);
 		} else if(p[0] == '$' && p[1] == '(') {
 			p = zskipsp(p + 2);
 			y += render_control(&p, x, y, width);
-		} else {
-			y += textfln(x, y, width, &p, color_text, &mw2, tab_width);
-			if(p[0]) {
-				if(p[0] == ':' && p[1] == ':' && p[2] == ':')
-					p += 3;
-				else
-					y += draw::texth()/4;
-			}
-		}
+		} else
+			y += textfln(x, y, width, &p, color_text, &mw2, tab_width, text_flags);
 		// Возвратим стандартные настройки блока
 		font = metrics::font;
 		fore = color_text;
@@ -349,4 +342,12 @@ int draw::textf(rect& rc, const char* string, int tab_width) {
 	rc.y2 = rc.y1 + draw::textf(0, 0, rc.width(), string, &rc.x2, 0, 0, 0, tab_width);
 	rc.x2 += rc.x1;
 	return rc.height();
+}
+
+int draw::textfw(const char* string, int tab_width) {
+	state push;
+	clipping.clear();
+	int width = 0;
+	draw::textf(0, 0, 1000, string, &width, 0, 0, 0, tab_width);
+	return width;
 }

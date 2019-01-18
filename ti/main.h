@@ -1,7 +1,6 @@
-#include "adat.h"
-#include "aref.h"
+#include "collection.h"
 #include "crt.h"
-#include "cflags.h"
+#include "stringcreator.h"
 
 #pragma once
 
@@ -142,19 +141,44 @@ struct army : adat<unit*, 32> {
 	void				removecasualty(player_s player);
 	void				sort(int (unit::*proc)() const);
 };
-struct querry : adat<unsigned char, 256> {
-	querry() {}
-	querry(unsigned char i1, unsigned char i2, bool(*select)(unsigned char index)) { add(i1, i2, select); }
-	void				add(unsigned char i1, unsigned char i2, bool(*select)(unsigned char index));
-	void				sort(int(*compare)(const void* p1, const void* p2));
-	template<class T> aref<T> col() { return aref<T>((T*)data, count); }
+struct gui_info {
+	unsigned char		border;
+	unsigned char		opacity, opacity_disabled, opacity_hilighted;
+	short				button_width, window_width, window_height, tips_width, control_border;
+	short				padding;
+	void				initialize();
 };
+struct string : stringcreator {
+	string();
+	void						addidentifier(const char* identifier) override;
+	void						addcost();
+	void						addplayerincome();
+	void						addstrenght();
+private:
+	const struct army*			army;
+	char						buffer[8192];
+};
+struct answer_info : string {
+	struct element {
+		int						param;
+		const char*				text;
+		const char*				getname() const { return text; }
+	};
+	typedef void(*tips_type)(stringcreator& sb, const element& e);
+	adat<element, 8>			elements;
+	constexpr explicit operator bool() const { return elements.count != 0; }
+	void						add(int param, const char* format, ...);
+	void						addv(int param, const char* format, const char* format_param);
+	int							choose(bool cancel_button = false) const;
+	void						sort();
+};
+extern gui_info gui_data;
 namespace game {
-unsigned char			choose(player_s player, unsigned char i1, unsigned char i2, const char* title, bool(*select)(unsigned char index), const char* (*source_getname)(unsigned char index), int(*compare)(const void* p1, const void* p2));
-void					strategic();
+unsigned char					choose(player_s player, unsigned char i1, unsigned char i2, const char* title, bool(*select)(unsigned char index), const char* (*source_getname)(unsigned char index), int(*compare)(const void* p1, const void* p2));
+void							strategic();
 };
-unit*					getminimal(unit** result, unsigned count, int (unit::*get)() const);
-unsigned				select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);
-unsigned				select(planet** result, planet** result_max, unit* parent);
-extern unit				solars[38];
-extern adat<unit, 256>	units;
+unit*							getminimal(unit** result, unsigned count, int (unit::*get)() const);
+unsigned						select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const = 0);
+unsigned						select(planet** result, planet** result_max, unit* parent);
+extern unit						solars[38];
+extern adat<unit, 256>			units;

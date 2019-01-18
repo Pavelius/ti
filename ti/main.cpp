@@ -1,12 +1,6 @@
-#include "view.h"
-
-extern bool	sys_optimize_mouse_move;
-
-using namespace draw;
-using namespace draw::controls;
+#include "main.h"
 
 int main() {
-	sys_optimize_mouse_move = true;
 	srand(clock());
 	players[TheEmiratesOfHacan].initialize();
 	players[TheL1z1xMindnet].initialize();
@@ -15,10 +9,8 @@ int main() {
 	players[TheBaronyOfLetnev].interactive = true;
 	players[FederationOfSol].initialize();
 	players[FederationOfSol].interactive = true;
-	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
-	draw::setcaption("Twilight Imperium 3ed");
 	//auto player = draw::chooseplayer();
-	game::strategic();
+	//game::strategic();
 	//draw::production(player, 5);
 	//draw::board();
 	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");

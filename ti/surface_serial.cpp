@@ -4,13 +4,15 @@
 
 #pragma pack(push)
 #pragma pack(1)
-struct bmp_header {
+namespace {
+namespace bmp {
+struct header {
 	unsigned short	signature; // for bitmap 4D42
 	unsigned		size; // size in bytes all file
 	unsigned short	reserved[2]; // reserved, must be null
 	unsigned		bits; // offset to bitmap bits from top of this structure
 };
-struct bmp_info {
+struct info {
 	unsigned		size; // The number of bytes required by the structure.
 	int				width; // The width of the bitmap, in pixels. If biCompression is BI_JPEG or BI_PNG, the biWidth member specifies the width of the decompressed JPEG or PNG image file, respectively.
 	int				height; // The height of the bitmap, in pixels. If biHeight is positive, the bitmap is a bottom-up DIB and its origin is the lower-left corner. If biHeight is negative, the bitmap is a top-down DIB and its origin is the upper-left corner.
@@ -23,15 +25,17 @@ struct bmp_info {
 	unsigned		color_used; // Used mainly with 8-bit per pixel image format.
 	unsigned		color_important;
 };
+}
+}
 #pragma pack(pop)
 
 void draw::write(const char* url, unsigned char* bits, int width, int height, int bpp, int scanline, color* pallette) {
-	bmp_header bmf = {0};
-	bmp_info bmi = {0};
+	bmp::header bmf = {0};
+	bmp::info bmi = {0};
 	//
 	bmf.size = sizeof(bmf);
 	bmf.signature = 0x4D42;
-	bmf.bits = sizeof(bmp_header) + sizeof(bmp_info);
+	bmf.bits = sizeof(bmp::header) + sizeof(bmp::info);
 	//
 	bmi.size = sizeof(bmi);
 	bmi.width = width;
@@ -88,45 +92,44 @@ bool draw::surface::read(const char* url, color* pallette, int need_bpp) {
 	unsigned char* pin = (unsigned char*)loadb(url, (int*)&size);
 	if(!pin)
 		return false;
+	auto result = false;
 	for(auto pv = surface::plugin::first; pv; pv = pv->next) {
 		int width, height, bpp;
 		if(pv->inspect(width, height, bpp, pin, size)) {
-			resize(width, height, bpp, true);
-			if(!pv->decode(bits, pin, size, scanline)) {
-				delete pin;
-				return false;
-			}
-			if(need_bpp)
-				convert(need_bpp, pallette);
+			if(!need_bpp)
+				need_bpp = 32;
+			resize(width, height, need_bpp, true);
+			if(!pv->decode(bits, need_bpp, pin, size))
+				break;
+			result = true;
 			break;
 		}
 	}
 	delete pin;
-	return true;
+	return result;
 }
 
 static struct bmp_bitmap_plugin : public draw::surface::plugin {
 
-	bmp_bitmap_plugin() : plugin("bmp", "BMP images\0*.bmp\0") {}
+	bmp_bitmap_plugin() : plugin("bmp", "BMP images\0*.bmp\0") {
+	}
 
-	bool decode(unsigned char* output, const unsigned char* input, unsigned input_size, int& output_scanline) override {
-		int width, height, bpp;
+	bool decode(unsigned char* output, int output_bpp, const unsigned char* input, unsigned input_size) override {
+		int width, height, input_bpp;
 		if(!output)
 			return false;
-		if(!inspect(width, height, bpp, input, input_size))
+		if(!inspect(width, height, input_bpp, input, input_size))
 			return false;
-		bpp = iabs(bpp);
-		auto ph = (bmp_header*)input;
-		auto pi = (bmp_info*)(input + sizeof(bmp_header));
-		unsigned char* ppal = (unsigned char*)pi + sizeof(bmp_info);
+		auto ph = (bmp::header*)input;
+		auto pi = (bmp::info*)(input + sizeof(bmp::header));
+		unsigned char* ppal = (unsigned char*)pi + sizeof(bmp::info);
 		unsigned char* pb = (unsigned char*)input + ph->bits;
-		int output_bpp = bpp;
-		int input_bpp = bpp;
-		int input_scanline = color::scanline(width, input_bpp);
+		auto input_scanline = color::scanline(width, input_bpp);
+		auto output_scanline = color::scanline(width, output_bpp);
 		color e;
 		for(int y = 0; y < height; y++) {
 			unsigned char* d = output + y * output_scanline;
-			unsigned char* s = pb + ((pi->height < 0) ? y * input_scanline : (pi->height - y - 1)*input_scanline);
+			unsigned char* s = pb + ((pi->height < 0) ? y : (pi->height - y - 1))*input_scanline;
 			for(int x = 0; x < width; x++) {
 				e.read(s, x, input_bpp, ppal);
 				e.write(d, x, output_bpp, 0);
@@ -138,11 +141,11 @@ static struct bmp_bitmap_plugin : public draw::surface::plugin {
 	bool inspect(int& width, int& height, int& bpp, const unsigned char* input, unsigned size) override {
 		if(input[1] != 0x4D || input[0] != 0x42)
 			return false;
-		auto ph = (bmp_header*)input;
-		auto pi = (bmp_info*)(input + sizeof(bmp_header));
+		auto ph = (bmp::header*)input;
+		auto pi = (bmp::info*)(input + sizeof(bmp::header));
 		width = pi->width;
 		height = pi->height;
-		bpp = -pi->bpp;
+		bpp = pi->bpp;
 		return true;
 	}
 

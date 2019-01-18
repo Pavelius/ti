@@ -2,12 +2,6 @@
 #include "io.h"
 #include "win.h"
 
-void printc(const char* format, ...) {
-	char temp[4096 * 4];
-	szprintvs(temp, temp + sizeof(temp)/sizeof(temp[0]), format, xva_start(format));
-	printcnf(temp);
-}
-
 void printcnf(const char* text) {
 	unsigned result;
 	WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), text, zlen(text), &result, 0);
@@ -25,12 +19,22 @@ io::file::~file() {
 }
 
 io::file::find::find(const char* url) {
+	path[0] = 0;
+	zcpy(path, url);
 	char temp[261];
-	zcpy(temp, url);
+	zcpy(temp, path);
 	zcat(temp, "/*.*");
 	handle = FindFirstFileA(temp, (WIN32_FIND_DATA*)&reserved);
 	if(handle == ((void*)-1))
 		handle = 0;
+}
+
+const char* io::file::find::fullname(char* result) {
+	zcpy(result, path);
+	if(result[0])
+		zcat(result, "/");
+	zcat(result, name());
+	return result;
 }
 
 void io::file::find::next() {
@@ -122,7 +126,8 @@ int io::file::seek(int pos, int rel) {
 }
 
 bool io::file::exist(const char* url) {
-	return GetFileAttributesA(url) != 0xFFFFFFFF;
+	auto f = GetFileAttributesA(url);
+	return f != 0xFFFFFFFF;
 }
 
 bool io::file::makedir(const char* url) {

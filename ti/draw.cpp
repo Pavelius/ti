@@ -13,21 +13,21 @@ extern "C" void	free(void* pointer);
 using namespace draw;
 
 // Default theme colors
-color colors::active;
-color colors::button;
-color colors::form;
-color colors::window;
-color colors::text;
-color colors::border;
-color colors::edit;
-color colors::h1;
-color colors::h2;
-color colors::h3;
-color colors::special;
-color colors::tips::text;
-color colors::tips::back;
-color colors::tabs::text;
-color colors::tabs::back;
+color				colors::active;
+color				colors::button;
+color				colors::form;
+color				colors::window;
+color				colors::text;
+color				colors::border;
+color				colors::edit;
+color				colors::h1;
+color				colors::h2;
+color				colors::h3;
+color				colors::special;
+color				colors::tips::text;
+color				colors::tips::back;
+color				colors::tabs::text;
+color				colors::tabs::back;
 // Color context and font context
 color				draw::fore;
 color				draw::fore_stroke;
@@ -37,27 +37,15 @@ bool				draw::mouseinput = true;
 color*				draw::palt;
 rect				draw::clipping;
 char				draw::link[4096];
+hotinfo				draw::hot;
 // Hot keys and menus
-int					hot::animate; // Каждый такт таймера это значение увеличивается на единицу.
-cursors				hot::cursor; // Текущая форма курсора
-int					hot::key; // Событие, которое происходит в данный момент
-point				hot::mouse; // current mouse coordinates
-bool				hot::pressed; // flag if any of mouse keys is pressed
-int					hot::param; // Event numeric parameter (optional)
-rect				hot::element; // Event rectange (optional)
-rect				hot::hilite; // Event rectange (optional)
-bool				sys_optimize_mouse_move = true;
 rect				sys_static_area;
 // Locale draw variables
-static draw::surface current_surface;
-draw::renderplugin*	draw::renderplugin::first;
-draw::surface*		draw::canvas = &current_surface;
+static draw::surface default_surface;
+draw::surface*		draw::canvas = &default_surface;
 static bool			line_antialiasing = true;
-static bool			break_modal;
-static int			break_result;
 // Drag
-static int			drag_id;
-static drag_part_s	drag_part;
+static rect			drag_rect;
 point				draw::drag::mouse;
 int					draw::drag::value;
 // Metrics
@@ -67,6 +55,7 @@ sprite*				metrics::h1 = (sprite*)loadb("art/fonts/h1.pma");
 sprite*				metrics::h2 = (sprite*)loadb("art/fonts/h2.pma");
 sprite*				metrics::h3 = (sprite*)loadb("art/fonts/h3.pma");
 int					metrics::scroll = 16;
+int					metrics::padding = 4;
 
 float sqrt(const float x) {
 	const float xhalf = 0.5f*x;
@@ -885,22 +874,21 @@ rect draw::getarea() {
 	return sys_static_area;
 }
 
-void draw::drag::begin(int id, drag_part_s part) {
-	drag_id = id;
-	drag_part = part;
-	drag::mouse = hot::mouse;
+void draw::drag::begin(const rect& value) {
+	drag_rect = value;
+	mouse = hot.mouse;
 }
 
 bool draw::drag::active() {
-	return drag_id != 0;
+	return drag_rect;
 }
 
-bool draw::drag::active(int id, drag_part_s part) {
-	if(drag_id == id && drag_part == part) {
-		if(!hot::pressed || hot::key == KeyEscape) {
-			drag_id = 0;
-			hot::key = 0;
-			hot::cursor = CursorArrow;
+bool draw::drag::active(const rect& value) {
+	if(drag_rect==value) {
+		if(!hot.pressed || hot.key == KeyEscape) {
+			drag_rect.clear();
+			hot.key = 0;
+			hot.cursor = CursorArrow;
 			return false;
 		}
 		return true;
@@ -991,7 +979,9 @@ static void linew(int x0, int y0, int x1, int y1, float wd) {
 void draw::line(int x0, int y0, int x1, int y1) {
 	if(!canvas)
 		return;
-	if(y0 == y1) {
+	if(linw != 1.0)
+		linew(x0, y0, x1, y1, linw);
+	else if(y0 == y1) {
 		if(!correct(x0, y0, x1, y1, clipping, false))
 			return;
 		set32(canvas->ptr(x0, y0), canvas->scanline, x1 - x0 + 1, 1, fore);
@@ -1000,31 +990,27 @@ void draw::line(int x0, int y0, int x1, int y1) {
 			return;
 		set32(canvas->ptr(x0, y0), canvas->scanline, 1, y1 - y0 + 1, fore);
 	} else if(line_antialiasing) {
-		if(linw != 1.0)
-			linew(x0, y0, x1, y1, linw);
-		else {
-			int dx = iabs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-			int dy = iabs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-			int err = dx - dy, e2, x2; // error value e_xy
-			int ed = dx + dy == 0 ? 1 : isqrt(dx*dx + dy * dy);
-			for(;;) {
-				pixel(x0, y0, 255 * iabs(err - dx + dy) / ed);
-				e2 = err; x2 = x0;
-				if(2 * e2 >= -dx) // x step
-				{
-					if(x0 == x1) break;
-					if(e2 + dy < ed)
-						pixel(x0, y0 + sy, 255 * (e2 + dy) / ed);
-					err -= dy; x0 += sx;
-				}
-				if(2 * e2 <= dy) // y step
-				{
-					if(y0 == y1)
-						break;
-					if(dx - e2 < ed)
-						pixel(x2 + sx, y0, 255 * (dx - e2) / ed);
-					err += dx; y0 += sy;
-				}
+		int dx = iabs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+		int dy = iabs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+		int err = dx - dy, e2, x2; // error value e_xy
+		int ed = dx + dy == 0 ? 1 : isqrt(dx*dx + dy * dy);
+		for(;;) {
+			pixel(x0, y0, 255 * iabs(err - dx + dy) / ed);
+			e2 = err; x2 = x0;
+			if(2 * e2 >= -dx) // x step
+			{
+				if(x0 == x1) break;
+				if(e2 + dy < ed)
+					pixel(x0, y0 + sy, 255 * (e2 + dy) / ed);
+				err -= dy; x0 += sx;
+			}
+			if(2 * e2 <= dy) // y step
+			{
+				if(y0 == y1)
+					break;
+				if(dx - e2 < ed)
+					pixel(x2 + sx, y0, 255 * (dx - e2) / ed);
+				err += dx; y0 += sy;
 			}
 		}
 	} else {
@@ -1338,7 +1324,7 @@ void draw::setclip(rect rcn) {
 static void intersect_rect(rect& r1, const rect& r2) {
 	if(!r1.intersect(r2))
 		return;
-	if(hot::mouse.in(r2)) {
+	if(hot.mouse.in(r2)) {
 		if(r2.y1 > r1.y1)
 			r1.y1 = r2.y1;
 		if(r2.x1 > r1.x1)
@@ -1348,29 +1334,28 @@ static void intersect_rect(rect& r1, const rect& r2) {
 		if(r2.x2 < r1.x2)
 			r1.x2 = r2.x2;
 	} else {
-		if(hot::mouse.y > r2.y2 && r2.y2 > r1.y1)
+		if(hot.mouse.y > r2.y2 && r2.y2 > r1.y1)
 			r1.y1 = r2.y2;
-		else if(hot::mouse.y < r2.y1 && r2.y1 < r1.y2)
+		else if(hot.mouse.y < r2.y1 && r2.y1 < r1.y2)
 			r1.y2 = r2.y1;
-		else if(hot::mouse.x > r2.x2 && r2.x2 > r1.x1)
+		else if(hot.mouse.x > r2.x2 && r2.x2 > r1.x1)
 			r1.x1 = r2.x2;
-		else if(hot::mouse.x < r2.x1 && r2.x1 < r1.x2)
+		else if(hot.mouse.x < r2.x1 && r2.x1 < r1.x2)
 			r1.x2 = r2.x1;
 	}
 }
 
 areas draw::area(rect rc) {
-	if(sys_optimize_mouse_move)
-		intersect_rect(sys_static_area, rc);
+	intersect_rect(sys_static_area, rc);
 	if(drag::active())
 		return AreaNormal;
-	if(!hot::mouse.in(clipping))
+	if(!hot.mouse.in(clipping))
 		return AreaNormal;
 	if(!mouseinput)
 		return AreaNormal;
-	if(hot::mouse.in(rc)) {
-		hot::hilite = rc;
-		return hot::pressed ? AreaHilitedPressed : AreaHilited;
+	if(hot.mouse.in(rc)) {
+		hot.hilite = rc;
+		return hot.pressed ? AreaHilitedPressed : AreaHilited;
 	}
 	return AreaNormal;
 }
@@ -1784,7 +1769,7 @@ void draw::image(int x, int y, const sprite* e, int id, int flags, unsigned char
 		if(!f.pallette || (flags&ImagePallette))
 			pal = draw::palt;
 		else
-			pal = (color*)e->offs(f.pallette);
+			pal = (color*)e->ptr(f.pallette);
 		if(!pal)
 			return;
 		if(flags&ImageMirrorH)
@@ -1799,7 +1784,7 @@ void draw::image(int x, int y, const sprite* e, int id, int flags, unsigned char
 		if(!f.pallette || (flags&ImagePallette))
 			pal = draw::palt;
 		else
-			pal = (color*)e->offs(f.pallette);
+			pal = (color*)e->ptr(f.pallette);
 		if(!pal)
 			return;
 		if(flags&ImageMirrorH)
@@ -2118,60 +2103,42 @@ void surface::convert(int new_bpp, color* pallette) {
 	bpp = iabs(new_bpp);
 }
 
-renderplugin::renderplugin(int priority) : next(0), priority(priority) {
-	if(!first)
-		first = this;
-	else {
-		auto p = first;
-		while(p->next && p->next->priority < priority)
-			p = p->next;
-		this->next = p->next;
-		p->next = this;
+char* draw::key2str(char* result, int key) {
+	result[0] = 0;
+	if(key&Ctrl)
+		zcat(result, "Ctrl+");
+	if(key&Alt)
+		zcat(result, "Alt+");
+	if(key&Shift)
+		zcat(result, "Shift+");
+	key = key & 0xFFFF;
+	switch(key) {
+	case KeyDown: zcat(result, "Down"); break;
+	case KeyDelete: zcat(result, "Del"); break;
+	case KeyEnd: zcat(result, "End"); break;
+	case KeyEnter: zcat(result, "Enter"); break;
+	case KeyHome: zcat(result, "Home"); break;
+	case KeyLeft: zcat(result, "Left"); break;
+	case KeyPageDown: zcat(result, "Page Down"); break;
+	case KeyPageUp: zcat(result, "Page Up"); break;
+	case KeyRight: zcat(result, "Right"); break;
+	case KeyUp: zcat(result, "Up"); break;
+	case F1: zcat(result, "F1"); break;
+	case F2: zcat(result, "F2"); break;
+	case F3: zcat(result, "F3"); break;
+	case F4: zcat(result, "F4"); break;
+	case F5: zcat(result, "F5"); break;
+	case F6: zcat(result, "F6"); break;
+	case F7: zcat(result, "F7"); break;
+	case F8: zcat(result, "F8"); break;
+	case F9: zcat(result, "F9"); break;
+	case F10: zcat(result, "F10"); break;
+	case F11: zcat(result, "F11"); break;
+	case F12: zcat(result, "F12"); break;
+	case KeySpace: zcat(result, "Space"); break;
+	default:
+		zcat(result, char(szupper(key - Alpha)));
+		break;
 	}
-}
-
-bool draw::defproc(int id) {
-	for(auto p = renderplugin::first; p; p = p->next) {
-		if(p->translate(id))
-			return true;
-	}
-	return false;
-}
-
-void draw::initialize() {
-	// Initilaize all plugins
-	for(auto p = renderplugin::first; p; p = p->next)
-		p->initialize();
-	// Set default window colors
-	draw::font = metrics::font;
-	draw::fore = colors::text;
-	draw::fore_stroke = colors::blue;
-}
-
-bool draw::ismodal() {
-	// Before plugin events
-	for(auto p = renderplugin::first; p; p = p->next)
-		p->before();
-	// Break modal loop
-	if(!break_modal)
-		return true;
-	break_modal = false;
-	return false;
-}
-
-void draw::breakmodal(int result) {
-	break_modal = true;
-	break_result = result;
-}
-
-void draw::buttoncancel() {
-	breakmodal(0);
-}
-
-void draw::buttonok() {
-	breakmodal(1);
-}
-
-int draw::getresult() {
-	return break_result;
+	return result;
 }
