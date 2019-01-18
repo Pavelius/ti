@@ -13,9 +13,12 @@ struct cmdid {
 	void clear() { memset(this, 0, sizeof(*this)); }
 };
 struct focusable_element {
-	int				id;
-	rect			rc;
+	int					id;
+	rect				rc;
 	operator bool() const { return id != 0; }
+};
+struct cube {
+	double x, y, z;
 };
 static focusable_element	elements[96];
 static focusable_element*	render_control;
@@ -42,6 +45,10 @@ static control*			current_execute_control;
 extern rect				sys_static_area;
 int						distance(point p1, point p2);
 gui_info				gui;
+const short				size = 192;
+//const short size = 192;
+const double			sqrt_3 = 1.732050807568877;
+const double			cos_30 = 0.86602540378;
 
 void gui_info::initialize() {
 	memset(this, 0, sizeof(*this));
@@ -50,6 +57,7 @@ void gui_info::initialize() {
 	border = 8;
 	padding = 4;
 	window_width = 400;
+	right_width = 220;
 	tips_width = 200;
 	button_width = 64;
 	opacity_hilighted = 200;
@@ -488,6 +496,7 @@ void draw::initialize() {
 	draw::font = metrics::font;
 	draw::fore = colors::text;
 	draw::fore_stroke = colors::blue;
+	gui.initialize();
 	set(draw_icon);
 }
 
@@ -522,4 +531,147 @@ void draw::domodal() {
 		hot.key = draw::rawinput();
 	if(!hot.key)
 		exit(0);
+}
+
+static void icon(int x, int y, unit_s type, int count) {
+	char temp[32];
+	const int r = 12;
+	const int a = r / 6;
+	const int h = r * 3 / 2;
+	draw::state push;
+	fore = colors::red;
+	if(count > 1)
+		zprint(temp, "%1i", count);
+	else
+		temp[0] = 0;
+	switch(type) {
+	case GroundForces:
+		circlef(x, y, r, fore, 96);
+		circle(x, y, r);
+		break;
+	case PDS:
+		rectf({x - r, y - r, x + r, y + r}, fore, 96);
+		rectb({x - r, y - r, x + r, y + r});
+		break;
+	case Fighters:
+		circlef(x, y, r, fore, 96);
+		circle(x, y, r);
+		line(x + r, y - r + a, x + r, y + r - a);
+		line(x + r + 1, y - r + a, x + r + 1, y + r - a);
+		line(x - r, y - r + a, x - r, y + r - a);
+		line(x - r - 1, y - r + a, x - r - 1, y + r - a);
+		break;
+	case Carrier:
+		rectf({x - h, y - r, x + h, y + r}, fore, 96);
+		rectb({x - h, y - r, x + h, y + r});
+		break;
+	}
+	fore = colors::white;
+	text(x - textw(temp) / 2, y - texth() / 2, temp);
+}
+
+static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size / 2)},
+{(short)(size * cos_30), (short)(size / 2)},
+{0, size},
+{-(short)(size * cos_30), (short)(size / 2)},
+{-(short)(size * cos_30), -(short)(size / 2)},
+{0, -size},
+};
+
+static const point planets_n2[] = {{(short)(size / 4), (short)(-size / 3)},
+{(short)(-size / 4), (short)(size / 3)}
+};
+
+static point h2p(point hex) {
+	short x = short(size * sqrt_3) * hex.x + (short(size * sqrt_3) / 2) * hex.y;
+	short y = size * 3 / 2 * hex.y;
+	return {x, y};
+}
+
+static cube cube_round(cube c) {
+	double rx = int(c.x);
+	double ry = int(c.y);
+	double rz = int(c.z);
+	auto x_diff = iabs((double)rx - c.x);
+	auto y_diff = iabs((double)ry - c.y);
+	auto z_diff = iabs((double)rz - c.z);
+	if(x_diff > y_diff && x_diff > z_diff)
+		rx = -ry - rz;
+	else if(y_diff > z_diff)
+		ry = -rx - rz;
+	else
+		rz = -rx - ry;
+	return {rx, ry, rz};
+}
+
+static point cube_to_oddr(cube c) {
+	auto col = c.x + (c.z - (((int)c.z) & 1)) / 2;
+	auto row = c.z;
+	return {(short)col, (short)row};
+}
+
+point hex_round(point pt) {
+	return pt;
+}
+
+static cube axial_to_cube(point pt) {
+	return {0, 0, 0};
+}
+
+static point cube_to_axial(cube c) {
+	return {0, 0};
+}
+
+static point p2h(point pt) {
+	auto q = ((sqrt_3 / 3.0) * (double)pt.x - (1.0 / 3.0) * (double)pt.y) / (double)size;
+	auto r = ((2.0 / 3.0) * (double)pt.y) / (double)size;
+	return cube_to_oddr(cube_round(axial_to_cube({(short)q, (short)r})));
+}
+
+static void hexagon(point pt) {
+	for(auto i = 0; i < 5; i++)
+		draw::line(pt + hexagon_offset[i], pt + hexagon_offset[i + 1], colors::border);
+	draw::line(pt + hexagon_offset[5], pt + hexagon_offset[0], colors::border);
+}
+
+static void draw_planet(point pt, int r, color c) {
+	draw::circlef(pt.x, pt.y, r, c, 128);
+	draw::circle(pt.x, pt.y, r, c);
+}
+
+static void draw_planet(point pt, int n, int m, int r, color c) {
+	switch(m) {
+	case 2:
+		draw_planet(pt + planets_n2[n], r, c);
+		break;
+	}
+}
+
+static void rander_board() {
+	last_board = {0, 0, getwidth(), getheight()};
+	rectf(last_board, colors::window);
+	area(last_board);
+	for(auto y = 0; y < 8; y++) {
+		for(auto x = 0; x < 8; x++) {
+			auto pt = h2p({(short)x, (short)y}) - camera;
+			hexagon(pt);
+			draw_planet(pt, 0, 2, 16, colors::blue);
+			draw_planet(pt, 1, 2, 20, colors::blue);
+		}
+	}
+}
+
+int	answer_info::choose(bool cancel_button) const {
+	while(ismodal()) {
+		auto x = getwidth() - gui.right_width - gui.border - gui.padding;
+		auto y = gui.padding + gui.border;
+		rander_board();
+		for(auto& e : elements)
+			y += windowb(x, y, gui.right_width, e.getname(), cmd(breakparam, e.param));
+		if(cancel_button)
+			y += windowb(x, y, gui.right_width, "cancel", cmd(buttoncancel), 0, KeyEscape);
+		domodal();
+		control_standart();
+	}
+	return getresult();
 }

@@ -81,9 +81,9 @@ void player::initialize() {
 	// Game setup: step 10
 	auto solar_system = solars + player;
 	adat<planet*, 8> planets;
-	planets.count = select(planets.data, planets.data + planets.getmaximum(), solar_system);
-	if(!planets.count)
-		return;
+	//planets.count = select(planets.data, planets.data + planets.getmaximum(), solar_system);
+	//if(!planets.count)
+	//	return;
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
 	create(SpaceDock, base_planet);

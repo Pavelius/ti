@@ -25,9 +25,6 @@
     <ClInclude Include="draw.h">
       <Filter>Графика</Filter>
     </ClInclude>
-    <ClInclude Include="view.h">
-      <Filter>Графика</Filter>
-    </ClInclude>
     <ClInclude Include="bstream.h">
       <Filter>Коллекция</Filter>
     </ClInclude>
@@ -132,16 +129,10 @@
     <ClCompile Include="draw_control.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
-    <ClCompile Include="view_board.cpp">
-      <Filter>Графика</Filter>
-    </ClCompile>
     <ClCompile Include="view_dialogs.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="draw_table.cpp">
-      <Filter>Графика</Filter>
-    </ClCompile>
-    <ClCompile Include="view_window.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="action.cpp">

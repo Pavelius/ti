@@ -1,5 +1,4 @@
 #include "main.h"
-#include "view.h"
 
 static bool politic_select(unsigned char value) {
 	for(auto& e : players) {
