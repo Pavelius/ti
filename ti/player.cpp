@@ -1,9 +1,14 @@
 #include "main.h"
 
+bsreq player_type[] = {
+	BSREQ(player_info, id, text_type),
+	BSREQ(player_info, name, text_type),
+{}};
+
 struct player_info_pregen {
 	const char*			id;
 	const char*			name;
-	unit_s				start_units[16];
+	unit_type_s				start_units[16];
 	cflags<tech_s>		start_tech;
 };
 static constexpr player_info_pregen player_data[] = {{""},
@@ -80,14 +85,16 @@ void player_info::sethuman(player_s id) {
 	human_player = players + id;
 }
 
-unit* player_info::create(unit_s id, unit* planet) {
-	return new unit(id, planet, getindex());
+unit_info* player_info::create(unit_type_s id, unit_info* planet) {
+	return new unit_info(id, planet, getindex());
 }
 
 void player_info::initialize() {
 	memset(this, 0, sizeof(*this));
 	auto player = getindex();
 	auto& pi = player_data[player];
+	id = pi.id;
+	name = pi.name;
 	technologies.data = pi.start_tech.data;
 	// Game setup: step 10
 	auto solar_system = solars + player;
@@ -111,10 +118,7 @@ void player_info::initialize() {
 		create(e, base);
 	}
 	// Game setup: step 11
-	actions[Fleet] = 3;
-	actions[Command] = 3;
-	actions[Strategy] = 2;
-	actions[Goods] = 0;
+	cost_info::initialize();
 }
 
 player_s player_info::getindex() const {
@@ -155,14 +159,8 @@ player_info* player_info::gethuman() {
 	return human_player;
 }
 
-void player_info::add(action_s id, int v) {
-	actions[id] += v;
-	if(actions[id] < 0)
-		actions[id] = 0;
-}
-
 int	player_info::get(action_s id) const {
-	int r = actions[id];
+	int r = cost_info::get(id);
 	switch(id) {
 	case Fleet:
 		if(is(TheBaronyOfLetnev))
@@ -210,22 +208,23 @@ static void strategic_phase() {
 	select(source, player_info::getspeaker());
 	for(auto p : source)
 		p->strategy = NoStrategy;
-	auto player = player_info::gethuman();
+	answer_info ai;
 	adat<strategy_s, Imperial + 1> politics;
 	for(auto i = Initiative; i <= Imperial; i = (strategy_s)(i + 1))
 		politics.add(i);
 	for(auto p : source) {
+		ai.clear();
 		if(!p->iscomputer()) {
-			answer_info ai;
 			for(auto e : politics)
 				ai.add(e, getstr(e));
 			ai.sort();
-			p->strategy = (strategy_s)ai.choose("Ёта стратегическа€ фаза. ¬ам нужно выбрать *одну* стратегию из списка ниже, которую будете использовать на этот ход. Ѕудьте внимательны. ¬аши враги также выбирают одну стратегию из этого же списка.");
+			p->strategy = (strategy_s)ai.choose(
+				"Ёта стратегическа€ фаза. ¬ам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. Ѕудьте внимательны. ¬аши враги также выбирают одну стратегию из этого же списка.", p);
 		} else {
 			p->strategy = politics.data[rand() % politics.getcount()];
 			string sb;
 			sb.add("Ќаши враги [%1] определились со своим курсом действий на ближайшее врем€. ѕо их решению это стала [%2] стратеги€. Ѕудьте внимательны и осторожны.", p->getname(), getstr(p->strategy));
-			player->report(sb);
+			player_info::report(sb);
 		}
 		politics.remove(politics.indexof(p->strategy));
 	}
@@ -237,14 +236,14 @@ action_s player_info::report(const string& sb) {
 	return (action_s)ai.choosev(false, 0, gethuman()->getid(), sb);
 }
 
-player_info* player_info::choose_opponent(string& sb) {
+player_info* player_info::choose_opponent(const char* text) {
 	answer_info ai;
 	for(auto p : active_players) {
 		if(this == p)
 			continue;
 		ai.add((int)p, p->getname());
 	}
-	return (player_info*)ai.choose(sb, iscomputer());
+	return (player_info*)ai.choose(text, this);
 }
 
 void player_info::add_action_cards(int value) {
@@ -255,20 +254,22 @@ void player_info::add_action_cards(int value) {
 
 void player_info::add_command_tokens(int value) {
 	static action_s command_area[] = {Strategy, Command, Fleet};
-	string sb;
-	answer_info ai;
-	sb.add("%1 получили %2i командных очков.", getyouname(), value);
-	auto p = sb.get();
 	while(value > 0) {
-		sb.set(p);
-		sb.adds("–аспределите [%1i] очко.");
+		string sb;
+		answer_info ai;
+		sb.add("%1 получили %2i командных очков.", getyouname(), value);
+		sb.adds("–аспределите [%1i] очко.", value);
 		ai.clear();
 		for(auto e : command_area)
 			ai.add(e, "ќчки %1", getstr(e));
-		auto a = (action_s)ai.choose(sb);
+		auto a = (action_s)ai.choose(sb, this);
 		add(a, 1);
 		value--;
 	}
+}
+
+void player_info::build_units(int value) {
+
 }
 
 static void refresh_players() {
@@ -285,20 +286,23 @@ static void refresh_players() {
 	}
 }
 
-static void strategy_primary_action(player_info* p, strategy_s id) {
+void player_info::add_peace_pact(int value) {
 	string sb;
-	player_array source; select(source, p->getspeaker());
+	sb.player = gethuman();
+	sb.opponent = this;
+	sb.add("¬ыбирайте оппонента с которым вы будете в сознических отношени€х до конца этого хода. Ќи он не вы не сможете нападать друг на друга.");
+	diplomacy_players[0] = this;
+	diplomacy_players[1] = choose_opponent(sb);
+	if(!sb.isplayer()) {
+		sb.add("%1 выбрали %2.", getname(), diplomacy_players[1]->getname());
+		report(sb);
+	}
+}
+
+static void strategy_primary_action(player_info* p, strategy_s id) {
 	switch(id) {
 	case Diplomacy:
-		sb.add("ƒипломатическа€ стратеги€ подразумевает, что вы достигаете определенных договоренностей с вашим врагом. Ќе он, не вы, не сможете нападать друг на друга.");
-		if(!p->iscomputer())
-			sb.adds(" то станет вашим союзником на этот ход?");
-		diplomacy_players[0] = p;
-		diplomacy_players[1] = p->choose_opponent(sb);
-		if(p->iscomputer()) {
-			sb.add("%1 выбрали %2.", p->getname(), diplomacy_players[1]->getname());
-			p->report(sb);
-		}
+		p->add_peace_pact(1);
 		break;
 	case Political:
 		p->add_action_cards(3);
@@ -330,27 +334,40 @@ static void strategy_primary_action(player_info* p, strategy_s id) {
 	}
 }
 
-static action_s choose_action(player_info* p) {
-	if(p->iscomputer()) {
-		return Pass;
-	} else {
-		string sb;
-		answer_info ai;
-		sb.add("„то вы предпочитаете делать в свой ход?");
-		for(auto a = StrategyAction; a <= TransferAction; a = (action_s)(a + 1)) {
-			if(!p->is(a))
-				continue;
-			ai.add(a, getstr(a), getstr(p->strategy));
-		}
-		for(auto a = Armistice; a <= WarFooting; a = (action_s)(a + 1)) {
-			if(!p->is(a))
-				continue;
-			ai.add(a, getstr(a));
-		}
-		if(p->is(Pass) && p->get(StrategyAction)==0)
-			ai.add(Pass, getstr(Pass));
-		return (action_s)ai.choose(sb);
+static void strategy_secondanary_action(player_info* p, strategy_s id) {
+	switch(id) {
+	case Diplomacy:
+		p->refresh_planets(1);
+		break;
+	case Political:
+		p->add_action_cards(1);
+		break;
+	case Logistics:
+		p->add_command_tokens(1);
+		break;
+	case Trade:
+		p->add_profit_for_trade_agreements();
+		break;
+	case Warfare:
+		break;
+	case Technology:
+		break;
+	case Imperial:
+		p->build_units(1);
+		break;
 	}
+}
+
+static action_s choose_action(player_info* p) {
+	string sb;
+	answer_info ai;
+	sb.add("„то вы предпочитаете делать в свой ход?");
+	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
+		if(!p->is(a) || !p->isallow(AsAction, a))
+			continue;
+		ai.add(a, getstr(a), getstr(p->strategy));
+	}
+	return (action_s)ai.choose(sb, p);
 }
 
 static void play_action(player_info* p, action_s id) {

@@ -22,7 +22,6 @@ struct stringcreator {
 	const char*			end() const { return pe; }
 	char*				get() const { return p; }
 	bool				ispos(const char* v) const { return p == v; }
-	void				set(char* p) { this->p = p; }
 private:
 	char*				p;
 	char*				pb;

@@ -118,6 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="bsreq.h" />
     <ClInclude Include="bstream.h" />
     <ClInclude Include="collection.h" />
     <ClInclude Include="color.h" />
@@ -134,9 +135,11 @@
     <ClInclude Include="win.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="abstract_deck.cpp" />
     <ClCompile Include="action.cpp" />
     <ClCompile Include="answer.cpp" />
-    <ClCompile Include="cost_info.cpp" />
+    <ClCompile Include="bsreq.cpp" />
+    <ClCompile Include="cost.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />

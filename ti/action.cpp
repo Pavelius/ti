@@ -1,17 +1,23 @@
 #include "main.h"
 
-enum play_s : unsigned char {
-	NoPlay,
-	AsAction, StrategicPhase,
-	AfterByingTechnology,
-	BeforeDrawPoliticCard, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
-	BeforeStrategy, AfterHit,
-};
+static bool has_tactic(const player_info* player) {
+	return player->get(Command) > 0;
+}
+
+static bool allow_pass(const player_info* player) {
+	if(player->get(StrategyAction) > 0)
+		return false;
+	return true;
+}
+
 struct action_info {
+	typedef bool (*test_proc)(const player_info* player);
 	struct proc_info {
 		play_s		type;
-		constexpr proc_info(play_s type) : type(type) {}
-		constexpr proc_info() : type(AsAction) {}
+		test_proc	test;
+		constexpr proc_info() : type(NoPlay), test(0) {}
+		constexpr proc_info(play_s type) : type(type), test(0) {}
+		constexpr proc_info(test_proc proc) : type(AsAction), test(proc) {}
 	};
 	const char*		id;
 	const char*		name;
@@ -94,9 +100,9 @@ static action_info action_data[] = {{"NoAction", "Нет действия"},
 {"WarFooting", "", 1, AsAction, ""},
 //
 {"StrategyAction", "%1 стратегия", 1, AsAction, ""},
-{"TacticalAction", "Тактическое действие", 1, AsAction, ""},
-{"TransferAction", "Перемещение", 1, AsAction, ""},
-{"Pass", "Пропуск хода", 1, AsAction, ""},
+{"TacticalAction", "Тактическое действие", 1, has_tactic, ""},
+{"TransferAction", "Перемещение", 1, has_tactic, ""},
+{"Pass", "Пропуск хода", 1, allow_pass, ""},
 //
 {"Strategy", "стратегии", 0, NoPlay, ""},
 {"Fleet", "флота", 0, NoPlay, ""},
@@ -105,3 +111,13 @@ static action_info action_data[] = {{"NoAction", "Нет действия"},
 };
 assert_enum(action, LastAction);
 getstr_enum(action);
+
+deck<action_s>	action_deck;
+
+bool player_info::isallow(play_s type, action_s id) const {
+	if(type != action_data[id].proc.type)
+		return false;
+	if(action_data[id].proc.test && !action_data[id].proc.test(this))
+		return false;
+	return true;
+}

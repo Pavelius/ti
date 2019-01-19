@@ -22,10 +22,10 @@ static struct unit_data_info {
 {"Dreadnought", "Дредноут", 5, 5, 1, 1, 5},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, {3, 3}},
 };
-getstr_enum(unit);
-adat<unit, 256>	units;
+getstr_enum(unit_info);
+adat<unit_info, 256>	units;
 
-unsigned select(unit** result, unit** result_max, unit* location, player_s player, bool (unit::*test)() const) {
+unsigned select(unit_info** result, unit_info** result_max, unit_info* location, player_s player, bool (unit_info::*test)() const) {
 	auto p = result;
 	for(auto& e : units) {
 		if(!e)
@@ -42,7 +42,7 @@ unsigned select(unit** result, unit** result_max, unit* location, player_s playe
 	return p - result;
 }
 
-unit* getminimal(unit** result, unsigned count, int (unit::*get)() const) {
+unit_info* getminimal(unit_info** result, unsigned count, int (unit_info::*get)() const) {
 	int value = 0;
 	int index = -1;
 	for(unsigned i = 0; i < count; i++) {
@@ -57,7 +57,7 @@ unit* getminimal(unit** result, unsigned count, int (unit::*get)() const) {
 	return result[index];
 }
 
-void* unit::operator new(unsigned size) {
+void* unit_info::operator new(unsigned size) {
 	for(auto& e : units) {
 		if(!e)
 			return &e;
@@ -65,15 +65,15 @@ void* unit::operator new(unsigned size) {
 	return units.add();
 }
 
-unit::~unit() {
+unit_info::~unit_info() {
 	type = NoUnit;
 }
 
-const char* unit::getname() const {
+const char* unit_info::getname() const {
 	return getstr(type);
 }
 
-int unit::getmovement() const {
+int unit_info::getmovement() const {
 	auto result = unit_data[type].movements;
 	switch(type) {
 	case Carrier:
@@ -96,7 +96,7 @@ int unit::getmovement() const {
 	return result;
 }
 
-int	unit::getresource() const {
+int	unit_info::getresource() const {
 	auto result = unit_data[type].cost;
 	switch(player) {
 	case TheL1z1xMindnet:
@@ -107,22 +107,22 @@ int	unit::getresource() const {
 	return result;
 }
 
-unit* unit::get(unit_s parent_type) {
+unit_info* unit_info::get(unit_type_s parent_type) {
 	auto result = this;
 	while(result && result->type != parent_type)
 		result = result->parent;
 	return result;
 }
 
-int	unit::getavailable(unit_s type) {
+int	unit_info::getavailable(unit_type_s type) {
 	return unit_data[type].available;
 }
 
-int	unit::getproduction(unit_s type) {
+int	unit_info::getproduction(unit_type_s type) {
 	return unit_data[type].production;
 }
 
-int unit::getmaxhits() const {
+int unit_info::getmaxhits() const {
 	switch(type) {
 	case Dreadnought:
 	case WarSun:
@@ -132,7 +132,7 @@ int unit::getmaxhits() const {
 	}
 }
 
-weapon_info unit::getweapon() const {
+weapon_info unit_info::getweapon() const {
 	auto w = unit_data[type].combat;
 	if(is(SardakkNOrr))
 		w.bonus++;
@@ -173,7 +173,7 @@ weapon_info unit::getweapon() const {
 	return w;
 }
 
-weapon_info unit::getweapon(bool attacker, player_s opponent, char round) const {
+weapon_info unit_info::getweapon(bool attacker, player_s opponent, char round) const {
 	auto w = getweapon();
 	if(is(TheL1z1xMindnet)) {
 		if(type == GroundForces && attacker)
@@ -184,7 +184,7 @@ weapon_info unit::getweapon(bool attacker, player_s opponent, char round) const 
 	return w;
 }
 
-bool unit::isinvaders() const {
+bool unit_info::isinvaders() const {
 	switch(type) {
 	case GroundForces:
 		return true;
@@ -195,7 +195,7 @@ bool unit::isinvaders() const {
 	}
 }
 
-bool unit::isplanetary(unit_s type) {
+bool unit_info::isplanetary(unit_type_s type) {
 	switch(type) {
 	case GroundForces:
 	case PDS:
@@ -205,7 +205,7 @@ bool unit::isplanetary(unit_s type) {
 	}
 }
 
-int	unit::getcount(unit_s type, player_s player, unit* location) {
+int	unit_info::getcount(unit_type_s type, player_s player, unit_info* location) {
 	auto result = 0;
 	for(auto& e : units) {
 		if(!e)
@@ -218,7 +218,7 @@ int	unit::getcount(unit_s type, player_s player, unit* location) {
 	return result;
 }
 
-int	unit::getcapacity() const {
+int	unit_info::getcapacity() const {
 	switch(type) {
 	case Carrier:
 	case WarSun:
@@ -233,7 +233,7 @@ int	unit::getcapacity() const {
 	}
 }
 
-unit_s unit::getcapacitylimit() const {
+unit_type_s unit_info::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
@@ -245,7 +245,7 @@ unit_s unit::getcapacitylimit() const {
 	}
 }
 
-int	unit::getcarried() const {
+int	unit_info::getcarried() const {
 	auto result = 0;
 	for(auto& e : units) {
 		if(!e)
@@ -256,7 +256,7 @@ int	unit::getcarried() const {
 	return result;
 }
 
-int unit::getjoincount(unit_s object) const {
+int unit_info::getjoincount(unit_type_s object) const {
 	auto maximum = getcapacity();
 	if(!maximum)
 		return 0;
@@ -267,7 +267,7 @@ int unit::getjoincount(unit_s object) const {
 	return maximum - current;
 }
 
-int	unit::getfightersupport() {
+int	unit_info::getfightersupport() {
 	auto result = 0;
 	for(auto& e : units) {
 		if(!e)
@@ -291,7 +291,7 @@ int	unit::getfightersupport() {
 	return result;
 }
 
-bool unit::build(unit_s object, bool run) {
+bool unit_info::build(unit_type_s object, bool run) {
 	auto solar_system = get(SolarSystem);
 	if(!solar_system)
 		return false;
@@ -329,12 +329,12 @@ bool unit::build(unit_s object, bool run) {
 		return false;
 	if(run) {
 		for(auto i = 0; i < produce_count; i++)
-			new unit(object, build_base, player);
+			new unit_info(object, build_base, player);
 	}
 	return true;
 }
 
-bool unit::in(const unit* object) const {
+bool unit_info::in(const unit_info* object) const {
 	for(auto p = this; p; p = p->parent) {
 		if(p == object)
 			return true;
@@ -342,7 +342,7 @@ bool unit::in(const unit* object) const {
 	return false;
 }
 
-int unit::getweight() const {
+int unit_info::getweight() const {
 	auto result = getresource()*2;
 	auto build_count = getproduction(type);
 	if(build_count)
@@ -356,5 +356,5 @@ int unit::getweight() const {
 	return result;
 }
 
-void unit::destroy() {
+void unit_info::destroy() {
 }

@@ -6,6 +6,8 @@ static int compare(const void* p1, const void* p2) {
 	return strcmp(e1->text, e2->text);
 }
 
+answer_info::answer_info() : stringcreator(buffer, zendof(buffer)) {}
+
 void answer_info::sort() {
 	qsort(elements.data, elements.getcount(), sizeof(elements[0]), compare);
 }
@@ -20,20 +22,19 @@ void answer_info::addv(int param, const char* format, const char* format_param) 
 	auto pe = elements.add();
 	pe->param = param;
 	pe->text = get();
-	string::addv(format, format_param);
+	stringcreator::addv(format, format_param);
 }
 
 void answer_info::add(int param, const char* format, ...) {
 	addv(param, format, xva_start(format));
 }
 
-int	answer_info::choose(const char* format, bool random) const {
-	if(random) {
-		if(elements.getcount())
+int	answer_info::choose(const char* format, const player_info* player) const {
+	if(player!=player_info::gethuman()) {
+		if(elements.getcount()==0)
 			return 0;
 		return elements.data[rand() % elements.getcount()].param;
 	}
-	auto player = player_info::gethuman();
 	if(!player)
 		return 0;
 	return choosev(false, 0, player->getid(), format);

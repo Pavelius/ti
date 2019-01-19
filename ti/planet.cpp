@@ -1,15 +1,15 @@
 #include "main.h"
 
-unit solars[38];
+unit_info solars[38];
 
-constexpr planet_info::planet_info(const char* name, char solar, char resource, char influence, tech_color_s tech_color, wormhole_s wormhole) : unit(Planet, solars + solar + LastPlayer + 1, NoPlayer),
+constexpr planet_info::planet_info(const char* name, char solar, char resource, char influence, tech_color_s tech_color, wormhole_s wormhole) : unit_info(Planet, solars + solar + LastPlayer + 1, NoPlayer),
 name(name),
 resource(resource),
 influence(influence),
 tech_color(tech_color),
 wormhole(wormhole) {}
 
-constexpr planet_info::planet_info(const char* name, player_s player, char resource, char influence) : unit(Planet, solars + player, player),
+constexpr planet_info::planet_info(const char* name, player_s player, char resource, char influence) : unit_info(Planet, solars + player, player),
 name(name),
 resource(resource),
 influence(influence),
@@ -80,7 +80,7 @@ int	planet_info::getresource() const {
 	return resource;
 }
 
-unsigned select(planet_info** result, planet_info** result_max, unit* parent) {
+unsigned select(planet_info** result, planet_info** result_max, unit_info* parent) {
 	auto p = result;
 	for(auto& e : planets) {
 		if(e.parent != parent)

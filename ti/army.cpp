@@ -1,6 +1,6 @@
 #include "main.h"
 
-void army::sort(int (unit::*proc)() const) {
+void army::sort(int (unit_info::*proc)() const) {
 	const auto i2 = getmaximum() - 1;
 	const auto i1 = 0;
 	for(int i = i2; i > i1; i--) {
@@ -20,7 +20,7 @@ void army::removecasualty(player_s player) {
 			continue;
 		temp.add(p);
 	}
-	temp.sort(&unit::getweight);
+	temp.sort(&unit_info::getweight);
 	if(temp.data[0])
 		temp.data[0]->destroy();
 }

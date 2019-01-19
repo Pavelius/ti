@@ -585,7 +585,7 @@ void draw::domodal() {
 		exit(0);
 }
 
-static void icon(int x, int y, unit_s type, int count) {
+static void icon(int x, int y, unit_type_s type, int count) {
 	char temp[32];
 	const int r = 12;
 	const int a = r / 6;
@@ -660,6 +660,18 @@ static point cube_to_oddr(cube c) {
 	auto col = c.x + (c.z - (((int)c.z) & 1)) / 2;
 	auto row = c.z;
 	return {(short)col, (short)row};
+}
+
+static point flat_hex_to_pixel(point hex) {
+	auto x = (short)((size * 3.0 * hex.x) / 2);
+	auto y = (short)(size * sqrt_3 * hex.x + 0.5 * (hex.y & 1));
+	return {x, y};
+}
+
+static point pixel_to_flat_hex(point pixel) {
+	auto q = (short)(((2.0 / 3.0) * pixel.x) / size);
+	auto r = (short)(((-1.0 / 3.0) * pixel.x + sqrt_3 / 3 * pixel.y) / size);
+	return {q, r};
 }
 
 point hex_round(point pt) {

@@ -43,6 +43,9 @@
     <ClInclude Include="rect.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
+    <ClInclude Include="bsreq.h">
+      <Filter>Коллекция</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt.cpp">
@@ -156,7 +159,13 @@
     <ClCompile Include="strategy.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="cost_info.cpp">
+    <ClCompile Include="cost.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="bsreq.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="abstract_deck.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,9 +1,20 @@
+#include "bsreq.h"
 #include "collection.h"
 #include "crt.h"
 #include "stringcreator.h"
 
 #pragma once
 
+bsreq player_type[];
+bsreq string_type[];
+
+enum play_s : unsigned char {
+	NoPlay,
+	AsAction, StrategicPhase,
+	AfterByingTechnology,
+	BeforeDrawPoliticCard, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
+	BeforeStrategy, AfterHit,
+};
 enum player_s : unsigned char {
 	NoPlayer,
 	TheXxchaKingdom,
@@ -24,26 +35,27 @@ enum strategy_s : unsigned char {
 	Initiative, Diplomacy, Political, Logistics,
 	Trade, Warfare, Technology, Imperial,
 };
-enum action_s : unsigned char {NoAction,
-Armistice, ChemicalWarfare, CivilDefense, CommandSummit, CorporateSponsorship,
-CouncilDissolved, CulturalCrisis, DeterminePolicy, DiplomaticImmunity, DirectHit,
-Disclosure, Discredit, DugIn, EmergencyRepairs, ExperimentalBattlestation,
-FantasticRhetoric, FighterPrototype, FlankSpeed, FocusedResearch, GhostShip,
-GoodYear, GrandArmada, InTheSilenceOfSpace, InfluenceInTheMerchantsGuild, Insubordination,
-IntoTheBreach, LocalUnrest, LuckyShot, MassiveTransport, MasterOfTrade,
-Minelayers, MoraleBoost, Multiculturalism, OpeningTheBlackBox, Patrol,
-Plague, PolicyParalysis, PoliticalStability, Privateers, ProductivitySpike,
-PublicDisgrace, RallyOfThePeople, RareMineral, Recheck, Reparations,
-RiseOfAMessiah, RuinousTariffs, Sabotage, ScientistAssassination, SecretIndustrialAgent,
-ShieldsHolding, SignalJamming, SkilledRetreat, SpacedockAccident, StarOfDeath,
-StellarCriminals, StrategicBombardment, StrategicFlexibility, StrategicShift, SuccessfulSpy,
-Synchronicity, TechBubble, TouchOfGenius, TradeStop, Transport,
-Thugs, UnexpectedAction, Uprising, Usurper, Veto,
-VoluntaryAnnexation, WarFooting,
-//
-StrategyAction, TacticalAction, TransferAction, Pass,
-Strategy, Fleet, Command, Goods,
-LastAction = Goods,
+enum action_s : unsigned char {
+	NoAction,
+	Armistice, ChemicalWarfare, CivilDefense, CommandSummit, CorporateSponsorship,
+	CouncilDissolved, CulturalCrisis, DeterminePolicy, DiplomaticImmunity, DirectHit,
+	Disclosure, Discredit, DugIn, EmergencyRepairs, ExperimentalBattlestation,
+	FantasticRhetoric, FighterPrototype, FlankSpeed, FocusedResearch, GhostShip,
+	GoodYear, GrandArmada, InTheSilenceOfSpace, InfluenceInTheMerchantsGuild, Insubordination,
+	IntoTheBreach, LocalUnrest, LuckyShot, MassiveTransport, MasterOfTrade,
+	Minelayers, MoraleBoost, Multiculturalism, OpeningTheBlackBox, Patrol,
+	Plague, PolicyParalysis, PoliticalStability, Privateers, ProductivitySpike,
+	PublicDisgrace, RallyOfThePeople, RareMineral, Recheck, Reparations,
+	RiseOfAMessiah, RuinousTariffs, Sabotage, ScientistAssassination, SecretIndustrialAgent,
+	ShieldsHolding, SignalJamming, SkilledRetreat, SpacedockAccident, StarOfDeath,
+	StellarCriminals, StrategicBombardment, StrategicFlexibility, StrategicShift, SuccessfulSpy,
+	Synchronicity, TechBubble, TouchOfGenius, TradeStop, Transport,
+	Thugs, UnexpectedAction, Uprising, Usurper, Veto,
+	VoluntaryAnnexation, WarFooting,
+	//
+	StrategyAction, TacticalAction, TransferAction, Pass,
+	Strategy, Fleet, Command, Goods,
+	LastAction = Goods,
 };
 enum tech_s : unsigned char {
 	AdvancedFighters, AntimassDeflectors, FleetLogistics, LightWaveDeflector, TypeIVDrive, XRDTransporters,
@@ -57,7 +69,7 @@ enum tech_color_s : unsigned char {
 enum wormhole_s : unsigned char {
 	NoHole, WormholeAlpha, WormholeBeta
 };
-enum unit_s : unsigned char {
+enum unit_type_s : unsigned char {
 	NoUnit,
 	SolarSystem, Nebula,
 	Planet,
@@ -65,8 +77,27 @@ enum unit_s : unsigned char {
 	GroundForces, Fighters, PDS,
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
 };
-struct unit;
+struct unit_info;
 struct string;
+struct name_info {
+	const char*					id;
+	const char*					name;
+	const char*					getid() const { return id; }
+	const char*					getname() const { return name; }
+};
+struct abstract_deck : adat<unsigned char> {
+	void						clear();
+	unsigned char				draw();
+	void						discard(unsigned char);
+	void						shuffle();
+private:
+	adat<unsigned char>			discarded;
+};
+template<class T>
+struct deck : abstract_deck {
+	T							draw() { return abstract_deck::draw(); }
+	void						discard(T e) { abstract_deck::discard(e); }
+};
 struct weapon_info {
 	char						chance;
 	char						count;
@@ -79,29 +110,47 @@ struct weapon_info {
 	void						clear();
 	int							roll() const;
 };
-struct tactic_info {
+struct tactic_info {};
+struct cost_info {
+	void						add(action_s id, int v);
+	int							get(action_s id) const { return actions[id]; }
+	void						initialize();
+	bool						is(action_s value) const { return actions[value] > 0; }
+	void						set(action_s id, int v) { actions[id] = v; }
+private:
+	char						actions[LastAction + 1];
 };
-struct player_info {
+struct strategy_info {
+	const char*					id;
+	const char*					name;
+	const char*					text;
+	char						initiative;
+	char						bonus;
+};
+struct player_info : name_info, cost_info {
 	cflags<tech_s>				technologies;
 	strategy_s					strategy;
 	//
 	static void					add(player_s id);
-	void						add(action_s id, int v);
+	void						add(action_s id, int v) { cost_info::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
+	void						add_peace_pact(int value);
 	void						add_trade_goods(int value) {}
 	void						add_technology(int value) {}
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
+	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
-	player_info*				choose_opponent(string& sb);
+	player_info*				choose_opponent(const char* text);
 	bool						choose_trade() const { return true; }
-	unit*						create(unit_s id, unit* planet);
+	unit_info*						create(unit_type_s id, unit_info* planet);
 	void						draw_political_card(int value) {}
 	void						initialize();
 	bool						is(player_s value) const;
-	bool						is(action_s value) const { return actions[value] > 0; }
+	bool						is(action_s value) const { return cost_info::get(value); }
+	bool						isallow(play_s type, action_s id) const;
 	bool						isally(player_info* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
@@ -118,57 +167,55 @@ struct player_info {
 	static void					make_move();
 	void						open_trade_negatiation() {}
 	void						predict_next_political_card(int value) {}
+	void						refresh_planets(int value) {}
 	static action_s				report(const string& sb);
 	void						return_command_from_board(int value) {}
-	void						set(action_s id, int v) { actions[id] = v; }
 	static void					setup();
 	static void					sethuman(player_s id);
-private:
-	char						actions[LastAction + 1];
 };
 extern player_info				players[SardakkNOrr + 1];
 typedef adat<player_info*, 6>	player_array;
-struct unit {
-	unit_s						type;
+struct unit_info {
+	unit_type_s					type;
 	player_s					player;
-	unit*						parent;
+	unit_info*					parent;
 	bool						used;
-	constexpr unit() : type(NoUnit), player(NoPlayer), parent(0), used(false) {}
-	constexpr unit(unit_s type) : type(type), player(NoPlayer), parent(0), used(false) {}
-	constexpr unit(unit_s type, unit* parent, player_s player) : type(type), player(player), parent(parent), used(false) {}
+	constexpr unit_info() : type(NoUnit), player(NoPlayer), parent(0), used(false) {}
+	constexpr unit_info(unit_type_s type) : type(type), player(NoPlayer), parent(0), used(false) {}
+	constexpr unit_info(unit_type_s type, unit_info* parent, player_s player) : type(type), player(player), parent(parent), used(false) {}
 	explicit operator bool() const { return type != NoUnit; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
-	~unit();
-	bool						build(unit_s object, bool run);
+	~unit_info();
+	bool						build(unit_type_s object, bool run);
 	void						destroy();
-	unit*						get(unit_s parent_type);
-	static int					getavailable(unit_s type);
+	unit_info*					get(unit_type_s parent_type);
+	static int					getavailable(unit_type_s type);
 	int							getcapacity() const;
-	unit_s						getcapacitylimit() const;
+	unit_type_s					getcapacitylimit() const;
 	int							getcarried() const;
-	static int					getcount(unit_s type, player_s player, unit* location = 0);
+	static int					getcount(unit_type_s type, player_s player, unit_info* location = 0);
 	int							getfightersupport();
 	virtual int					getinfluence() const { return 0; }
-	int							getjoincount(unit_s object) const;
+	int							getjoincount(unit_type_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
 	virtual const char*			getname() const;
-	static int					getproduction(unit_s type);
+	static int					getproduction(unit_type_s type);
 	int							getproduction() const { return getproduction(type); }
 	virtual int					getresource() const;
 	int							getstrenght() const { return getweapon().chance; }
-	weapon_info						getweapon() const;
-	weapon_info						getweapon(bool attacker, player_s opponent, char round) const;
+	weapon_info					getweapon() const;
+	weapon_info					getweapon(bool attacker, player_s opponent, char round) const;
 	int							getweight() const;
 	bool						is(player_s type) const { return players[player].is(type); }
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isinvaders() const;
 	bool						isplanetary() const { return isplanetary(type); }
-	static bool					isplanetary(unit_s type);
-	bool						in(const unit* parent) const;
+	static bool					isplanetary(unit_type_s type);
+	bool						in(const unit_info* parent) const;
 };
-struct planet_info : unit {
+struct planet_info : unit_info {
 	const char*					name;
 	tech_color_s				tech_color;
 	wormhole_s					wormhole;
@@ -185,18 +232,20 @@ struct planet_info : unit {
 	virtual int					getresource() const override;
 	static void					refresh();
 };
-struct army : adat<unit*, 32> {
+struct army : adat<unit_info*, 32> {
 	void						removecasualty(player_s player);
-	void						sort(int (unit::*proc)() const);
+	void						sort(int (unit_info::*proc)() const);
 };
 struct string : stringcreator {
+	const player_info*			player;
+	const player_info*			opponent;
 	string();
 	void						addidentifier(const char* identifier) override;
+	bool						isplayer() const;
 private:
-	const struct army*			army;
 	char						buffer[8192];
 };
-struct answer_info : string {
+struct answer_info : stringcreator {
 	struct element {
 		int						param;
 		const char*				text;
@@ -205,12 +254,17 @@ struct answer_info : string {
 	typedef void(*tips_proc)(stringcreator& sb, const element& e);
 	adat<element, 8>			elements;
 	constexpr explicit operator bool() const { return elements.count != 0; }
+	answer_info();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(const char* format, bool random = false) const;
+	int							choose(const char* format, const player_info* player) const;
 	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
 	void						sort();
+private:
+	char						buffer[4096];
 };
+extern deck<action_s>			action_deck;
 extern player_array				active_players;
-extern unit						solars[38];
-extern adat<unit, 256>			units;
+extern unit_info						solars[38];
+extern strategy_info			strategy_data[];
+extern adat<unit_info, 256>			units;
