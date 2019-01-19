@@ -7,8 +7,8 @@ static struct unit_data_info {
 	char		cost;
 	char		production;
 	char		movements;
-	weapon_info		combat;
-} unit_data[] = {{""},
+	weapon_info	combat;
+} unit_type_data[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
 {"Nebula", "Небула", 0, 0, 0, 0},
 {"Planet", "Планета", 0, 0, 0, 0},
@@ -22,7 +22,7 @@ static struct unit_data_info {
 {"Dreadnought", "Дредноут", 5, 5, 1, 1, 5},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, {3, 3}},
 };
-getstr_enum(unit_info);
+getstr_enum(unit_type);
 adat<unit_info, 256>	units;
 
 unsigned select(unit_info** result, unit_info** result_max, unit_info* location, player_s player, bool (unit_info::*test)() const) {
@@ -74,7 +74,7 @@ const char* unit_info::getname() const {
 }
 
 int unit_info::getmovement() const {
-	auto result = unit_data[type].movements;
+	auto result = unit_type_data[type].movements;
 	switch(type) {
 	case Carrier:
 		if(players[player].technologies.is(XRDTransporters))
@@ -97,7 +97,7 @@ int unit_info::getmovement() const {
 }
 
 int	unit_info::getresource() const {
-	auto result = unit_data[type].cost;
+	auto result = unit_type_data[type].cost;
 	switch(player) {
 	case TheL1z1xMindnet:
 		if(type == Dreadnought)
@@ -115,11 +115,11 @@ unit_info* unit_info::get(unit_type_s parent_type) {
 }
 
 int	unit_info::getavailable(unit_type_s type) {
-	return unit_data[type].available;
+	return unit_type_data[type].available;
 }
 
 int	unit_info::getproduction(unit_type_s type) {
-	return unit_data[type].production;
+	return unit_type_data[type].production;
 }
 
 int unit_info::getmaxhits() const {
@@ -133,7 +133,7 @@ int unit_info::getmaxhits() const {
 }
 
 weapon_info unit_info::getweapon() const {
-	auto w = unit_data[type].combat;
+	auto w = unit_type_data[type].combat;
 	if(is(SardakkNOrr))
 		w.bonus++;
 	if(is(TheL1z1xMindnet)) {
