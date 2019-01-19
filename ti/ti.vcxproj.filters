@@ -135,15 +135,6 @@
     <ClCompile Include="action.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="politic.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
-    <ClCompile Include="game.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
-    <ClCompile Include="querry.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="string_value.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
@@ -161,6 +152,12 @@
     </ClCompile>
     <ClCompile Include="zip.cpp">
       <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="strategy.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="cost_info.cpp">
+      <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -361,18 +361,24 @@ static int window(int x, int y, int width, const char* string, int right_width =
 	return height + gui.border * 2;
 }
 
-static void render_picture(int x, int y, const char* id) {
+static int render_picture(int x, int y, const char* id, areas* pa = 0) {
 	static amap<const char*, surface> avatars;
 	auto p = avatars.find(id);
 	if(!p) {
 		p = avatars.add(id, surface());
 		p->value.resize(gui.hero_width, gui.hero_width, 32, true);
-		surface e(id, 0);
+		char temp[260];
+		zprint(temp, "art/portraits/%1.bmp", id);
+		surface e(temp, 0);
 		if(e)
 			blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
 	}
 	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
-	rectb({x, y, x + gui.hero_width, y + gui.hero_width}, colors::border);
+	rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
+	rectb(rc, colors::border);
+	if(pa)
+		*pa = area(rc);
+	return gui.hero_width;
 }
 
 static int windowp(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
@@ -693,6 +699,31 @@ static void draw_planet(point pt, int n, int m, int r, color c) {
 	}
 }
 
+static int render_right() {
+	auto x = gui.border;
+	auto y = gui.border;
+	for(auto p : active_players) {
+		areas a = AreaNormal;
+		auto w = render_picture(x, y, p->getid(), &a);
+		rect rc = {x, y, x + w, y + w};
+		if(p->gethuman() == p) {
+			rectb(rc, colors::white);
+			rc.offset(-1, -1);
+		}
+		if(p->getspeaker() == p) {
+			rectb(rc, colors::blue); rc.offset(-1, -1);
+			rectb(rc, colors::blue.mix(colors::form)); rc.offset(-1, -1);
+		}
+		if(a == AreaHilited || a == AreaHilitedPressed) {
+			string sb;
+			p->getinfo(sb);
+			tooltips(x - gui.border, y + gui.border, w, sb);
+		}
+		y += w + gui.padding;
+	}
+	return y;
+}
+
 static void render_board() {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
@@ -721,22 +752,22 @@ struct control_player_table : table {
 		if(columns[column] == "name")
 			return getstr(source[line]);
 		else if(columns[column] == "politic")
-			return getstr(players[source[line]].politic);
+			return getstr(players[source[line]].strategy);
 		return 0;
 	}
 	int getnumber(int line, int column) const override {
 		if(columns[column] == "resource")
-			return planet::get(source[line], &planet::getresource);
+			return planet_info::get(source[line], &planet_info::getresource);
 		else if(columns[column] == "influence")
-			return planet::get(source[line], &planet::getinfluence);
+			return planet_info::get(source[line], &planet_info::getinfluence);
 		else if(columns[column] == "planet_count")
-			return planet::get(source[line], &planet::getone);
+			return planet_info::get(source[line], &planet_info::getone);
 		else if(columns[column] == "fleet")
-			return players[source[line]].getfleet();
+			return players[source[line]].get(Fleet);
 		else if(columns[column] == "command")
-			return players[source[line]].getcommand();
+			return players[source[line]].get(Command);
 		else if(columns[column] == "strategy")
-			return players[source[line]].getstrategy();
+			return players[source[line]].get(Strategy);
 		return 0;
 	}
 	player_s getvalue() const {
@@ -764,9 +795,8 @@ struct control_player_table : table {
 	}
 	void initialize() {
 		source.clear();
-		for(auto i = FirstPlayer; i <= LastPlayer; i = (player_s)(i + 1)) {
-			if(players[i].ingame)
-				source.add(i);
+		for(auto p : active_players) {
+			source.add(p->getindex());
 		}
 		qsort(source.data, source.count, sizeof(source.data[0]), compare);
 	}
@@ -808,20 +838,18 @@ static int show_right_buttoms() {
 	return y + radius * 2;
 }
 
-int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format, const char* format_param) const {
+int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
 	int x, y;
-	string sb;
 	while(ismodal()) {
 		render_board();
+		render_right();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
 		if(format) {
-			sb.clear();
-			sb.addv(format, format_param);
 			if(picture)
-				y += windowp(x, y, gui.hero_width, gui.window_width, picture, sb);
+				y += windowp(x, y, gui.hero_width, gui.window_width, picture, format);
 			else
-				y += window(x, y, gui.window_width, sb, gui.window_width);
+				y += window(x, y, gui.window_width, format, gui.window_width);
 			y += gui.padding;
 		}
 		x = getwidth() - gui.right_width - gui.border * 2;

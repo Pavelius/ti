@@ -3,17 +3,18 @@
 
 int main() {
 	srand(clock());
-	players[TheEmiratesOfHacan].initialize();
-	players[TheL1z1xMindnet].initialize();
-	players[TheL1z1xMindnet].interactive = true;
-	players[TheBaronyOfLetnev].initialize();
-	players[TheBaronyOfLetnev].interactive = true;
-	players[FederationOfSol].initialize();
-	players[FederationOfSol].interactive = true;
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
-	player_info::make_move();
+	//player_info::add(SardakkNOrr);
+	player_info::add(UniversitiesOfJolNar);
+	player_info::add(TheEmiratesOfHacan);
+	//player_info::add(TheL1z1xMindnet);
+	player_info::add(TheBaronyOfLetnev);
+	player_info::add(FederationOfSol);
+	player_info::setup();
+	player_info::sethuman(FederationOfSol);
+	player_info::gethuman()->make_move();
 	//auto player = draw::chooseplayer();
 	//game::strategic();
 	//draw::production(player, 5);

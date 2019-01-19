@@ -19,10 +19,31 @@ enum player_s : unsigned char {
 	FirstPlayer = TheXxchaKingdom,
 	LastPlayer = SardakkNOrr,
 };
-enum politic_s : unsigned char {
-	NoPolitic,
+enum strategy_s : unsigned char {
+	NoStrategy,
 	Initiative, Diplomacy, Political, Logistics,
 	Trade, Warfare, Technology, Imperial,
+};
+enum action_s : unsigned char {NoAction,
+Armistice, ChemicalWarfare, CivilDefense, CommandSummit, CorporateSponsorship,
+CouncilDissolved, CulturalCrisis, DeterminePolicy, DiplomaticImmunity, DirectHit,
+Disclosure, Discredit, DugIn, EmergencyRepairs, ExperimentalBattlestation,
+FantasticRhetoric, FighterPrototype, FlankSpeed, FocusedResearch, GhostShip,
+GoodYear, GrandArmada, InTheSilenceOfSpace, InfluenceInTheMerchantsGuild, Insubordination,
+IntoTheBreach, LocalUnrest, LuckyShot, MassiveTransport, MasterOfTrade,
+Minelayers, MoraleBoost, Multiculturalism, OpeningTheBlackBox, Patrol,
+Plague, PolicyParalysis, PoliticalStability, Privateers, ProductivitySpike,
+PublicDisgrace, RallyOfThePeople, RareMineral, Recheck, Reparations,
+RiseOfAMessiah, RuinousTariffs, Sabotage, ScientistAssassination, SecretIndustrialAgent,
+ShieldsHolding, SignalJamming, SkilledRetreat, SpacedockAccident, StarOfDeath,
+StellarCriminals, StrategicBombardment, StrategicFlexibility, StrategicShift, SuccessfulSpy,
+Synchronicity, TechBubble, TouchOfGenius, TradeStop, Transport,
+Thugs, UnexpectedAction, Uprising, Usurper, Veto,
+VoluntaryAnnexation, WarFooting,
+//
+StrategyAction, TacticalAction, TransferAction, Pass,
+Strategy, Fleet, Command, Goods,
+LastAction = Goods,
 };
 enum tech_s : unsigned char {
 	AdvancedFighters, AntimassDeflectors, FleetLogistics, LightWaveDeflector, TypeIVDrive, XRDTransporters,
@@ -45,40 +66,68 @@ enum unit_s : unsigned char {
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
 };
 struct unit;
-struct weapon {
+struct string;
+struct weapon_info {
 	char						chance;
 	char						count;
 	char						bonus;
 	char						reroll;
-	constexpr weapon() : chance(0), count(1), bonus(0), reroll(0) {}
-	constexpr weapon(char chance) : chance(chance), count(1), bonus(0), reroll(0) {}
-	constexpr weapon(char chance, char count) : chance(chance), count(count), bonus(0), reroll(0) {}
+	constexpr weapon_info() : chance(0), count(1), bonus(0), reroll(0) {}
+	constexpr weapon_info(char chance) : chance(chance), count(1), bonus(0), reroll(0) {}
+	constexpr weapon_info(char chance, char count) : chance(chance), count(count), bonus(0), reroll(0) {}
 	explicit operator bool() const { return chance != 0; }
 	void						clear();
 	int							roll() const;
 };
+struct tactic_info {
+};
 struct player_info {
-	char						command, strategy, fleet, goods;
 	cflags<tech_s>				technologies;
-	politic_s					politic;
-	bool						ingame;
-	bool						interactive;
-	explicit operator bool() const { return ingame; }
+	strategy_s					strategy;
 	//
+	static void					add(player_s id);
+	void						add(action_s id, int v);
+	void						add_action_cards(int value);
+	void						add_command_tokens(int value);
+	void						add_trade_goods(int value) {}
+	void						add_technology(int value) {}
+	void						add_objective(int value) {}
+	void						add_profit_for_trade_agreements() {}
+	void						add_victory_points(int value) {}
+	void						cancel_all_trade_agreements() {}
+	player_info*				choose_opponent(string& sb);
+	bool						choose_trade() const { return true; }
 	unit*						create(unit_s id, unit* planet);
+	void						draw_political_card(int value) {}
 	void						initialize();
 	bool						is(player_s value) const;
-	bool						iscomputer() const { return !interactive; }
-	int							getcommand() const { return command; }
-	int							getfleet() const;
+	bool						is(action_s value) const { return actions[value] > 0; }
+	bool						isally(player_info* enemy) const;
+	bool						iscomputer() const;
+	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
+	int							get(action_s id) const;
+	static player_info*			gethuman();
+	const char*					getid() const;
 	player_s					getindex() const;
+	void						getinfo(string& sb) const;
 	int							getinitiative() const;
-	static int					getinitiative(politic_s value);
-	int							getstrategy() const { return strategy; }
-	int							getgoods() const { return goods; }
+	static int					getinitiative(strategy_s value);
+	const char*					getname() const;
+	static player_info*			getspeaker();
+	const char*					getyouname() const;
 	static void					make_move();
+	void						open_trade_negatiation() {}
+	void						predict_next_political_card(int value) {}
+	static action_s				report(const string& sb);
+	void						return_command_from_board(int value) {}
+	void						set(action_s id, int v) { actions[id] = v; }
+	static void					setup();
+	static void					sethuman(player_s id);
+private:
+	char						actions[LastAction + 1];
 };
 extern player_info				players[SardakkNOrr + 1];
+typedef adat<player_info*, 6>	player_array;
 struct unit {
 	unit_s						type;
 	player_s					player;
@@ -109,8 +158,8 @@ struct unit {
 	int							getproduction() const { return getproduction(type); }
 	virtual int					getresource() const;
 	int							getstrenght() const { return getweapon().chance; }
-	weapon						getweapon() const;
-	weapon						getweapon(bool attacker, player_s opponent, char round) const;
+	weapon_info						getweapon() const;
+	weapon_info						getweapon(bool attacker, player_s opponent, char round) const;
 	int							getweight() const;
 	bool						is(player_s type) const { return players[player].is(type); }
 	bool						iscarrier() const { return getcapacity() != 0; }
@@ -119,17 +168,17 @@ struct unit {
 	static bool					isplanetary(unit_s type);
 	bool						in(const unit* parent) const;
 };
-struct planet : unit {
+struct planet_info : unit {
 	const char*					name;
 	tech_color_s				tech_color;
 	wormhole_s					wormhole;
 	char						resource;
 	char						influence;
-	constexpr planet(const char* name, char solar, char resource, char influence,
+	constexpr planet_info(const char* name, char solar, char resource, char influence,
 		tech_color_s tech_color = NoTech,
 		wormhole_s wormhole = NoHole);
-	constexpr planet(const char* name, player_s player, char resource, char influence);
-	static int					get(player_s player, int(planet::*getproc)() const);
+	constexpr planet_info(const char* name, player_s player, char resource, char influence);
+	static int					get(player_s player, int(planet_info::*getproc)() const);
 	virtual const char*			getname() const override { return name; }
 	virtual int					getinfluence() const override;
 	int							getone() const { return 1; }
@@ -158,9 +207,10 @@ struct answer_info : string {
 	constexpr explicit operator bool() const { return elements.count != 0; }
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(bool cancel_button, const char* format, ...) const;
-	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format, const char* format_param) const;
+	int							choose(const char* format, bool random = false) const;
+	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
 	void						sort();
 };
+extern player_array				active_players;
 extern unit						solars[38];
 extern adat<unit, 256>			units;

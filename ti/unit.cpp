@@ -1,13 +1,13 @@
 #include "main.h"
 
-static struct unit_info {
+static struct unit_data_info {
 	const char*	id;
 	const char*	name;
 	char		available;
 	char		cost;
 	char		production;
 	char		movements;
-	weapon		combat;
+	weapon_info		combat;
 } unit_data[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
 {"Nebula", "Небула", 0, 0, 0, 0},
@@ -132,7 +132,7 @@ int unit::getmaxhits() const {
 	}
 }
 
-weapon unit::getweapon() const {
+weapon_info unit::getweapon() const {
 	auto w = unit_data[type].combat;
 	if(is(SardakkNOrr))
 		w.bonus++;
@@ -173,7 +173,7 @@ weapon unit::getweapon() const {
 	return w;
 }
 
-weapon unit::getweapon(bool attacker, player_s opponent, char round) const {
+weapon_info unit::getweapon(bool attacker, player_s opponent, char round) const {
 	auto w = getweapon();
 	if(is(TheL1z1xMindnet)) {
 		if(type == GroundForces && attacker)

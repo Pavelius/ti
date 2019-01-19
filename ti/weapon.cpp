@@ -1,11 +1,11 @@
 #include "main.h"
 
-void weapon::clear() {
+void weapon_info::clear() {
 	chance = 0;
 	count = 1;
 }
 
-int weapon::roll() const {
+int weapon_info::roll() const {
 	if(chance < 1)
 		return 0;
 	auto result = 0;

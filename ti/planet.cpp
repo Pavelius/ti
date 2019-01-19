@@ -2,21 +2,21 @@
 
 unit solars[38];
 
-constexpr planet::planet(const char* name, char solar, char resource, char influence, tech_color_s tech_color, wormhole_s wormhole) : unit(Planet, solars + solar + LastPlayer + 1, NoPlayer),
+constexpr planet_info::planet_info(const char* name, char solar, char resource, char influence, tech_color_s tech_color, wormhole_s wormhole) : unit(Planet, solars + solar + LastPlayer + 1, NoPlayer),
 name(name),
 resource(resource),
 influence(influence),
 tech_color(tech_color),
 wormhole(wormhole) {}
 
-constexpr planet::planet(const char* name, player_s player, char resource, char influence) : unit(Planet, solars + player, player),
+constexpr planet_info::planet_info(const char* name, player_s player, char resource, char influence) : unit(Planet, solars + player, player),
 name(name),
 resource(resource),
 influence(influence),
 tech_color(NoTech),
 wormhole(NoHole) {}
 
-static planet planets[] = {{"Archon Ren", TheXxchaKingdom, 2, 3},
+static planet_info planets[] = {{"Archon Ren", TheXxchaKingdom, 2, 3},
 {"Arc Prime", TheBaronyOfLetnev, 4, 0},
 {"Maaluuk", TheNaaluCollective, 0, 2},
 {"[0.0.0]", TheL1z1xMindnet, 5, 0},
@@ -72,15 +72,15 @@ static planet planets[] = {{"Archon Ren", TheXxchaKingdom, 2, 3},
 {"Xxehan", 12, 1, 1, Green},
 };
 
-int	planet::getinfluence() const {
+int	planet_info::getinfluence() const {
 	return influence;
 }
 
-int	planet::getresource() const {
+int	planet_info::getresource() const {
 	return resource;
 }
 
-unsigned select(planet** result, planet** result_max, unit* parent) {
+unsigned select(planet_info** result, planet_info** result_max, unit* parent) {
 	auto p = result;
 	for(auto& e : planets) {
 		if(e.parent != parent)
@@ -91,7 +91,7 @@ unsigned select(planet** result, planet** result_max, unit* parent) {
 	return p - result;
 }
 
-int planet::get(player_s player, int(planet::*getproc)() const) {
+int planet_info::get(player_s player, int(planet_info::*getproc)() const) {
 	auto result = 0;
 	for(auto& e : planets) {
 		if(e.player != player)
@@ -101,7 +101,7 @@ int planet::get(player_s player, int(planet::*getproc)() const) {
 	return result;
 }
 
-void planet::refresh() {
+void planet_info::refresh() {
 	for(auto& e : planets)
 		e.used = false;
 }

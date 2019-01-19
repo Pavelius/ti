@@ -27,6 +27,14 @@ void answer_info::add(int param, const char* format, ...) {
 	addv(param, format, xva_start(format));
 }
 
-int	answer_info::choose(bool cancel_button, const char* format, ...) const {
-	return choosev(cancel_button, 0, "art/portraits/mentax.png", format, xva_start(format));
+int	answer_info::choose(const char* format, bool random) const {
+	if(random) {
+		if(elements.getcount())
+			return 0;
+		return elements.data[rand() % elements.getcount()].param;
+	}
+	auto player = player_info::gethuman();
+	if(!player)
+		return 0;
+	return choosev(false, 0, player->getid(), format);
 }
