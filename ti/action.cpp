@@ -121,3 +121,12 @@ bool player_info::isallow(play_s type, action_s id) const {
 		return false;
 	return true;
 }
+
+void player_info::create_action_deck() {
+	action_deck.clear();
+	for(auto i = Armistice; i <= WarFooting; i=(action_s)(i+1)) {
+		for(auto j = 0; j < action_data[i].count; j++)
+			action_deck.add(i);
+	}
+	action_deck.shuffle();
+}

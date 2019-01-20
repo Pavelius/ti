@@ -52,6 +52,7 @@ enum action_s : unsigned char {
 	Synchronicity, TechBubble, TouchOfGenius, TradeStop, Transport,
 	Thugs, UnexpectedAction, Uprising, Usurper, Veto,
 	VoluntaryAnnexation, WarFooting,
+	FirstActionCard = Armistice, LastActionCard = WarFooting,
 	//
 	StrategyAction, TacticalAction, TransferAction, Pass,
 	Strategy, Fleet, Command, Goods,
@@ -95,7 +96,8 @@ private:
 };
 template<class T>
 struct deck : abstract_deck {
-	T							draw() { return abstract_deck::draw(); }
+	void						add(T e) { auto p = abstract_deck::add(); *p = e; }
+	T							draw() { return (T)abstract_deck::draw(); }
 	void						discard(T e) { abstract_deck::discard(e); }
 };
 struct weapon_info {
@@ -113,6 +115,7 @@ struct weapon_info {
 struct tactic_info {};
 struct cost_info {
 	void						add(action_s id, int v);
+	void						difference(string& sb, const cost_info& e);
 	int							get(action_s id) const { return actions[id]; }
 	void						initialize();
 	bool						is(action_s value) const { return actions[value] > 0; }
@@ -128,7 +131,6 @@ struct strategy_info {
 	char						bonus;
 };
 struct player_info : name_info, cost_info {
-	cflags<tech_s>				technologies;
 	strategy_s					strategy;
 	//
 	static void					add(player_s id);
@@ -143,18 +145,22 @@ struct player_info : name_info, cost_info {
 	void						add_victory_points(int value) {}
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
+	void						check_card_limin();
 	player_info*				choose_opponent(const char* text);
 	bool						choose_trade() const { return true; }
-	unit_info*						create(unit_type_s id, unit_info* planet);
+	unit_info*					create(unit_type_s id, unit_info* planet);
+	static void					create_action_deck();
 	void						draw_political_card(int value) {}
 	void						initialize();
 	bool						is(player_s value) const;
 	bool						is(action_s value) const { return cost_info::get(value); }
+	bool						is(tech_s value) const { return technologies.is(value); }
 	bool						isallow(play_s type, action_s id) const;
 	bool						isally(player_info* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
 	int							get(action_s id) const;
+	int							getcardscount() const;
 	static player_info*			gethuman();
 	const char*					getid() const;
 	player_s					getindex() const;
@@ -172,6 +178,8 @@ struct player_info : name_info, cost_info {
 	void						return_command_from_board(int value) {}
 	static void					setup();
 	static void					sethuman(player_s id);
+private:
+	cflags<tech_s>				technologies;
 };
 extern player_info				players[SardakkNOrr + 1];
 typedef adat<player_info*, 6>	player_array;
@@ -237,10 +245,8 @@ struct army : adat<unit_info*, 32> {
 };
 struct string : stringcreator {
 	const player_info*			player;
-	const player_info*			opponent;
 	string();
 	void						addidentifier(const char* identifier) override;
-	bool						isplayer() const;
 private:
 	char						buffer[8192];
 };

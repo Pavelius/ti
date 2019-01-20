@@ -12,3 +12,6 @@ void cost_info::initialize() {
 	actions[Strategy] = 2;
 	actions[Goods] = 0;
 }
+
+void cost_info::difference(string& sb, const cost_info& e) {
+}

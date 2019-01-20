@@ -187,6 +187,7 @@ void player_info::getinfo(string& sb) const {
 }
 
 void player_info::setup() {
+	create_action_deck();
 	if(!active_players.count)
 		return;
 	speaker = active_players.data[rand()% active_players.count];
@@ -230,6 +231,17 @@ static void strategic_phase() {
 	}
 }
 
+int player_info::getcardscount() const {
+	auto result = 0;
+	for(auto i = FirstActionCard; i <= LastActionCard; i = (action_s)(i + 1))
+		result += get(i);
+	return result;
+}
+
+void player_info::check_card_limin() {
+
+}
+
 action_s player_info::report(const string& sb) {
 	answer_info ai;
 	ai.add(0, "Принять");
@@ -247,8 +259,12 @@ player_info* player_info::choose_opponent(const char* text) {
 }
 
 void player_info::add_action_cards(int value) {
+	for(auto i = 0; i < value; i++) {
+		auto a = action_deck.draw();
+		add(a, 1);
+	}
 	string sb;
-	sb.add("%1 получили %2i командных очков.", getyouname(), value);
+	sb.add("%1 получили %2i получили карт действий.", getyouname(), value);
 	report(sb);
 }
 
@@ -288,12 +304,11 @@ static void refresh_players() {
 
 void player_info::add_peace_pact(int value) {
 	string sb;
-	sb.player = gethuman();
-	sb.opponent = this;
+	sb.player = this;
 	sb.add("Выбирайте оппонента с которым вы будете в сознических отношениях до конца этого хода. Ни он не вы не сможете нападать друг на друга.");
 	diplomacy_players[0] = this;
 	diplomacy_players[1] = choose_opponent(sb);
-	if(!sb.isplayer()) {
+	if(iscomputer()) {
 		sb.add("%1 выбрали %2.", getname(), diplomacy_players[1]->getname());
 		report(sb);
 	}

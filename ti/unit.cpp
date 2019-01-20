@@ -77,19 +77,19 @@ int unit_info::getmovement() const {
 	auto result = unit_type_data[type].movements;
 	switch(type) {
 	case Carrier:
-		if(players[player].technologies.is(XRDTransporters))
+		if(players[player].is(XRDTransporters))
 			result++;
 		break;
 	case Cruiser:
-		if(players[player].technologies.is(TypeIVDrive))
+		if(players[player].is(TypeIVDrive))
 			result++;
 		break;
 	case Dreadnought:
-		if(players[player].technologies.is(TypeIVDrive))
+		if(players[player].is(TypeIVDrive))
 			result++;
 		break;
 	case Fighters:
-		if(players[player].technologies.is(AdvancedFighters))
+		if(players[player].is(AdvancedFighters))
 			result = 2;
 		break;
 	}
@@ -149,24 +149,24 @@ weapon_info unit_info::getweapon() const {
 	auto& pi = players[player];
 	switch(type) {
 	case Fighters:
-		if(pi.technologies.is(Cybernetics))
+		if(pi.is(Cybernetics))
 			w.bonus++;
-		if(pi.technologies.is(AdvancedFighters))
+		if(pi.is(AdvancedFighters))
 			w.bonus++;
 		break;
 	case GroundForces:
-		if(pi.technologies.is(GenSynthesis))
+		if(pi.is(GenSynthesis))
 			w.bonus++;
 		break;
 	case Cruiser:
 	case Destroyer:
-		if(pi.technologies.is(HylarVAssaultLaser))
+		if(pi.is(HylarVAssaultLaser))
 			w.bonus++;
 		break;
 	case PDS:
-		if(pi.technologies.is(MagenDefenseGrid))
+		if(pi.is(MagenDefenseGrid))
 			w.bonus++;
-		if(pi.technologies.is(GravitonLaserSystem))
+		if(pi.is(GravitonLaserSystem))
 			w.reroll++;
 		break;
 	}
@@ -189,7 +189,7 @@ bool unit_info::isinvaders() const {
 	case GroundForces:
 		return true;
 	case Fighters:
-		return players[player].technologies.is(GravitonNegator);
+		return players[player].is(GravitonNegator);
 	default:
 		return false;
 	}
@@ -225,7 +225,7 @@ int	unit_info::getcapacity() const {
 		return 6;
 	case Dreadnought:
 	case Cruiser:
-		if(players[player].technologies.is(StasisCapsules))
+		if(players[player].is(StasisCapsules))
 			return 1;
 		return 0;
 	default:
@@ -237,7 +237,7 @@ unit_type_s unit_info::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
-		if(players[player].technologies.is(StasisCapsules))
+		if(players[player].is(StasisCapsules))
 			return GroundForces;
 		return NoUnit;
 	default:
@@ -319,7 +319,7 @@ bool unit_info::build(unit_type_s object, bool run) {
 	}
 	if(build_base->player != player)
 		return false;
-	if(object==Fighters && !players[player].technologies.is(AdvancedFighters)) {
+	if(object==Fighters && !players[player].is(AdvancedFighters)) {
 		auto available_count = solar_system->getfightersupport();
 		auto exist_count = getcount(object, player, solar_system);
 		if(exist_count + produce_count > available_count)
