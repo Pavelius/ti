@@ -196,14 +196,13 @@ struct unit_info {
 	int							getcarried() const;
 	static int					getcount(unit_type_s type, player_s player, unit_info* location = 0);
 	int							getfightersupport();
-	virtual int					getinfluence() const { return 0; }
 	int							getjoincount(unit_type_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
-	virtual const char*			getname() const;
+	const char*					getname() const;
 	static int					getproduction(unit_type_s type);
 	int							getproduction() const { return getproduction(type); }
-	virtual int					getresource() const;
+	int							getresource() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weapon_info					getweapon() const;
 	weapon_info					getweapon(bool attacker, player_s opponent, char round) const;
@@ -226,10 +225,10 @@ struct planet_info : unit_info {
 		wormhole_s wormhole = NoHole);
 	constexpr planet_info(const char* name, player_s player, char resource, char influence);
 	static int					get(player_s player, int(planet_info::*getproc)() const);
-	virtual const char*			getname() const override { return name; }
-	virtual int					getinfluence() const override;
+	const char*					getname() const { return name; }
+	int							getinfluence() const;
 	int							getone() const { return 1; }
-	virtual int					getresource() const override;
+	int							getresource() const;
 	static void					refresh();
 };
 struct army : adat<unit_info*, 32> {
