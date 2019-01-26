@@ -5,58 +5,77 @@ bsreq player_type[] = {
 	BSREQ(player_info, name, text_type),
 {}};
 
-struct player_info_pregen {
+struct player_pregen_info {
 	const char*			id;
 	const char*			name;
-	unit_type_s				start_units[16];
+	char				tokens[3];
+	cflags<bonus_s>		bonus;
+	adat<action_s, 8>	actions;
+	unit_type_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
-static constexpr player_info_pregen player_data[] = {{""},
-{"xxcha", "Королевство Иксча",
+static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3},
+{CombatBonusDefend},
+{ExecutePrimaryAbility, ChangePoliticCard},
 {Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
-{AntimassDeflectors, EnviroCompensator}
-},
-{"barony", "Баронство Летнева",
+{AntimassDeflectors, EnviroCompensator}},
+{"barony", "Баронство Летнева", {2, 3, 3},
+{BonusFleetTokens},
+{BaronyEquipment},
 {Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces},
 {HylarVAssaultLaser, AntimassDeflectors}
 },
-{"naalu", "Община Наалу",
+{"naalu", "Община Наалу", {2, 3, 3},
+{BonusInitiative, CombatBonusFighters},
+{NaaluFleetRetreat},
 {GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
 {EnviroCompensator, AntimassDeflectors}
 },
-{"mindnet", "Сеть раума L1z1x",
+{"mindnet", "Сеть раума L1z1x", {3, 3, 3},
+{BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
+{},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
 {EnviroCompensator, StasisCapsules, Cybernetics, HylarVAssaultLaser}
 },
-{"yssaril", "Племена Изарилов",
+{"yssaril", "Племена Изарилов", {2, 3, 3},
+{BonusActionCards},
+{LookActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS},
 {Cybernetics, AntimassDeflectors}
 },
-{"sol", "Федерация Солнца",
+{"sol", "Федерация Солнца", {2, 3, 3},
+{BonusCommandCounter},
+{SolOrbitalDrop},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
 {AntimassDeflectors, XRDTransporters}
 },
-{"mentax", "Коалиция Ментаков",
+{"mentax", "Коалиция Ментаков", {2, 3, 4},
+{},
+{MentakAmbush, MentakPiracy},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
 {EnviroCompensator, HylarVAssaultLaser}
 },
-{"hacan", "Эмираты Хакканов",
+{"hacan", "Эмираты Хакканов", {2, 3, 3},
+{BonusTrade},
+{HacanTradeActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
 {EnviroCompensator, SarweenTools}
 },
-{"jelnar", "Университеты Джолнаров",
+{"jelnar", "Университеты Джолнаров", {2, 3, 3},
+{CombatPenalty, BonusTechnology},
+{JolanrRerollCombatDices},
 {GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought},
 {AntimassDeflectors, HylarVAssaultLaser, EnviroCompensator, SarweenTools}
 },
-{"norr", "Сардак Норры",
+{"norr", "Сардак Норры", {2, 3, 3},
+{CombatBonusAll},
+{},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS},
 {DeepSpaceCannon, HylarVAssaultLaser}
 },
 };
-getstr_enum(player);
 
-player_array			active_players;
-player_info				players[SardakkNOrr + 1];
+player_info				players[6];
 static player_info*		speaker;
 static player_info*		human_player;
 static player_info*		diplomacy_players[2];
@@ -67,8 +86,14 @@ static int compare_planets(const void* p1, const void* p2) {
 	return e2->resource - e1->resource;
 }
 
-bool player_info::is(player_s value) const {
-	return (this - players) == value;
+player_info* player_info::find(const char* id) {
+	for(auto& e : players) {
+		if(!e)
+			continue;
+		if(strcmp(e.id, id) == 0)
+			return &e;
+	}
+	return 0;
 }
 
 bool player_info::iscomputer() const {
@@ -81,31 +106,42 @@ bool player_info::isally(player_info* enemy) const {
 		|| (diplomacy_players[0] == enemy && diplomacy_players[1] == this);
 }
 
-void player_info::sethuman(player_s id) {
-	human_player = players + id;
+void player_info::sethuman() {
+	human_player = this;
 }
 
 unit_info* player_info::create(unit_type_s id, unit_info* planet) {
-	return new unit_info(id, planet, getindex());
+	auto p = new unit_info(id);
+	p->player = this;
+	p->parent = planet;
+	return p;
 }
 
-void player_info::initialize() {
+const player_pregen_info* find_by_id(const char* id) {
+	for(auto& e : player_pregen_data) {
+		if(strcmp(e.id, id) == 0)
+			return &e;
+	}
+	return 0;
+}
+
+void player_info::create(const char* id) {
 	memset(this, 0, sizeof(*this));
-	auto player = getindex();
-	auto& pi = player_data[player];
-	id = pi.id;
-	name = pi.name;
-	technologies.data = pi.start_tech.data;
+	auto p = find_by_id(id);
+	assert(p);
+	this->id = p->id;
+	this->name = p->name;
+	technologies = p->start_tech;
+	bonuses = p->bonus;
 	// Game setup: step 10
-	auto solar_system = solars + player;
 	adat<planet_info*, 8> planets;
-	//planets.count = select(planets.data, planets.data + planets.getmaximum(), solar_system);
-	//if(!planets.count)
-	//	return;
+	planets.count = planet_info::select(planets.data, planets.endof(), p->id);
+	assert(planets.count);
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
+	auto solar_system = planets.data[0]->parent;
 	create(SpaceDock, base_planet);
-	for(auto e : pi.start_units) {
+	for(auto e : p->start_units) {
 		if(!e)
 			break;
 		auto base = solar_system;
@@ -118,19 +154,17 @@ void player_info::initialize() {
 		create(e, base);
 	}
 	// Game setup: step 11
-	cost_info::initialize();
-}
-
-player_s player_info::getindex() const {
-	return (player_s)(this - players);
+	set(Strategy, p->tokens[0]);
+	set(Command, p->tokens[1]);
+	set(Fleet, p->tokens[2]);
 }
 
 const char* player_info::getid() const {
-	return player_data[getindex()].id;
+	return id;
 }
 
 const char* player_info::getname() const {
-	return player_data[getindex()].name;
+	return name;
 }
 
 const char* player_info::getyouname() const {
@@ -141,14 +175,9 @@ const char* player_info::getyouname() const {
 
 int	player_info::getinitiative() const {
 	auto result = getinitiative(strategy);
-	if(is(TheNaaluCollective))
+	if(is(BonusInitiative))
 		result = 0;
 	return result;
-}
-
-void player_info::add(player_s id) {
-	active_players.add(players + id);
-	players[id].initialize();
 }
 
 player_info* player_info::getspeaker() {
@@ -163,7 +192,7 @@ int	player_info::get(action_s id) const {
 	int r = cost_info::get(id);
 	switch(id) {
 	case Fleet:
-		if(is(TheBaronyOfLetnev))
+		if(is(BonusFleetTokens))
 			r++;
 		break;
 	}
@@ -174,8 +203,8 @@ void player_info::getinfo(string& sb) const {
 	sb.add("###%1", getname());
 	if(strategy)
 		sb.addn("[+%1 стратегия]", getstr(strategy));
-	sb.addn("%1i ресурсов", planet_info::get(getindex(), &planet_info::getresource));
-	sb.addn("%1i влияния", planet_info::get(getindex(), &planet_info::getinfluence));
+	sb.addn("%1i ресурсов", planet_info::get(this, &planet_info::getresource));
+	sb.addn("%1i влияния", planet_info::get(this, &planet_info::getinfluence));
 	sb.addn("%1i стратегических маркеров", get(Strategy));
 	sb.addn("%1i тактических маркеров", get(Command));
 	sb.addn("%1i маркеров флота", get(Fleet));
@@ -188,18 +217,14 @@ void player_info::getinfo(string& sb) const {
 
 void player_info::setup() {
 	create_action_deck();
-	if(!active_players.count)
-		return;
-	speaker = active_players.data[rand()% active_players.count];
+	speaker = &players[rand() % (sizeof(players) / sizeof(players[0]))];
 }
 
 static void select(player_array& source, const player_info* start) {
-	auto index = active_players.indexof((player_info*)start);
-	if(index==-1)
-		return;
-	for(unsigned i = 0; i < active_players.count; i++) {
-		source.add(active_players.data[index++]);
-		if(index >= (int)active_players.count)
+	auto index = start - players;
+	for(unsigned i = 0; i < lenghtof(players); i++) {
+		source.add(&players[index++]);
+		if(index >= (int)lenghtof(players))
 			index = 0;
 	}
 }
@@ -250,10 +275,10 @@ action_s player_info::report(const string& sb) {
 
 player_info* player_info::choose_opponent(const char* text) {
 	answer_info ai;
-	for(auto p : active_players) {
-		if(this == p)
+	for(auto& e : players) {
+		if(this == &e)
 			continue;
-		ai.add((int)p, p->getname());
+		ai.add((int)&e, e.getname());
 	}
 	return (player_info*)ai.choose(text, this);
 }
@@ -285,20 +310,25 @@ void player_info::add_command_tokens(int value) {
 }
 
 void player_info::build_units(int value) {
+	adat<unit_info*> result;
+	if(iscomputer()) {
 
+	} else {
+		build(result, 0, 0, value, true);
+	}
 }
 
 static void refresh_players() {
 	memset(diplomacy_players, 0, sizeof(diplomacy_players));
-	for(auto p : active_players) {
-		if(p->strategy == Initiative) {
-			p->set(StrategyAction, 0);
-			speaker = p;
+	for(auto& e : players) {
+		if(e.strategy == Initiative) {
+			e.set(StrategyAction, 0);
+			speaker = &e;
 		} else
-			p->set(StrategyAction, 1);
-		p->set(TacticalAction, 1);
-		p->set(TransferAction, 1);
-		p->set(Pass, 1);
+			e.set(StrategyAction, 1);
+		e.set(TacticalAction, 1);
+		e.set(TransferAction, 1);
+		e.set(Pass, 1);
 	}
 }
 
@@ -400,14 +430,14 @@ static void action_phase() {
 	while(someone_move) {
 		someone_move = false;
 		for(auto i = 0; i <= last_initiative; i++) {
-			for(auto p : active_players) {
-				if(p->get(Pass) == 0)
+			for(auto& e : players) {
+				if(e.get(Pass) == 0)
 					continue;
-				if(p->getinitiative() != i)
+				if(e.getinitiative() != i)
 					continue;
-				auto a = choose_action(p);
-				play_action(p, a);
-				p->add(a, -1);
+				auto a = choose_action(&e);
+				play_action(&e, a);
+				e.add(a, -1);
 				someone_move = true;
 			}
 		}

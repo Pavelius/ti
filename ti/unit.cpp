@@ -7,25 +7,26 @@ static struct unit_data_info {
 	char		cost;
 	char		production;
 	char		movements;
+	char		count;
 	weapon_info	combat;
 } unit_type_data[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
 {"Nebula", "Небула", 0, 0, 0, 0},
 {"Planet", "Планета", 0, 0, 0, 0},
 {"SpaceDock", "Доки", 3, 4, 1, 0},
-{"GroundForces", "Наземные силы", 0, 1, 2, 0, 8},
-{"Fighters", "Истребители", 0, 1, 2, 0, 9},
-{"PDS", "СПЗ", 6, 2, 1, 0, 6},
-{"Carrier", "Транспорт", 4, 3, 1, 1, 9},
-{"Cruiser", "Крейсер", 8, 2, 1, 2, 7},
-{"Destroyer", "Эсминец", 8, 1, 1, 2, 9},
-{"Dreadnought", "Дредноут", 5, 5, 1, 1, 5},
-{"WarSun", "Звезда смерти", 2, 12, 1, 2, {3, 3}},
+{"GroundForces", "Наземные силы", 0, 1, 2, 0, 2, 8},
+{"Fighters", "Истребители", 0, 1, 2, 0, 2, 9},
+{"PDS", "СПЗ", 6, 2, 1, 0, 1, 6},
+{"Carrier", "Транспорт", 4, 3, 1, 1, 1, 9},
+{"Cruiser", "Крейсер", 8, 2, 1, 2, 1, 7},
+{"Destroyer", "Эсминец", 8, 1, 1, 2, 1, 9},
+{"Dreadnought", "Дредноут", 5, 5, 1, 1, 1, 5},
+{"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, {3, 3}},
 };
 getstr_enum(unit_type);
 adat<unit_info, 256>	units;
 
-unsigned select(unit_info** result, unit_info** result_max, unit_info* location, player_s player, bool (unit_info::*test)() const) {
+unsigned select(unit_info** result, unit_info** result_max, const unit_info* location, const player_info* player, bool (unit_info::*test)() const) {
 	auto p = result;
 	for(auto& e : units) {
 		if(!e)
@@ -77,19 +78,19 @@ int unit_info::getmovement() const {
 	auto result = unit_type_data[type].movements;
 	switch(type) {
 	case Carrier:
-		if(players[player].is(XRDTransporters))
+		if(player->is(XRDTransporters))
 			result++;
 		break;
 	case Cruiser:
-		if(players[player].is(TypeIVDrive))
+		if(player->is(TypeIVDrive))
 			result++;
 		break;
 	case Dreadnought:
-		if(players[player].is(TypeIVDrive))
+		if(player->is(TypeIVDrive))
 			result++;
 		break;
 	case Fighters:
-		if(players[player].is(AdvancedFighters))
+		if(player->is(AdvancedFighters))
 			result = 2;
 		break;
 	}
@@ -98,9 +99,9 @@ int unit_info::getmovement() const {
 
 int	unit_info::getresource() const {
 	auto result = unit_type_data[type].cost;
-	switch(player) {
-	case TheL1z1xMindnet:
-		if(type == Dreadnought)
+	switch(type) {
+	case Dreadnought:
+		if(player->is(BonusCostDreadnought))
 			result--;
 		break;
 	}
@@ -134,52 +135,47 @@ int unit_info::getmaxhits() const {
 
 weapon_info unit_info::getweapon() const {
 	auto w = unit_type_data[type].combat;
-	if(is(SardakkNOrr))
-		w.bonus++;
-	if(is(TheL1z1xMindnet)) {
-		if(type == Dreadnought)
+	if(player) {
+		if(player->is(CombatBonusAll))
 			w.bonus++;
-	}
-	if(is(TheNaaluCollective)) {
-		if(type == Fighters)
+		if(player->is(CombatPenalty))
+			w.bonus--;
+		if(type == Dreadnought && player->is(CombatBonusDreadnought))
 			w.bonus++;
-	}
-	if(is(UniversitiesOfJolNar))
-		w.bonus--;
-	auto& pi = players[player];
-	switch(type) {
-	case Fighters:
-		if(pi.is(Cybernetics))
+		if(type == Fighters && player->is(CombatBonusFighters))
 			w.bonus++;
-		if(pi.is(AdvancedFighters))
-			w.bonus++;
-		break;
-	case GroundForces:
-		if(pi.is(GenSynthesis))
-			w.bonus++;
-		break;
-	case Cruiser:
-	case Destroyer:
-		if(pi.is(HylarVAssaultLaser))
-			w.bonus++;
-		break;
-	case PDS:
-		if(pi.is(MagenDefenseGrid))
-			w.bonus++;
-		if(pi.is(GravitonLaserSystem))
-			w.reroll++;
-		break;
+		switch(type) {
+		case Fighters:
+			if(player->is(Cybernetics))
+				w.bonus++;
+			if(player->is(AdvancedFighters))
+				w.bonus++;
+			break;
+		case GroundForces:
+			if(player->is(GenSynthesis))
+				w.bonus++;
+			break;
+		case Cruiser:
+		case Destroyer:
+			if(player->is(HylarVAssaultLaser))
+				w.bonus++;
+			break;
+		case PDS:
+			if(player->is(MagenDefenseGrid))
+				w.bonus++;
+			if(player->is(GravitonLaserSystem))
+				w.reroll++;
+			break;
+		}
 	}
 	return w;
 }
 
-weapon_info unit_info::getweapon(bool attacker, player_s opponent, char round) const {
+weapon_info unit_info::getweapon(bool attacker, const player_info* opponent, char round) const {
 	auto w = getweapon();
-	if(is(TheL1z1xMindnet)) {
-		if(type == GroundForces && attacker)
-			w.bonus++;
-	}
-	if(players[opponent].is(TheXxchaKingdom) && round == 1)
+	if(type == GroundForces && attacker && player->is(CombatBonusGroundForcesAttack))
+		w.bonus++;
+	if(attacker && round == 1 && opponent->is(CombatBonusDefend))
 		w.bonus--;
 	return w;
 }
@@ -189,7 +185,7 @@ bool unit_info::isinvaders() const {
 	case GroundForces:
 		return true;
 	case Fighters:
-		return players[player].is(GravitonNegator);
+		return player->is(GravitonNegator);
 	default:
 		return false;
 	}
@@ -205,7 +201,11 @@ bool unit_info::isplanetary(unit_type_s type) {
 	}
 }
 
-int	unit_info::getcount(unit_type_s type, player_s player, unit_info* location) {
+int	unit_info::getcount() const {
+	return unit_type_data[type].count;
+}
+
+int	unit_info::getcount(unit_type_s type, const player_info* player, unit_info* location) {
 	auto result = 0;
 	for(auto& e : units) {
 		if(!e)
@@ -225,7 +225,7 @@ int	unit_info::getcapacity() const {
 		return 6;
 	case Dreadnought:
 	case Cruiser:
-		if(players[player].is(StasisCapsules))
+		if(player->is(StasisCapsules))
 			return 1;
 		return 0;
 	default:
@@ -237,7 +237,7 @@ unit_type_s unit_info::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
-		if(players[player].is(StasisCapsules))
+		if(player->is(StasisCapsules))
 			return GroundForces;
 		return NoUnit;
 	default:
@@ -319,7 +319,7 @@ bool unit_info::build(unit_type_s object, bool run) {
 	}
 	if(build_base->player != player)
 		return false;
-	if(object==Fighters && !players[player].is(AdvancedFighters)) {
+	if(object==Fighters && !player->is(AdvancedFighters)) {
 		auto available_count = solar_system->getfightersupport();
 		auto exist_count = getcount(object, player, solar_system);
 		if(exist_count + produce_count > available_count)
@@ -328,8 +328,11 @@ bool unit_info::build(unit_type_s object, bool run) {
 	if(produce_count <= 0)
 		return false;
 	if(run) {
-		for(auto i = 0; i < produce_count; i++)
-			new unit_info(object, build_base, player);
+		for(auto i = 0; i < produce_count; i++) {
+			auto p = new unit_info(object);
+			p->parent = build_base;
+			p->player = player;
+		}
 	}
 	return true;
 }

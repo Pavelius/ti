@@ -381,7 +381,7 @@ static int render_picture(int x, int y, const char* id, areas* pa = 0) {
 	return gui.hero_width;
 }
 
-static int windowp(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
+static int window(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
 	x -= width_picture;
 	auto width = width_picture + width_text;
 	rect rc = {x, y, x + width, y};
@@ -712,23 +712,23 @@ static void draw_planet(point pt, int n, int m, int r, color c) {
 }
 
 static int render_right() {
-	auto x = gui.border;
-	auto y = gui.border;
-	for(auto p : active_players) {
+	int x = gui.border;
+	int y = gui.border;
+	for(auto& e : players) {
 		areas a = AreaNormal;
-		auto w = render_picture(x, y, p->getid(), &a);
+		auto w = render_picture(x, y, e.getid(), &a);
 		rect rc = {x, y, x + w, y + w};
-		if(p->gethuman() == p) {
+		if(e.gethuman() == &e) {
 			rectb(rc, colors::white);
 			rc.offset(-1, -1);
 		}
-		if(p->getspeaker() == p) {
+		if(e.getspeaker() == &e) {
 			rectb(rc, colors::blue); rc.offset(-1, -1);
 			rectb(rc, colors::blue.mix(colors::form)); rc.offset(-1, -1);
 		}
 		if(a == AreaHilited || a == AreaHilitedPressed) {
 			string sb;
-			p->getinfo(sb);
+			e.getinfo(sb);
 			tooltips(x - gui.border, y + gui.border, w, sb);
 		}
 		y += w + gui.padding;
@@ -754,100 +754,16 @@ static void render_board() {
 	}
 }
 
-struct control_player_table : table {
-	adat<player_s, 6>		source;
-	bool					focusable;
-	int getmaximum() const override {
-		return source.count;
-	}
-	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
-		if(columns[column] == "name")
-			return getstr(source[line]);
-		else if(columns[column] == "politic")
-			return getstr(players[source[line]].strategy);
+static int render_report(int x, int y, const char* picture, const char* format) {
+	if(!format)
 		return 0;
-	}
-	int getnumber(int line, int column) const override {
-		if(columns[column] == "resource")
-			return planet_info::get(source[line], &planet_info::getresource);
-		else if(columns[column] == "influence")
-			return planet_info::get(source[line], &planet_info::getinfluence);
-		else if(columns[column] == "planet_count")
-			return planet_info::get(source[line], &planet_info::getone);
-		else if(columns[column] == "fleet")
-			return players[source[line]].get(Fleet);
-		else if(columns[column] == "command")
-			return players[source[line]].get(Command);
-		else if(columns[column] == "strategy")
-			return players[source[line]].get(Strategy);
-		return 0;
-	}
-	player_s getvalue() const {
-		return source[current];
-	}
-	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 160},
-		{Text, "politic", "Политика", 100},
-		{Number | AlignRight, "resource", "Рс", 32},
-		{Number | AlignRight, "influence", "Вл", 32},
-		{Number | AlignRight, "planet_count", "Пл", 32},
-		{Number | AlignRight, "fleet", "Флот", 32},
-		{Number | AlignRight, "command", "Ком", 32},
-		{Number | AlignRight, "strategy", "Стр", 32},
-		{}};
-		return columns;
-	}
-	static int compare(const void* p1, const void* p2) {
-		auto i1 = *((player_s*)p1);
-		auto i2 = *((player_s*)p2);
-		auto d = players[i1].getinitiative() - players[i2].getinitiative();
-		if(d == 0)
-			return strcmp(getstr(i1), getstr(i2));
-		return d;
-	}
-	void initialize() {
-		source.clear();
-		for(auto p : active_players) {
-			source.add(p->getindex());
-		}
-		qsort(source.data, source.count, sizeof(source.data[0]), compare);
-	}
-	bool isfocusable() const {
-		return focusable;
-	}
-	control_player_table() : table(getcolumns()), focusable(false) {
-		initialize();
-	}
-};
-
-static bool player_info_tips(int x, int y, int radius) {
-	rect rc = {x - radius, y - radius, x + radius, y + radius};
-	draw::circlef(x, y, radius, colors::form, 128);
-	draw::circle(x, y, radius);
-	return areb(rc);
-}
-
-static void show_statistic() {
-	rect rc;
-	control_player_table mv;
-	mv.current = -1;
-	rc.x1 = gui.border * 2;
-	rc.y1 = gui.border * 2;
-	rc.x2 = rc.x1 + mv.columns->gettotalwidth();
-	rc.y2 = rc.y1 + mv.getrowheight() * (mv.source.getcount() + 1);
-	window(rc, false, false);
-	mv.show_border = false;
-	mv.show_selection = false;
-	mv.view(rc);
-}
-
-static int show_right_buttoms() {
-	auto radius = 16;
-	auto x = getwidth() - radius - gui.border;
-	auto y = gui.padding + gui.border + radius;
-	if(player_info_tips(x, y, radius))
-		show_statistic();
-	return y + radius * 2;
+	auto y0 = y;
+	if(picture)
+		y += window(x, y, gui.hero_width, gui.window_width, picture, format);
+	else
+		y += window(x, y, gui.window_width, format, gui.window_width);
+	y += gui.padding;
+	return y - y0;
 }
 
 int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
@@ -857,13 +773,7 @@ int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture
 		render_right();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		if(format) {
-			if(picture)
-				y += windowp(x, y, gui.hero_width, gui.window_width, picture, format);
-			else
-				y += window(x, y, gui.window_width, format, gui.window_width);
-			y += gui.padding;
-		}
+		y += render_report(x, y, picture, format);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		for(auto& e : elements)
 			y += windowb(x, y, gui.right_width, e.getname(), cmd(breakparam, e.param));
@@ -873,4 +783,76 @@ int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture
 		control_standart();
 	}
 	return getresult();
+}
+
+struct unit_table : table {
+	struct element {
+		unit_info	unit;
+		int			count;
+	};
+	static const int table_maximum = (WarSun - GroundForces + 1);
+	element			source[table_maximum + 1];
+	bool			focusable;
+	int getmaximum() const override {
+		return table_maximum;
+	}
+	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
+		if(columns[column] == "name")
+			return getstr(source[line].unit.type);
+		return 0;
+	}
+	int getnumber(int line, int column) const override {
+		if(columns[column] == "resource")
+			return source[line].unit.getresource();
+		if(columns[column] == "count")
+			return source[line].unit.getcount();
+		return 0;
+	}
+	unit_type_s getvalue() const {
+		return source[current].unit.type;
+	}
+	static const column* getcolumns() {
+		static constexpr column columns[] = {{Text, "name", "Наименование", 120},
+		{Number | AlignRight, "resource", "Цена", 32},
+		{Number | AlignRight, "count", "К-во", 32},
+		{}};
+		return columns;
+	}
+	static int compare(const void* p1, const void* p2) {
+		auto i1 = *((unit_type_s*)p1);
+		auto i2 = *((unit_type_s*)p2);
+		return strcmp(getstr(i1), getstr(i2));
+	}
+	unit_table(player_info* player) : table(getcolumns()) {
+		memset(source, 0, sizeof(source));
+		const auto i1 = GroundForces;
+		for(auto i = i1; i <= WarSun; i = (unit_type_s)(i + 1)) {
+			source[i - i1].unit.type = i;
+			source[i - i1].unit.player = player;
+		}
+		//qsort(source, table_maximum, sizeof(source[0]), compare);
+	}
+};
+
+bool player_info::build(adat<unit_info*> units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button) {
+	int x, y;
+	unit_table u1(this);
+	auto text_width = gui.window_width;
+	while(ismodal()) {
+		render_board();
+		render_right();
+		x = getwidth() - gui.window_width - gui.border * 2;
+		y = gui.border * 2;
+		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum()+1) + 1};
+		window(rc, false, false);
+		u1.view(rc);
+		x = getwidth() - gui.right_width - gui.border * 2;
+		y += rc.height() + gui.padding + gui.border*2;
+		y += windowb(x, y, gui.right_width, "Построить", cmd(buttoncancel), 0, KeyEnter);
+		if(cancel_button)
+			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
+		domodal();
+		control_standart();
+	}
+	return getresult()!=0;
 }

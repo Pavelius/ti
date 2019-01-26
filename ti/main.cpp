@@ -6,20 +6,16 @@ int main() {
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
-	//player_info::add(SardakkNOrr);
-	player_info::add(UniversitiesOfJolNar);
-	player_info::add(TheEmiratesOfHacan);
-	//player_info::add(TheL1z1xMindnet);
-	player_info::add(TheBaronyOfLetnev);
-	player_info::add(FederationOfSol);
+	planet_info::initialize();
+	players[0].create("jelnar");
+	players[1].create("hacan");
+	players[2].create("barony");
+	players[3].create("sol"); players[3].sethuman();
+	players[4].create("norr");
+	players[5].create("xxcha");
 	player_info::setup();
-	player_info::sethuman(FederationOfSol);
+	player_info::gethuman()->build_units(1);
 	player_info::gethuman()->make_move();
-	//auto player = draw::chooseplayer();
-	//game::strategic();
-	//draw::production(player, 5);
-	//draw::board();
-	//draw::report("Тестовая строка окна, которое появился при выводе сообщения.\n$(accept)");
 	return 0;
 }
 

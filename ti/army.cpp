@@ -13,7 +13,7 @@ void army::sort(int (unit_info::*proc)() const) {
 	}
 }
 
-void army::removecasualty(player_s player) {
+void army::removecasualty(const player_info* player) {
 	army temp;
 	for(auto p : *this) {
 		if(!*p)

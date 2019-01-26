@@ -25,6 +25,7 @@ struct adat {
 	void					clear() { count = 0; }
 	T*						end() { return data + count; }
 	const T*				end() const { return data + count; }
+	const T*				endof() const { return data + count_max; }
 	int						getcount() const { return count; }
 	int						getmaximum() const { return count_max; }
 	int						indexof(const T* e) const { if(e >= data && e < data + count) return e - data; return -1; }
