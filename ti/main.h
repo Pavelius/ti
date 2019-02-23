@@ -68,15 +68,26 @@ enum wormhole_s : unsigned char {
 };
 enum unit_type_s : unsigned char {
 	NoUnit,
-	SolarSystem, Nebula,
+	SolarSystem, AsteroidField, Nebula, Supernova,
 	Planet,
 	SpaceDock,
 	GroundForces, Fighters, PDS,
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
 };
+enum target_s : unsigned {
+	TargetUnit, TargetPlanet, TargetSystem, TargetPlayer,
+	TargetMask = 0xF,
+	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
+	Station = 0x100,
+};
 struct unit_info;
 struct planet_info;
+struct player_info;
 struct string;
+struct army : adat<unit_info*, 32> {
+	void						removecasualty(const player_info* player);
+	void						sort(int (unit_info::*proc)() const);
+};
 struct name_info {
 	const char*					id;
 	const char*					name;
@@ -140,7 +151,7 @@ struct player_info : name_info, cost_info {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
-	bool						build(adat<unit_info*> units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button);
+	bool						build(army& units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button);
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
@@ -154,12 +165,14 @@ struct player_info : name_info, cost_info {
 	bool						is(bonus_s value) const { return bonuses.is(value); }
 	bool						is(tech_s value) const { return technologies.is(value); }
 	bool						isallow(play_s type, action_s id) const;
+	bool						isallow(unit_type_s id) const;
 	bool						isally(player_info* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
 	static player_info*			find(const char* id);
 	int							get(action_s id) const;
 	int							getcardscount() const;
+	int							getfleet() const;
 	static player_info*			gethuman();
 	const char*					getid() const;
 	void						getinfo(string& sb) const;
@@ -202,6 +215,7 @@ struct unit_info {
 	int							getcount() const;
 	static int					getcount(unit_type_s type, const player_info* player, unit_info* location = 0);
 	int							getfightersupport();
+	static int					getfleet(const player_info* player);
 	int							getjoincount(unit_type_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
@@ -213,23 +227,36 @@ struct unit_info {
 	weapon_info					getweapon() const;
 	weapon_info					getweapon(bool attacker, const player_info* opponent, char round) const;
 	int							getweight() const;
+	static int					gmi(int x, int y) { return y * 8 + x; }
 	bool						iscarrier() const { return getcapacity() != 0; }
+	bool						isfleet() const;
 	bool						isinvaders() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(unit_type_s type);
 	bool						in(const unit_info* parent) const;
 };
+extern unit_info				solars[38];
 struct planet_info : unit_info {
 	const char*					name;
 	const char*					home;
+	char						solar;
 	tech_color_s				tech_color;
 	wormhole_s					wormhole;
 	char						resource;
 	char						influence;
-	constexpr planet_info(const char* name, char solar, char resource, char influence,
-		tech_color_s tech_color,
-		wormhole_s wormhole = NoHole);
-	constexpr planet_info(const char* name, const char* home, char resource, char influence);
+	char						index;
+	constexpr planet_info(const char* name, char planet_parent, char resource, char influence, char index,
+		tech_color_s tech_color, wormhole_s wormhole = NoHole) : unit_info(Planet),
+		name(name), home(0), solar(planet_parent),
+		resource(resource), influence(influence), index(index),
+		tech_color(tech_color),
+		wormhole(wormhole) {}
+	constexpr planet_info(const char* name, const char* home, char resource, char influence, char index) : unit_info(Planet),
+		name(name), home(home), solar(-1),
+		resource(resource), influence(influence), index(index),
+		tech_color(NoTech),
+		wormhole(NoHole) {}
+	static void					create_stars();
 	static void					initialize();
 	static int					get(const player_info* player, int(planet_info::*getproc)() const);
 	const char*					getname() const { return name; }
@@ -239,10 +266,7 @@ struct planet_info : unit_info {
 	static void					refresh();
 	static unsigned				select(planet_info** result, planet_info* const* result_max, unit_info* parent);
 	static unsigned				select(planet_info** result, planet_info* const* result_max, const char* home);
-};
-struct army : adat<unit_info*, 32> {
-	void						removecasualty(const player_info* player);
-	void						sort(int (unit_info::*proc)() const);
+	static void					setup();
 };
 struct string : stringcreator {
 	const player_info*			player;
@@ -271,6 +295,6 @@ private:
 };
 extern deck<action_s>			action_deck;
 extern player_info				players[6];
-extern unit_info				solars[38];
+extern int						solar_map[8 * 8];
 extern strategy_info			strategy_data[];
 extern adat<unit_info, 256>		units;

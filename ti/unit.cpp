@@ -11,7 +11,9 @@ static struct unit_data_info {
 	weapon_info	combat;
 } unit_type_data[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
+{"AsteroidField", "Поле астероидов", 0, 0, 0, 0},
 {"Nebula", "Небула", 0, 0, 0, 0},
+{"Supernova", "Супернова", 0, 0, 0, 0},
 {"Planet", "Планета", 0, 0, 0, 0},
 {"SpaceDock", "Доки", 3, 4, 1, 0},
 {"GroundForces", "Наземные силы", 0, 1, 2, 0, 2, 8},
@@ -24,6 +26,7 @@ static struct unit_data_info {
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, {3, 3}},
 };
 getstr_enum(unit_type);
+assert_enum(unit_type, WarSun);
 adat<unit_info, 256>	units;
 
 unsigned select(unit_info** result, unit_info** result_max, const unit_info* location, const player_info* player, bool (unit_info::*test)() const) {
@@ -178,6 +181,19 @@ weapon_info unit_info::getweapon(bool attacker, const player_info* opponent, cha
 	if(attacker && round == 1 && opponent->is(CombatBonusDefend))
 		w.bonus--;
 	return w;
+}
+
+bool unit_info::isfleet() const {
+	switch(type) {
+	case Carrier:
+	case Cruiser:
+	case Destroyer:
+	case Dreadnought:
+	case WarSun:
+		return true;
+	default:
+		return false;
+	}
 }
 
 bool unit_info::isinvaders() const {
@@ -360,4 +376,16 @@ int unit_info::getweight() const {
 }
 
 void unit_info::destroy() {
+}
+
+int	unit_info::getfleet(const player_info* player) {
+	auto result = 0;
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(!e.isfleet())
+			continue;
+		result++;
+	}
+	return result;
 }

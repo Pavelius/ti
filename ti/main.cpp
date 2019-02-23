@@ -7,6 +7,7 @@ int main() {
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
 	planet_info::initialize();
+	planet_info::create_stars();
 	players[0].create("jelnar");
 	players[1].create("hacan");
 	players[2].create("barony");

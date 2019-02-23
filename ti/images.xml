@@ -34,4 +34,25 @@
       <png input="...\yssaril"/>
     </group>
   </library>
+  <library output="...\sprites\planets" count="17">
+    <group input="D:\resources\planets_large">
+      <png input="...\planet-1"/>
+      <png input="...\planet-2"/>
+      <png input="...\planet-3"/>
+      <png input="...\planet-4"/>
+      <png input="...\planet-5"/>
+      <png input="...\planet-6"/>
+      <png input="...\planet-7"/>
+      <png input="...\planet-8"/>
+      <png input="...\planet-9"/>
+      <png input="...\planet-10"/>
+      <png input="...\planet-11"/>
+      <png input="...\planet-12"/>
+      <png input="...\planet-13"/>
+      <png input="...\planet-14"/>
+      <png input="...\planet-15"/>
+      <png input="...\planet-16"/>
+      <png input="...\big_planet"/>
+    </group>
+  </library>
 </convert>

@@ -183,7 +183,6 @@
       <SubType>Designer</SubType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)xmlimg.exe "$(SolutionDir)ti\images.xml"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)art\fonts\font.pma</Outputs>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

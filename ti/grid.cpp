@@ -1,1 +1,1 @@
-unsigned char indecies[8*8];
+#include "main.h"

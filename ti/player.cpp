@@ -106,6 +106,15 @@ bool player_info::isally(player_info* enemy) const {
 		|| (diplomacy_players[0] == enemy && diplomacy_players[1] == this);
 }
 
+bool player_info::isallow(unit_type_s id) const {
+	switch(id) {
+	case WarSun:
+		return is(WarSunTech);
+	default:
+		return true;
+	}
+}
+
 void player_info::sethuman() {
 	human_player = this;
 }
@@ -217,6 +226,7 @@ void player_info::getinfo(string& sb) const {
 
 void player_info::setup() {
 	create_action_deck();
+	planet_info::setup();
 	speaker = &players[rand() % (sizeof(players) / sizeof(players[0]))];
 }
 
@@ -309,8 +319,12 @@ void player_info::add_command_tokens(int value) {
 	}
 }
 
+int	player_info::getfleet() const {
+	return unit_info::getfleet(this);
+}
+
 void player_info::build_units(int value) {
-	adat<unit_info*> result;
+	army result;
 	if(iscomputer()) {
 
 	} else {

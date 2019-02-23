@@ -3,6 +3,7 @@
 
 using namespace draw;
 using namespace draw::controls;
+static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 
 enum ui_command_s {
 	NoUICommand, ChooseLeft, ChooseRight, ChooseList,
@@ -698,17 +699,8 @@ static void hexagon(point pt) {
 	draw::line(pt + hexagon_offset[5], pt + hexagon_offset[0], colors::border);
 }
 
-static void draw_planet(point pt, int r, color c) {
-	draw::circlef(pt.x, pt.y, r, c, 128);
-	draw::circle(pt.x, pt.y, r, c);
-}
-
-static void draw_planet(point pt, int n, int m, int r, color c) {
-	switch(m) {
-	case 2:
-		draw_planet(pt + planets_n2[n], r, c);
-		break;
-	}
+static void draw_planet(point pt, planet_info* p) {
+	image(pt.x, pt.y, planets, p->index, 0);
 }
 
 static int render_right() {
@@ -736,6 +728,13 @@ static int render_right() {
 	return y;
 }
 
+static unit_info* get_system_index(int index) {
+	auto n = solar_map[index];
+	if(n == -1)
+		return 0;
+	return solars + n;
+}
+
 static void render_board() {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
@@ -747,9 +746,23 @@ static void render_board() {
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
+			auto p = get_system_index(planet_info::gmi(x, y));
+			if(!p)
+				continue;
 			hexagon(pt);
-			draw_planet(pt, 0, 2, 16, colors::blue);
-			draw_planet(pt, 1, 2, 20, colors::blue);
+			adat<planet_info*, 3> source;
+			source.count = planet_info::select(source.begin(), source.endof(), p);
+			switch(source.count) {
+			case 0:
+				break;
+			case 1:
+				draw_planet(pt, source[0]);
+				break;
+			case 2:
+				draw_planet(pt + planets_n2[0], source[0]);
+				draw_planet(pt + planets_n2[1], source[1]);
+				break;
+			}
 		}
 	}
 }
@@ -791,10 +804,10 @@ struct unit_table : table {
 		int			count;
 	};
 	static const int table_maximum = (WarSun - GroundForces + 1);
-	element			source[table_maximum + 1];
+	adat<element, table_maximum> source;
 	bool			focusable;
 	int getmaximum() const override {
-		return table_maximum;
+		return source.getcount();
 	}
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
@@ -805,16 +818,19 @@ struct unit_table : table {
 		if(columns[column] == "resource")
 			return source[line].unit.getresource();
 		if(columns[column] == "count")
-			return source[line].unit.getcount();
+			return source[line].count;
+		if(columns[column] == "total")
+			return source[line].unit.getresource()*source[line].count;
 		return 0;
 	}
 	unit_type_s getvalue() const {
 		return source[current].unit.type;
 	}
 	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 120},
+		static constexpr column columns[] = {{Text, "name", "Наименование", 224},
 		{Number | AlignRight, "resource", "Цена", 32},
 		{Number | AlignRight, "count", "К-во", 32},
+		{Number | AlignRight, "total", "Сумма", 48},
 		{}};
 		return columns;
 	}
@@ -823,18 +839,49 @@ struct unit_table : table {
 		auto i2 = *((unit_type_s*)p2);
 		return strcmp(getstr(i1), getstr(i2));
 	}
+	static void add_value() {
+		auto p = (unit_table*)hot.param;
+		auto i = p->current;
+		p->source[i].count++;
+	}
+	static void sub_value() {
+		auto p = (unit_table*)hot.param;
+		auto i = p->current;
+		p->source[i].count--;
+	}
+	void row(const rect &rc, int index) override {
+		table::row(rc, index);
+		bool disabled;
+		auto x = rc.x2 - 2;
+		auto y1 = rc.y1 + 1;
+		auto y2 = rc.y2 - 2;
+		auto h = y2 - y1;
+		auto focused = (index == current);
+		disabled = false;
+		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "+", Alpha + '+', true)) {
+			execute(add_value, (int)this);
+		}
+		x -= h + 2;
+		disabled = (source[index].count<=0);
+		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "-", Alpha + '-', true)) {
+			execute(sub_value, (int)this);
+		}
+	}
 	unit_table(player_info* player) : table(getcolumns()) {
-		memset(source, 0, sizeof(source));
+		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
 		for(auto i = i1; i <= WarSun; i = (unit_type_s)(i + 1)) {
-			source[i - i1].unit.type = i;
-			source[i - i1].unit.player = player;
+			if(!player->isallow(i))
+				continue;
+			auto p = source.add();
+			p->unit.type = i;
+			p->unit.player = player;
 		}
 		//qsort(source, table_maximum, sizeof(source[0]), compare);
 	}
 };
 
-bool player_info::build(adat<unit_info*> units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button) {
+bool player_info::build(army& units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	auto text_width = gui.window_width;
