@@ -706,7 +706,7 @@ static void draw_planet(point pt, planet_info* p) {
 	font = metrics::h1;
 	image(pt.x, pt.y, planets, p->index, 0);
 	auto pn = p->name;
-	text(pt.x - textw(pn)/2, pt.y + 128 / 2, pn, -1, TextStroke);
+	text(pt.x - textw(pn) / 2, pt.y + 128 / 2, pn, -1, TextStroke);
 	fore_stroke = push_stro;
 	font = push_font;
 }
@@ -758,19 +758,26 @@ static void render_board() {
 			if(!p)
 				continue;
 			hexagon(pt);
-			adat<planet_info*, 3> source;
-			source.count = planet_info::select(source.begin(), source.endof(), p);
-			switch(source.count) {
-			case 0:
-				break;
-			case 1:
-				draw_planet(pt, source[0]);
-				break;
-			case 2:
-				draw_planet(pt + planets_n2[0], source[0]);
-				draw_planet(pt + planets_n2[1], source[1]);
-				break;
-			}
+			if(p->type == SolarSystem) {
+				adat<planet_info*, 3> source;
+				source.count = planet_info::select(source.begin(), source.endof(), p);
+				switch(source.count) {
+				case 0:
+					break;
+				case 1:
+					draw_planet(pt, source[0]);
+					break;
+				case 2:
+					draw_planet(pt + planets_n2[0], source[0]);
+					draw_planet(pt + planets_n2[1], source[1]);
+					break;
+				}
+			} else if(p->type == AsteroidField)
+				image(pt.x, pt.y, planets, 19, 0); 
+			else if(p->type == Nebula)
+				image(pt.x, pt.y, planets, 17, 0);
+			else if(p->type == Supernova)
+				image(pt.x, pt.y, planets, 18, 0);
 		}
 	}
 }
@@ -870,7 +877,7 @@ struct unit_table : table {
 			execute(add_value, (int)this);
 		}
 		x -= h + 2;
-		disabled = (source[index].count<=0);
+		disabled = (source[index].count <= 0);
 		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "-", Alpha + '-', true)) {
 			execute(sub_value, (int)this);
 		}
@@ -898,16 +905,16 @@ bool player_info::build(army& units, const planet_info* planet, const planet_inf
 		render_right();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum()+1) + 1};
+		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 1) + 1};
 		window(rc, false, false);
 		u1.view(rc);
 		x = getwidth() - gui.right_width - gui.border * 2;
-		y += rc.height() + gui.padding + gui.border*2;
+		y += rc.height() + gui.padding + gui.border * 2;
 		y += windowb(x, y, gui.right_width, "Построить", cmd(buttoncancel), 0, KeyEnter);
 		if(cancel_button)
 			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
 		domodal();
 		control_standart();
 	}
-	return getresult()!=0;
+	return getresult() != 0;
 }

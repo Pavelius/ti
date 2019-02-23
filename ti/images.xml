@@ -34,7 +34,7 @@
       <png input="...\yssaril"/>
     </group>
   </library>
-  <library output="...\sprites\planets" count="17">
+  <library output="...\sprites\planets" count="20">
     <group input="D:\resources\planets_large">
       <png input="...\planet-1"/>
       <png input="...\planet-2"/>
@@ -53,6 +53,9 @@
       <png input="...\planet-15"/>
       <png input="...\planet-16"/>
       <png input="...\big_planet"/>
+      <png input="...\galaxy_nebula"/>
+      <png input="...\galaxy_supernova"/>
+      <png input="...\galaxy_asteroids_field"/>
     </group>
   </library>
 </convert>

@@ -235,7 +235,7 @@ struct unit_info {
 	static bool					isplanetary(unit_type_s type);
 	bool						in(const unit_info* parent) const;
 };
-extern unit_info				solars[38];
+extern unit_info				solars[48];
 struct planet_info : unit_info {
 	const char*					name;
 	const char*					home;

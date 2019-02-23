@@ -1,7 +1,7 @@
 #include "main.h"
 
 int			solar_map[8 * 8];
-unit_info	solars[38];
+unit_info	solars[48];
 
 static planet_info planets[] = {{"Archon Ren", "xxcha", 2, 3, 0},
 {"Arc Prime", "barony", 4, 0, 0},
@@ -160,7 +160,7 @@ void planet_info::create_stars() {
 	}
 	solar_map[gmi(3, 3)] = -1;
 	auto allowed_system = get_system_count();
-	while(allowed_system > random_count) {
+	while(allowed_system >= random_count) {
 		indecies[random_count] = random_count;
 		auto d = d100();
 		if(d < 50)
@@ -178,7 +178,8 @@ void planet_info::create_stars() {
 	for(auto& e : solar_map) {
 		if(e == -1)
 			continue;
-		e = indecies[index++];
+		if(index<random_count)
+			e = indecies[index++];
 	}
-	solar_map[gmi(3, 3)] = indecies[0];
+	solar_map[gmi(3, 3)] = 0;
 }
