@@ -631,8 +631,8 @@ static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size /
 {0, -size},
 };
 
-static const point planets_n2[] = {{(short)(size / 4), (short)(-size / 3)},
-{(short)(-size / 4), (short)(size / 3)}
+static const point planets_n2[] = {{(short)(size / 2), (short)(-size / 4)},
+{(short)(-size / 2), (short)(size / 4)}
 };
 
 static point h2p(point hex) {
@@ -700,7 +700,15 @@ static void hexagon(point pt) {
 }
 
 static void draw_planet(point pt, planet_info* p) {
+	auto push_font = font;
+	auto push_stro = fore_stroke;
+	fore_stroke = colors::black;
+	font = metrics::h1;
 	image(pt.x, pt.y, planets, p->index, 0);
+	auto pn = p->name;
+	text(pt.x - textw(pn)/2, pt.y + 128 / 2, pn, -1, TextStroke);
+	fore_stroke = push_stro;
+	font = push_font;
 }
 
 static int render_right() {

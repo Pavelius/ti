@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<convert output="art" input="d:\projects\ti\art">
+<convert output="d:\projects\ti\art" input="d:\projects\ti\art">
   <library output="...\fonts\font">
     <font input="Segoe UI" height="16"/>
   </library>
