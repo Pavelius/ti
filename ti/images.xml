@@ -3,6 +3,9 @@
   <library output="...\fonts\font">
     <font input="Segoe UI" height="16"/>
   </library>
+  <library output="...\fonts\small">
+    <font input="Segoe UI" height="14"/>
+  </library>
   <library output="...\fonts\h1">
     <font input="Segoe UI" height="22"/>
   </library>
@@ -56,6 +59,11 @@
       <png input="...\galaxy_nebula"/>
       <png input="...\galaxy_supernova"/>
       <png input="...\galaxy_asteroids_field"/>
+    </group>
+  </library>
+  <library output="...\sprites\units" count="20">
+    <group input="D:\resources\ships\result">
+      <png input="...\fighters"/>
     </group>
   </library>
 </convert>

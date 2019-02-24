@@ -1248,13 +1248,24 @@ void draw::gradh(rect rc, const color c1, const color c2, int skip) {
 void draw::circlef(int xm, int ym, int r, const color c1, unsigned char alpha) {
 	if(xm - r >= clipping.x2 || xm + r < clipping.x1 || ym - r >= clipping.y2 || ym + r < clipping.y1)
 		return;
-	int x = -r, y = 0, err = 2 - 2 * r, y1;
+	int x = -r, y = 0, err = 2 - 2 * r, y1, y2 = ym - 1;
 	do {
 		y1 = ym + y;
-		rectf({xm + x, y1, xm - x, y1 + 1}, c1, alpha);
-		if(y != 0) {
-			y1 = ym - y;
+		if(y1 == y2) {
+			pixel(xm + x, y1, alpha);
+			pixel(xm - x, y1, alpha);
+			if(y != 0) {
+				y1 = ym - y;
+				pixel(xm + x, y1, alpha);
+				pixel(xm - x, y1, alpha);
+			}
+		} else {
+			y2 = y1;
 			rectf({xm + x, y1, xm - x, y1 + 1}, c1, alpha);
+			if(y != 0) {
+				y1 = ym - y;
+				rectf({xm + x, y1, xm - x, y1 + 1}, c1, alpha);
+			}
 		}
 		r = err;
 		if(r <= y)

@@ -4,6 +4,9 @@
 using namespace draw;
 using namespace draw::controls;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
+static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
+static color player_colors[sizeof(players)/ sizeof(players[0])][2];
+const int unit_size = 12;
 
 enum ui_command_s {
 	NoUICommand, ChooseLeft, ChooseRight, ChooseList,
@@ -549,6 +552,14 @@ void draw::initialize() {
 	draw::font = metrics::font;
 	draw::fore = colors::text;
 	draw::fore_stroke = colors::blue;
+	player_colors[0][0] = color::create(97, 189, 79);
+	player_colors[1][0] = color::create(242, 214, 0);
+	player_colors[2][0] = color::create(255, 159, 26);
+	player_colors[3][0] = color::create(235, 90, 70);
+	player_colors[4][0] = color::create(195, 119, 224);
+	player_colors[5][0] = color::create(0, 121, 191);
+	for(auto& e : player_colors)
+		e[1] = e[0].mix(colors::black, 128);
 	gui.initialize();
 	set(draw_icon);
 }
@@ -586,43 +597,6 @@ void draw::domodal() {
 		exit(0);
 }
 
-static void icon(int x, int y, unit_type_s type, int count) {
-	char temp[32];
-	const int r = 12;
-	const int a = r / 6;
-	const int h = r * 3 / 2;
-	draw::state push;
-	fore = colors::red;
-	if(count > 1)
-		zprint(temp, "%1i", count);
-	else
-		temp[0] = 0;
-	switch(type) {
-	case GroundForces:
-		circlef(x, y, r, fore, 96);
-		circle(x, y, r);
-		break;
-	case PDS:
-		rectf({x - r, y - r, x + r, y + r}, fore, 96);
-		rectb({x - r, y - r, x + r, y + r});
-		break;
-	case Fighters:
-		circlef(x, y, r, fore, 96);
-		circle(x, y, r);
-		line(x + r, y - r + a, x + r, y + r - a);
-		line(x + r + 1, y - r + a, x + r + 1, y + r - a);
-		line(x - r, y - r + a, x - r, y + r - a);
-		line(x - r - 1, y - r + a, x - r - 1, y + r - a);
-		break;
-	case Carrier:
-		rectf({x - h, y - r, x + h, y + r}, fore, 96);
-		rectb({x - h, y - r, x + h, y + r});
-		break;
-	}
-	fore = colors::white;
-	text(x - textw(temp) / 2, y - texth() / 2, temp);
-}
-
 static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size / 2)},
 {(short)(size * cos_30), (short)(size / 2)},
 {0, size},
@@ -633,6 +607,10 @@ static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size /
 
 static const point planets_n2[] = {{(short)(size / 2), (short)(-size / 4)},
 {(short)(-size / 2), (short)(size / 4)}
+};
+static const point planets_n3[] = {{0, (short)(-size / 2)},
+{(short)(-size / 2), 0},
+{(short)(size / 3), (short)(size / 3)}
 };
 
 static point h2p(point hex) {
@@ -699,6 +677,171 @@ static void hexagon(point pt) {
 	draw::line(pt + hexagon_offset[5], pt + hexagon_offset[0], colors::border);
 }
 
+static void trianglef(int x1, int y1, int dy, int dx, color c1) {
+	auto d = dx / 2;
+	if(!dy)
+		return;
+	auto push_fore = fore;
+	fore = c1;
+	for(auto y = 0; y < dy; y++) {
+		auto x = dx * y / dy;
+		line(x1 - x, y1 + y, x1 + x, y1 + y);
+	}
+	fore = push_fore;
+}
+
+static void triangleb(int x1, int y1, int dy, int dx, color c1) {
+	auto push_fore = fore;
+	fore = c1;
+	line(x1, y1, x1 - dx, y1 + dy);
+	line(x1, y1, x1 + dx, y1 + dy);
+	line(x1 - dx, y1 + dy, x1 + dx, y1 + dy);
+	fore = push_fore;
+}
+
+static void cannon(int x, int y, color c1, color c2) {
+	line(x, y, x + unit_size / 2, y, c1); y++;
+	line(x, y, x + unit_size / 2, y, c2);
+}
+
+static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color c2) {
+	int n;
+	char temp[32]; zprint(temp, "%1i", count);
+	const int r = unit_size;
+	auto show_count = true;
+	switch(type) {
+	case Fighters:
+		circlef(x, y, r, c1);
+		circle(x, y, r, c2);
+		break;
+	case GroundForces:
+		rectf({x - r, y - r, x + r, y + r}, c1);
+		rectb({x - r, y - r, x + r, y + r}, c2);
+		break;
+	case PDS:
+		x += r;
+		trianglef(x, y - r, r * 2, r, c1);
+		triangleb(x, y - r, r * 2, r, c2);
+		break;
+	case SpaceDock:
+		show_count = false;
+		circlef(x, y, r * 3, c1, 128);
+		circle(x, y, r * 3, c2);
+		break;
+	case Carrier:
+		zcat(temp, "T");
+		n = r + r / 2;
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
+		cannon(x + n, y, c1, c2);
+		break;
+	case Destroyer:
+		zcat(temp, "D");
+		n = r + r / 2;
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
+		cannon(x + n, y - 2, c1, c2);
+		cannon(x + n, y + 2, c1, c2);
+		break;
+	case Cruiser:
+		zcat(temp, "C");
+		n = r + r / 2;
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
+		cannon(x + n, y - 3, c1, c2);
+		cannon(x + n, y, c1, c2);
+		cannon(x + n, y + 3, c1, c2);
+		break;
+	case Dreadnought:
+		zcat(temp, "R");
+		n = r + r;
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
+		cannon(x + n, y - 6, c1, c2);
+		cannon(x + n, y - 3, c1, c2);
+		cannon(x + n, y, c1, c2);
+		cannon(x + n, y + 3, c1, c2);
+		break;
+	case WarSun:
+		zcat(temp, "W");
+		circlef(x + r, y + r, r * 2, c1);
+		circle(x + r, y + r, r * 2, c2);
+		break;
+	}
+	if(show_count) {
+		auto push_font = font;
+		font = font_small;
+		text(x - textw(temp) / 2 - 1, y - texth() / 2, temp);
+		font = push_font;
+	}
+}
+
+static int compare_units(const void* v1, const void* v2) {
+	auto e1 = *((unit_info**)v1);
+	auto e2 = *((unit_info**)v2);
+	return (int)e1->type - (int)e2->type;
+}
+
+static void draw_units(int x, int y, unit_info* parent, bool ground) {
+	struct unit_draw_info {
+		unit_type_s		type;
+		char			count;
+		void clear() {
+			type = NoUnit;
+			count = 0;
+		}
+	};
+	auto player_index = parent->player->getindex();
+	auto c1 = player_colors[player_index][0];
+	auto c2 = player_colors[player_index][1];
+	adat<unit_info*, 32> source;
+	source.count = unit_info::select(source.begin(), source.endof(), parent);
+	if(!source) {
+		if(ground) {
+			if(parent->player) {
+				circlef(x, y, unit_size, c1, 128);
+				circle(x, y, unit_size, c2);
+			}
+		}
+		return;
+	}
+	qsort(source.data, source.count, sizeof(source.data[0]), compare_units);
+	// Stardock draw separately
+	if(source.data[0]->type == SpaceDock)
+		draw_unit(x, y, SpaceDock, 1, c1, c2);
+	source.remove(0);
+	if(!source)
+		return;
+	// Remove unique
+	adat<unit_draw_info, 8> drawing;
+	memset(drawing.data, 0, sizeof(drawing.data));
+	auto pd = drawing.data;
+	for(unsigned i = 0; i < source.count; i++) {
+		if(pd->type == source.data[i]->type)
+			pd->count++;
+		else {
+			if(pd->type != NoUnit)
+				pd++;
+			pd->type = source.data[i]->type;
+			pd->count = 1;
+		}
+	}
+	drawing.count = (pd - drawing.data) + 1;
+	// Draw
+	if(ground) {
+		auto x0 = x - ((unit_size * 2 + 2) * drawing.count) / 2 + (unit_size * 2 + 2) / 2;
+		for(unsigned i = 0; i < drawing.count; i++) {
+			draw_unit(x0, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
+			x0 += unit_size + 2;
+		}
+	} else {
+		for(unsigned i = 0; i < drawing.count; i++) {
+			draw_unit(x, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
+			y += unit_size * 2 + 2;
+		}
+	}
+}
+
 static void draw_planet(point pt, planet_info* p) {
 	auto push_font = font;
 	auto push_stro = fore_stroke;
@@ -709,6 +852,7 @@ static void draw_planet(point pt, planet_info* p) {
 	text(pt.x - textw(pn) / 2, pt.y + 128 / 2, pn, -1, TextStroke);
 	fore_stroke = push_stro;
 	font = push_font;
+	draw_units(pt.x, pt.y, p, true);
 }
 
 static int render_right() {
@@ -771,13 +915,19 @@ static void render_board() {
 					draw_planet(pt + planets_n2[0], source[0]);
 					draw_planet(pt + planets_n2[1], source[1]);
 					break;
+				case 3:
+					draw_planet(pt + planets_n3[0], source[0]);
+					draw_planet(pt + planets_n3[1], source[1]);
+					draw_planet(pt + planets_n3[2], source[2]);
+					break;
 				}
 			} else if(p->type == AsteroidField)
-				image(pt.x, pt.y, planets, 19, 0); 
+				image(pt.x, pt.y, planets, 19, 0);
 			else if(p->type == Nebula)
 				image(pt.x, pt.y, planets, 17, 0);
 			else if(p->type == Supernova)
 				image(pt.x, pt.y, planets, 18, 0);
+			draw_units(pt.x - size / 3, pt.y - size / 3, p, false);
 		}
 	}
 }

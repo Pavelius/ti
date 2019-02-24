@@ -3,60 +3,70 @@
 int			solar_map[8 * 8];
 unit_info	solars[48];
 
-static planet_info planets[] = {{"Archon Ren", "xxcha", 2, 3, 0},
-{"Arc Prime", "barony", 4, 0, 0},
-{"Maaluuk", "naalu", 0, 2, 0},
+static planet_info planets[] = {{"Архон рен", "xxcha", 2, 3, 0},
+{"Арк Прайм", "barony", 4, 0, 0},
+{"Мейлук", "naalu", 0, 2, 0},
 {"[0.0.0]", "mindnet", 5, 0, 0},
-{"Retillion", "yssaril", 2, 3, 0},
-{"Jord", "sol", 4, 2, 0},
-{"Moll Primus", "mentak", 4, 1, 0},
-{"Arretze", "hacan", 2, 0, 0},
-{"Nar", "jelnar", 2, 1, 0},
-{"Tren'Lak", "norr", 1, 0, 0},
+{"Ретиллион", "yssaril", 2, 3, 0},
+{"Йорд", "sol", 4, 2, 0},
+{"Мол Примус", "mentak", 4, 1, 0},
+{"Аретц", "hacan", 2, 0, 0},
+{"Нар", "jelnar", 2, 1, 0},
+{"Трен'Лак", "norr", 1, 0, 0},
 //
-{"Archon Tau", "xxcha", 1, 1, 1},
-{"Wren Terra", "barony", 2, 1, 1},
-{"Druaa", "naalu", 3, 1, 1},
-{"Shalloq", "yssaril", 1, 2, 1},
-{"Hercant", "hacan", 1, 1, 1},
-{"Jol", "jelnar", 1, 2, 1},
-{"Quinarra", "norr", 3, 1, 1},
+{"Архон Тау", "xxcha", 1, 1, 5},
+{"Врен Терра", "barony", 2, 1, 5},
+{"Друа", "naalu", 3, 1, 5},
+{"Шаллок", "yssaril", 1, 2, 5},
+{"Херкант", "hacan", 1, 1, 5},
+{"Жол", "jelnar", 1, 2, 5},
+{"Куинарра", "norr", 3, 1, 5},
 //
-{"Kamdorn", "hacan", 0, 1, 2},
+{"Камдорн", "hacan", 0, 1, 2},
 //
-{"Mecatol Rex", 0, 1, 6, 16, NoTech},
-{"Bereg", 1, 3, 1, 12, Green},
-{"Centauri", 2, 1, 3, 13, Blue},
-{"Qucen'n", 3, 1, 2, 2, Green},
-{"Tequ'ran", 4, 2, 0, 3, Red},
-{"New Albion", 5, 1, 1, 4, Green},
-{"Coorneeq", 6, 1, 2, 0, Red},
-{"Mellon", 7, 0, 2, 5, NoTech},
-{"Lazar", 8, 1, 0, 6, NoTech},
-{"Arnor", 9, 2, 1, 7, NoTech},
-{"Arinam", 10, 1, 2, 8, Blue},
-{"Abyz", 11, 3, 0, 9, NoTech},
-{"Dal Bootha", 12, 0, 2, 8, Red},
-{"Saudor", 13, 2, 2, 10, NoTech},
-{"Tibah", 14, 1, 1, 11, NoTech},
-{"Mehar Xull", 15, 1, 3, 12, Blue},
-{"Tar'Mann", 16, 1, 1, 2, NoTech},
-{"Wellon", 17, 1, 2, 13, NoTech},
-{"Vefut II", 18, 2, 0, 14, Red},
-{"Lodor", 19, 3, 1, 15, Green, WormholeAlpha},
-{"Quenn", 20, 2, 1, 0, Green, WormholeBeta},
-{"Lirta IV", 1, 2, 3, 2, NoTech},
-{"Gral", 2, 1, 1, 3, NoTech},
-{"Rarron", 3, 0, 3, 5, NoTech},
-{"Torkan", 4, 0, 3, 6, Blue},
-{"Starpoint", 5, 3, 1, 7, NoTech},
-{"Resculon", 6, 2, 0, 0, NoTech},
-{"Zohbat", 7, 3, 1, 14, Blue},
-{"Sakulag", 8, 2, 1, 2, NoTech},
-{"Lor", 9, 1, 2, 3, Red},
-{"Meer", 10, 0, 4, 6, NoTech},
-{"Fira", 11, 2, 0, 0, Blue},
-{"Xxehan", 12, 1, 1, 2, Green},
+{"Мекатол Рекс", 0, 1, 6, 16, NoTech},
+{"Берег", 1, 3, 1, 12, Green},
+{"Центаури", 2, 1, 3, 13, Blue},
+{"Квуцен'н", 3, 1, 2, 2, Green},
+{"Текю'Ран", 4, 2, 0, 3, Red},
+{"Новый Альбион", 5, 1, 1, 4, Green},
+{"Курник", 6, 1, 2, 0, Red},
+{"Меллоун", 7, 0, 2, 5, NoTech},
+{"Лазар", 8, 1, 0, 6, NoTech},
+{"Арнор", 9, 2, 1, 7, NoTech},
+{"Аринам", 10, 1, 2, 8, Blue},
+{"Абиз", 11, 3, 0, 9, NoTech},
+{"Дал Бутта", 12, 0, 2, 8, Red},
+{"Заудрон", 13, 2, 2, 10, NoTech},
+{"Тибах", 14, 1, 1, 11, NoTech},
+{"Мехар Ксулл", 15, 1, 3, 12, Blue},
+{"Тар'Ман", 16, 1, 1, 2, NoTech},
+{"Веллон", 17, 1, 2, 13, NoTech},
+{"Вифут II", 18, 2, 0, 14, Red},
+{"Лодор", 19, 3, 1, 15, Green, WormholeAlpha},
+{"Квен", 20, 2, 1, 0, Green, WormholeBeta},
+{"Лирта IV", 1, 2, 3, 2, NoTech},
+{"Грал", 2, 1, 1, 3, NoTech},
+{"Рарун", 3, 0, 3, 5, NoTech},
+{"Торкан", 4, 0, 3, 6, Blue},
+{"Старпоинт", 5, 3, 1, 7, NoTech},
+{"Рескулон", 6, 2, 0, 0, NoTech},
+{"Зохбат", 7, 3, 1, 14, Blue},
+{"Сакулаг", 8, 2, 1, 2, NoTech},
+{"Лор", 9, 1, 2, 3, Red},
+{"Мир", 10, 0, 4, 6, NoTech},
+{"Файра", 11, 2, 0, 0, Blue},
+{"Ксехан", 12, 1, 1, 2, Green},
+};
+struct solar_range {
+	unit_type_s	type;
+	char		from;
+	char		to;
+};
+static solar_range solar_range_data[] = {{SolarSystem, 21, 24},
+{AsteroidField, 25, 28},
+{Nebula, 29, 30},
+{Supernova, 31, 32},
 };
 
 int	planet_info::getinfluence() const {
@@ -109,6 +119,10 @@ void planet_info::refresh() {
 void planet_info::initialize() {
 	for(auto& e : solars)
 		e.type = SolarSystem;
+	for(auto& e : solar_range_data) {
+		for(auto i = e.from; i <= e.to; i++)
+			solars[i].type = e.type;
+	}
 	for(auto& e : planets) {
 		e.type = Planet;
 		e.player = 0;
@@ -138,48 +152,52 @@ int get_system_count() {
 }
 
 void planet_info::create_stars() {
+	char player_pos[][2] = {{3, 0}, {6, 0}, {0, 3}, {6, 3}, {0, 6}, {3, 6}};
 	memset(solar_map, 0, sizeof(solar_map));
 	for(auto y = 0; y < 7; y++) {
 		if(y < 3) {
 			for(auto x = 0; x < (3 - y); x++)
 				solar_map[gmi(x, y)] = -1;
-			for(auto x = 7; x < 8; x++)
-				solar_map[gmi(x, y)] = -1;
 		} else {
 			for(auto x = 7 - (y-3); x < 8; x++)
 				solar_map[gmi(x, y)] = -1;
 		}
+		solar_map[gmi(7, y)] = -1;
 	}
 	for(auto x = 0; x < 8; x++)
 		solar_map[gmi(x, 7)] = -1;
-	int indecies[sizeof(solars)/ sizeof(solars[0])];
-	int random_count = 0;
-	while(random_count < 21) {
-		indecies[random_count] = random_count;
-		random_count++;
-	}
-	solar_map[gmi(3, 3)] = -1;
+	adat<int, 32> solar_deck;
+	for(auto i = 1; i <= 32; i++)
+		solar_deck.add(i);
+	zshuffle(solar_deck.data, solar_deck.count);
+	solar_map[gmi(3, 3)] = -1; // Мекатор рекс
+	for(auto e : player_pos)
+		solar_map[gmi(e[0], e[1])] = -1;
 	auto allowed_system = get_system_count();
-	while(allowed_system >= random_count) {
-		indecies[random_count] = random_count;
-		auto d = d100();
-		if(d < 50)
-			solars[random_count].type = SolarSystem;
-		else if(d<75)
-			solars[random_count].type = AsteroidField;
-		else if(d<90)
-			solars[random_count].type = Nebula;
-		else
-			solars[random_count].type = Supernova;
-		random_count++;
-	}
-	zshuffle(indecies+1, random_count-1);
-	int index = 1;
+	auto index = 0;
 	for(auto& e : solar_map) {
 		if(e == -1)
 			continue;
-		if(index<random_count)
-			e = indecies[index++];
+		if(index<solar_deck.getcount())
+			e = solar_deck[index++];
 	}
-	solar_map[gmi(3, 3)] = 0;
+	solar_map[gmi(3, 3)] = 0; // Расположили Менкатол Рекс
+	// Расопложим игроков
+	index = 33;
+	int player_index = 0;
+	for(auto& e : players) {
+		for(auto& pn : planets) {
+			if(!pn.home)
+				continue;
+			if(strcmp(pn.home, e.id) == 0)
+				pn.parent = solars + index;
+		}
+		solar_map[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
+		player_index++;
+		index++;
+	}
+}
+
+bool unit_info::issolar() const {
+	return this >= solars && this < (solars + sizeof(solars) / sizeof(solars[0]));
 }

@@ -134,22 +134,16 @@ const player_pregen_info* find_by_id(const char* id) {
 	return 0;
 }
 
-void player_info::create(const char* id) {
-	memset(this, 0, sizeof(*this));
-	auto p = find_by_id(id);
+static void create_start_units(player_info* player) {
+	auto p = find_by_id(player->id);
 	assert(p);
-	this->id = p->id;
-	this->name = p->name;
-	technologies = p->start_tech;
-	bonuses = p->bonus;
-	// Game setup: step 10
 	adat<planet_info*, 8> planets;
 	planets.count = planet_info::select(planets.data, planets.endof(), p->id);
 	assert(planets.count);
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
 	auto solar_system = planets.data[0]->parent;
-	create(SpaceDock, base_planet);
+	player->create(SpaceDock, base_planet);
 	for(auto e : p->start_units) {
 		if(!e)
 			break;
@@ -160,8 +154,18 @@ void player_info::create(const char* id) {
 			base = base_planet;
 			break;
 		}
-		create(e, base);
+		player->create(e, base);
 	}
+}
+
+void player_info::create(const char* id) {
+	memset(this, 0, sizeof(*this));
+	auto p = find_by_id(id);
+	assert(p);
+	this->id = p->id;
+	this->name = p->name;
+	technologies = p->start_tech;
+	bonuses = p->bonus;
 	// Game setup: step 11
 	set(Strategy, p->tokens[0]);
 	set(Command, p->tokens[1]);
@@ -170,6 +174,12 @@ void player_info::create(const char* id) {
 
 const char* player_info::getid() const {
 	return id;
+}
+
+int	player_info::getindex() const {
+	if(!this)
+		return 0;
+	return this - players;
 }
 
 const char* player_info::getname() const {
@@ -226,8 +236,11 @@ void player_info::getinfo(string& sb) const {
 
 void player_info::setup() {
 	create_action_deck();
-	planet_info::setup();
 	speaker = &players[rand() % (sizeof(players) / sizeof(players[0]))];
+	planet_info::setup();
+	for(auto& e : players)
+		create_start_units(&e);
+	unit_info::update_control();
 }
 
 static void select(player_array& source, const player_info* start) {

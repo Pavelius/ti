@@ -389,3 +389,36 @@ int	unit_info::getfleet(const player_info* player) {
 	}
 	return result;
 }
+
+unsigned unit_info::select(unit_info** result, unit_info* const* result_max, unit_info* parent) {
+	auto p = result;
+	for(auto& e : units) {
+		if(e.parent != parent)
+			continue;
+		if(p < result_max)
+			*p++ = &e;
+	}
+	return p - result;
+}
+
+static unit_info* get_first_unit(const unit_info* parent) {
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(e.parent == parent)
+			return &e;
+	}
+	return 0;
+}
+
+void unit_info::update_control() {
+	for(auto& e : solars) {
+		if(!e)
+			continue;
+		auto p = get_first_unit(&e);
+		if(p)
+			e.player = p->player;
+		else
+			e.player = 0;
+	}
+}

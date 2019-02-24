@@ -175,6 +175,7 @@ struct player_info : name_info, cost_info {
 	int							getfleet() const;
 	static player_info*			gethuman();
 	const char*					getid() const;
+	int							getindex() const;
 	void						getinfo(string& sb) const;
 	int							getinitiative() const;
 	static int					getinitiative(strategy_s value);
@@ -231,9 +232,12 @@ struct unit_info {
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
 	bool						isinvaders() const;
+	bool						issolar() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(unit_type_s type);
 	bool						in(const unit_info* parent) const;
+	static unsigned				select(unit_info** result, unit_info* const* result_max, unit_info* parent);
+	static void					update_control();
 };
 extern unit_info				solars[48];
 struct planet_info : unit_info {
