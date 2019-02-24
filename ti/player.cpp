@@ -336,12 +336,19 @@ int	player_info::getfleet() const {
 	return unit_info::getfleet(this);
 }
 
+unit_info* player_info::gethomesystem() const {
+	auto index = getindex();
+	return solars + 33 + index;
+}
+
 void player_info::build_units(int value) {
 	army result;
 	if(iscomputer()) {
 
 	} else {
-		build(result, 0, 0, value, true);
+		auto planet = gethomesystem();
+		if(build(result, 0, planet, value, true))
+			unit_info::update_control();
 	}
 }
 
@@ -474,4 +481,19 @@ static void action_phase() {
 void player_info::make_move() {
 	strategic_phase();
 	action_phase();
+}
+
+int get_solar_map_index(int index) {
+	for(unsigned i = 0; i < sizeof(solar_map) / sizeof(solar_map[0]); i++) {
+		if(solar_map[i] == index)
+			return i;
+	}
+	return -1;
+}
+
+void player_info::slide(const unit_info* p) {
+	if(!p->issolar())
+		return;
+	auto index = get_solar_map_index(p - solars);
+	slide(index);
 }

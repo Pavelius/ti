@@ -8,6 +8,8 @@ static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
 static color player_colors[sizeof(players)/ sizeof(players[0])][2];
 const int unit_size = 12;
 
+int isqrt(int num);
+
 enum ui_command_s {
 	NoUICommand, ChooseLeft, ChooseRight, ChooseList,
 };
@@ -730,7 +732,7 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 		break;
 	case Carrier:
 		zcat(temp, "T");
-		n = r + r / 2;
+		n = r + r;
 		rectf({x - r, y - r, x + n, y + r}, c1);
 		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y, c1, c2);
@@ -984,6 +986,8 @@ struct unit_table : table {
 			return source[line].unit.getresource();
 		if(columns[column] == "count")
 			return source[line].count;
+		if(columns[column] == "count_units")
+			return source[line].count * unit_info::getproduction(source[line].unit.type);
 		if(columns[column] == "total")
 			return source[line].unit.getresource()*source[line].count;
 		return 0;
@@ -994,7 +998,8 @@ struct unit_table : table {
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 224},
 		{Number | AlignRight, "resource", "Цена", 32},
-		{Number | AlignRight, "count", "К-во", 32},
+		//{Number | AlignRight, "count", "К-во", 32},
+		{Number | AlignRight, "count_units", "К-во", 32},
 		{Number | AlignRight, "total", "Сумма", 48},
 		{}};
 		return columns;
@@ -1046,10 +1051,52 @@ struct unit_table : table {
 	}
 };
 
-bool player_info::build(army& units, const planet_info* planet, const planet_info* system, int minimal, bool cancel_button) {
+void player_info::slide(int x, int y) {
+	const auto step = 16;
+	auto x0 = camera.x;
+	auto y0 = camera.y;
+	auto w = last_board.width();
+	if(!w)
+		w = getwidth();
+	auto h = last_board.width();
+	if(!h)
+		h = getheight();
+	auto x1 = x - w / 2;
+	auto y1 = y - h / 2;
+	auto lenght = distance({(short)x0, (short)y0}, {(short)x1, (short)y1});
+	if(!lenght)
+		return;
+	auto start = 0;
+	auto dx = x1 - x0;
+	auto dy = y1 - y0;
+	while(start < lenght && ismodal()) {
+		render_board();
+		render_right();
+		sysredraw();
+		start += step;
+		short x2 = x0 + dx * start / lenght;
+		short y2 = y0 + dy * start / lenght;
+		camera.x = x2;
+		camera.y = y2;
+	}
+	camera.x = x1;
+	camera.y = y1;
+}
+
+void player_info::slide(int hexagon) {
+	if(hexagon == -1)
+		return;
+	auto x = hexagon % 8;
+	auto y = hexagon / 8;
+	point pt = h2p({(short)x, (short)y});
+	slide(pt.x, pt.y);
+}
+
+bool player_info::build(army& units, const planet_info* planet, unit_info* system, int minimal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	auto text_width = gui.window_width;
+	slide(system);
 	while(ismodal()) {
 		render_board();
 		render_right();
@@ -1060,11 +1107,19 @@ bool player_info::build(army& units, const planet_info* planet, const planet_inf
 		u1.view(rc);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
-		y += windowb(x, y, gui.right_width, "Построить", cmd(buttoncancel), 0, KeyEnter);
+		y += windowb(x, y, gui.right_width, "Построить", cmd(buttonok), 0, KeyEnter);
 		if(cancel_button)
 			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
 		domodal();
 		control_standart();
 	}
-	return getresult() != 0;
+	auto result = getresult() != 0;
+	if(result) {
+		for(auto& e : u1.source) {
+			for(auto i = e.count * unit_info::getproduction(e.unit.type); i > 0; i--) {
+				create(e.unit.type, system);
+			}
+		}
+	}
+	return result;
 }
