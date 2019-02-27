@@ -1071,7 +1071,6 @@ void player_info::slide(int x, int y) {
 	auto dy = y1 - y0;
 	while(start < lenght && ismodal()) {
 		render_board();
-		render_right();
 		sysredraw();
 		start += step;
 		short x2 = x0 + dx * start / lenght;
