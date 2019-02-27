@@ -336,6 +336,10 @@ int	player_info::getfleet() const {
 	return unit_info::getfleet(this);
 }
 
+int	player_info::getresource() const {
+	return planet_info::get(this, &planet_info::getresource);
+}
+
 unit_info* player_info::gethomesystem() const {
 	auto index = getindex();
 	return solars + 33 + index;
@@ -347,7 +351,7 @@ void player_info::build_units(int value) {
 
 	} else {
 		auto planet = gethomesystem();
-		if(build(result, 0, planet, value, true))
+		if(build(result, 0, planet, getresource(), getfleet(), value, true))
 			unit_info::update_control();
 	}
 }

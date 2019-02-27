@@ -2,7 +2,7 @@
 #include "draw.h"
 
 int main() {
-	srand(time(0));
+	srand((int)time(0));
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
