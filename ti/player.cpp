@@ -333,7 +333,7 @@ void player_info::add_command_tokens(int value) {
 }
 
 int	player_info::getfleet() const {
-	return unit_info::getfleet(this);
+	return get(Fleet);
 }
 
 int	player_info::getresource() const {
