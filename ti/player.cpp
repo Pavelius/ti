@@ -351,7 +351,7 @@ void player_info::build_units(int value) {
 	if(iscomputer()) {
 
 	} else {
-		if(build(result, planet, solar, value, true))
+		if(build(result, planet, solar, value, getfleet(), 2, true))
 			unit_info::update_control();
 	}
 }
