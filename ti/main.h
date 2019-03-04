@@ -153,7 +153,7 @@ struct player_info : name_info, cost_info {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
-	bool						build(army& units, const planet_info* planet, unit_info* system, int minimal, bool cancel_button);
+	bool						build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, bool cancel_button);
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
@@ -184,6 +184,7 @@ struct player_info : name_info, cost_info {
 	static int					getinitiative(strategy_s value);
 	unit_info*					gethomesystem() const;
 	const char*					getname() const;
+	int							getresource() const;
 	static player_info*			getspeaker();
 	const char*					getyouname() const;
 	static void					make_move();

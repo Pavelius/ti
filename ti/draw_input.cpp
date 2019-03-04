@@ -5,7 +5,7 @@ using namespace draw;
 using namespace draw::controls;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
-static color player_colors[sizeof(players)/ sizeof(players[0])][2];
+static color player_colors[sizeof(players) / sizeof(players[0])][2];
 const int unit_size = 12;
 
 int isqrt(int num);
@@ -974,6 +974,7 @@ struct unit_table : table {
 	static const int table_maximum = (WarSun - GroundForces + 1);
 	adat<element, table_maximum> source;
 	bool			focusable;
+	int				fleet, resource, production;
 	int getmaximum() const override {
 		return source.getcount();
 	}
@@ -999,7 +1000,6 @@ struct unit_table : table {
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 224},
 		{Number | AlignRight, "resource", "Цена", 32},
-		//{Number | AlignRight, "count", "К-во", 32},
 		{Number | AlignRight, "count_units", "К-во", 32},
 		{Number | AlignRight, "total", "Сумма", 48},
 		{}};
@@ -1038,7 +1038,14 @@ struct unit_table : table {
 			execute(sub_value, (int)this);
 		}
 	}
-	unit_table(player_info* player) : table(getcolumns()) {
+	void view(const rect& rc) {
+		table::view(rc);
+		rect rv = {rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2};
+		string sb;
+		sb.add("Ваши ресурсы [%1i], флот [%2i], продукция [%3i]", resource, fleet, production);
+		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
+	}
+	unit_table(player_info* player) : table(getcolumns()), fleet(-1), resource(-1), production(0) {
 		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
 		for(auto i = i1; i <= WarSun; i = (unit_type_s)(i + 1)) {
@@ -1092,9 +1099,11 @@ void player_info::slide(int hexagon) {
 	slide(pt.x, pt.y);
 }
 
-bool player_info::build(army& units, const planet_info* planet, unit_info* system, int minimal, bool cancel_button) {
+bool player_info::build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
+	u1.fleet = fleet;
+	u1.resource = resources;
 	auto text_width = gui.window_width;
 	slide(system);
 	while(ismodal()) {
@@ -1102,7 +1111,7 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 		render_right();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 1) + 1};
+		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};
 		window(rc, false, false);
 		u1.view(rc);
 		x = getwidth() - gui.right_width - gui.border * 2;
