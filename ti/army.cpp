@@ -24,3 +24,28 @@ void army::removecasualty(const player_info* player) {
 	if(temp.data[0])
 		temp.data[0]->destroy();
 }
+
+void army::rollup() {
+	auto ps = data;
+	auto pe = data + count;
+	for(auto pd = data; pd < pe; pd++) {
+		auto found = false;
+		for(auto pb = data; pb < ps; pb++) {
+			if(*pb == *ps) {
+				found = true;
+				break;
+			}
+		}
+		if(!found)
+			*ps++ = *pd;
+	}
+}
+
+void army::transform(target_s v) {
+	auto ps = data;
+	auto pe = data + count;
+	while(ps < pe) {
+		*ps = (*ps)->get(v);
+		ps++;
+	}
+}

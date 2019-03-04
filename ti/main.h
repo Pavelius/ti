@@ -78,7 +78,7 @@ enum target_s : unsigned {
 	TargetUnit, TargetPlanet, TargetSystem, TargetPlayer,
 	TargetMask = 0xF,
 	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
-	Station = 0x100,
+	DockPresent = 0x100,
 };
 struct unit_info;
 struct planet_info;
@@ -86,7 +86,9 @@ struct player_info;
 struct string;
 struct army : adat<unit_info*, 32> {
 	void						removecasualty(const player_info* player);
+	void						rollup();
 	void						sort(int (unit_info::*proc)() const);
+	void						transform(target_s v);
 };
 struct name_info {
 	const char*					id;
@@ -155,6 +157,7 @@ struct player_info : name_info, cost_info {
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
+	unit_info*					choose(army& source, const char* format) const;
 	player_info*				choose_opponent(const char* text);
 	bool						choose_trade() const { return true; }
 	void						create(const char* id);
@@ -192,6 +195,8 @@ struct player_info : name_info, cost_info {
 	static void					slide(int x, int y);
 	static void					slide(const unit_info* p);
 	static void					slide(int hexagon);
+	void						select(army& source, unsigned flags) const;
+	unsigned					select(unit_info** result, unit_info* const* result_maximum, unsigned flags, unit_type_s type) const;
 	static void					setup();
 	void						sethuman();
 private:
@@ -213,6 +218,7 @@ struct unit_info {
 	bool						build(unit_type_s object, bool run);
 	void						destroy();
 	unit_info*					get(unit_type_s parent_type);
+	unit_info*					get(target_s v) const;
 	static int					getavailable(unit_type_s type);
 	int							getcapacity() const;
 	unit_type_s					getcapacitylimit() const;
@@ -228,6 +234,8 @@ struct unit_info {
 	static int					getproduction(unit_type_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
+	const char*					getsolarname() const;
+	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weapon_info					getweapon() const;
 	weapon_info					getweapon(bool attacker, const player_info* opponent, char round) const;
@@ -237,8 +245,10 @@ struct unit_info {
 	bool						isfleet() const;
 	bool						isinvaders() const;
 	bool						issolar() const;
+	bool						isplanet() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(unit_type_s type);
+	bool						isunit() const;
 	bool						in(const unit_info* parent) const;
 	static unsigned				select(unit_info** result, unit_info* const* result_max, unit_info* parent);
 	static void					update_control();
@@ -266,6 +276,7 @@ struct planet_info : unit_info {
 		wormhole(NoHole) {}
 	static void					create_stars();
 	static void					initialize();
+	unit_info*					get(target_s v) const { return unit_info::get(v); }
 	static int					get(const player_info* player, int(planet_info::*getproc)() const);
 	const char*					getname() const { return name; }
 	int							getinfluence() const;

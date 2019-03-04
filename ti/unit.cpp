@@ -74,6 +74,10 @@ unit_info::~unit_info() {
 }
 
 const char* unit_info::getname() const {
+	if(issolar())
+		return getsolarname();
+	if(isplanet())
+		return getplanetname();
 	return getstr(type);
 }
 
@@ -211,6 +215,7 @@ bool unit_info::isplanetary(unit_type_s type) {
 	switch(type) {
 	case GroundForces:
 	case PDS:
+	case SpaceDock:
 		return true;
 	default:
 		return false;
@@ -420,5 +425,32 @@ void unit_info::update_control() {
 			e.player = p->player;
 		else
 			e.player = 0;
+	}
+}
+
+bool unit_info::isunit() const {
+	return this >= units.data && this < (units.data + sizeof(units.data) / sizeof(units.data[0]));
+}
+
+unit_info* unit_info::get(target_s v) const {
+	if(!this)
+		return 0;
+	switch(v) {
+	case TargetSystem:
+		if(issolar())
+			return const_cast<unit_info*>(this);
+		else if(isplanet())
+			return const_cast<unit_info*>(parent);
+		return parent->get(v);
+	case TargetPlanet:
+		if(issolar())
+			return 0;
+		if(isplanet())
+			return const_cast<unit_info*>(this);
+		return parent->get(v);
+	default:
+		if(issolar() || isplanet())
+			return 0;
+		return const_cast<unit_info*>(this);
 	}
 }

@@ -343,13 +343,26 @@ unit_info* player_info::gethomesystem() const {
 
 void player_info::build_units(int value) {
 	army result;
+	select(result, TargetPlanet | Friendly | DockPresent);
+	auto planet = static_cast<planet_info*>(choose(result, "”кажите планету, на которой будете строить"));
+	if(!planet)
+		return;
+	auto solar = planet->get(TargetSystem);
 	if(iscomputer()) {
 
 	} else {
-		auto planet = gethomesystem();
-		if(build(result, 0, planet, value, true))
+		if(build(result, planet, solar, value, true))
 			unit_info::update_control();
 	}
+}
+
+unit_info* player_info::choose(army& source, const char* format) const {
+	answer_info ai;
+	for(auto p : source)
+		ai.add((int)p, p->getname());
+	if(!ai)
+		return 0;
+	return (unit_info*)ai.choose(format, this);
 }
 
 static void refresh_players() {
@@ -496,4 +509,48 @@ void player_info::slide(const unit_info* p) {
 		return;
 	auto index = get_solar_map_index(p - solars);
 	slide(index);
+}
+
+unsigned player_info::select(unit_info** result, unit_info* const* pe, unsigned flags, unit_type_s type) const {
+	auto ps = result;
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(flags&Friendly && e.player != this)
+			continue;
+		if(e.type != SpaceDock)
+			continue;
+		if(ps < pe)
+			*ps++ = &e;
+	}
+	return ps - result;
+}
+
+void player_info::select(army& result, unsigned flags) const {
+	if(flags&DockPresent) {
+		result.count = select(result.begin(), result.endof(), flags, SpaceDock);
+		result.transform((target_s)(flags&TargetMask));
+		result.rollup();
+		return;
+	}
+	switch(flags&TargetMask) {
+	case TargetSystem:
+		for(auto& e : solars) {
+			if(!e)
+				continue;
+			if(flags&Friendly && e.player != this)
+				continue;
+			result.add(&e);
+		}
+		break;
+	case TargetPlanet:
+		for(auto& e : solars) {
+			if(!e)
+				continue;
+			if(flags&Friendly && e.player != this)
+				continue;
+			result.add(&e);
+		}
+		break;
+	}
 }

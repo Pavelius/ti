@@ -201,3 +201,21 @@ void planet_info::create_stars() {
 bool unit_info::issolar() const {
 	return this >= solars && this < (solars + sizeof(solars) / sizeof(solars[0]));
 }
+
+bool unit_info::isplanet() const {
+	return this >= planets && this < (planets + sizeof(planets) / sizeof(planets[0]));
+}
+
+const char* unit_info::getsolarname() const {
+	for(auto& e : planets) {
+		if(!e)
+			continue;
+		if(e.parent == this)
+			return e.name;
+	}
+	return getstr(type);
+}
+
+const char* unit_info::getplanetname() const {
+	return (static_cast<const planet_info*>(this))->name;
+}

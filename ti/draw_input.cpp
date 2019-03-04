@@ -809,11 +809,12 @@ static void draw_units(int x, int y, unit_info* parent, bool ground) {
 	}
 	qsort(source.data, source.count, sizeof(source.data[0]), compare_units);
 	// Stardock draw separately
-	if(source.data[0]->type == SpaceDock)
+	if(source.data[0]->type == SpaceDock) {
 		draw_unit(x, y, SpaceDock, 1, c1, c2);
-	source.remove(0);
-	if(!source)
-		return;
+		source.remove(0);
+		if(!source)
+			return;
+	}
 	// Remove unique
 	adat<unit_draw_info, 8> drawing;
 	memset(drawing.data, 0, sizeof(drawing.data));
@@ -1071,7 +1072,6 @@ void player_info::slide(int x, int y) {
 	auto dy = y1 - y0;
 	while(start < lenght && ismodal()) {
 		render_board();
-		render_right();
 		sysredraw();
 		start += step;
 		short x2 = x0 + dx * start / lenght;
@@ -1117,7 +1117,10 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 	if(result) {
 		for(auto& e : u1.source) {
 			for(auto i = e.count * unit_info::getproduction(e.unit.type); i > 0; i--) {
-				create(e.unit.type, system);
+				if(e.unit.isplanetary())
+					create(e.unit.type, const_cast<planet_info*>(planet));
+				else
+					create(e.unit.type, system);
 			}
 		}
 	}
