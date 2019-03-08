@@ -8,6 +8,7 @@ static struct unit_data_info {
 	char		production;
 	char		movements;
 	char		count;
+	char		production_count;
 	weapon_info	combat;
 } unit_type_data[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
@@ -15,7 +16,7 @@ static struct unit_data_info {
 {"Nebula", "Небула", 0, 0, 0, 0},
 {"Supernova", "Супернова", 0, 0, 0, 0},
 {"Planet", "Планета", 0, 0, 0, 0},
-{"SpaceDock", "Доки", 3, 4, 1, 0},
+{"SpaceDock", "Доки", 3, 4, 1, 0, 0, 2},
 {"GroundForces", "Наземные силы", 0, 1, 2, 0, 2, 8},
 {"Fighters", "Истребители", 0, 1, 2, 0, 2, 9},
 {"PDS", "СПЗ", 6, 2, 1, 0, 1, 6},
@@ -23,7 +24,7 @@ static struct unit_data_info {
 {"Cruiser", "Крейсер", 8, 2, 1, 2, 1, 7},
 {"Destroyer", "Эсминец", 8, 1, 1, 2, 1, 9},
 {"Dreadnought", "Дредноут", 5, 5, 1, 1, 1, 5},
-{"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, {3, 3}},
+{"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
 };
 getstr_enum(unit_type);
 assert_enum(unit_type, WarSun);
@@ -124,6 +125,22 @@ unit_info* unit_info::get(unit_type_s parent_type) {
 
 int	unit_info::getavailable(unit_type_s type) {
 	return unit_type_data[type].available;
+}
+
+int	unit_info::getproduce() const {
+	if(!parent)
+		return 0;
+	auto result = getproduce(type);
+	if(!result)
+		return 0;
+	auto planet = parent->getplanet();
+	if(planet)
+		result += planet->getresource();
+	return result;
+}
+
+int	unit_info::getproduce(unit_type_s type) {
+	return unit_type_data[type].production_count;
 }
 
 int	unit_info::getproduction(unit_type_s type) {
@@ -453,4 +470,17 @@ unit_info* unit_info::get(target_s v) const {
 			return 0;
 		return const_cast<unit_info*>(this);
 	}
+}
+
+unit_info* unit_info::find(unit_type_s v, const player_info* player) const {
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(e.parent != this)
+			continue;
+		if(player && e.player != player)
+			continue;
+		return &e;
+	}
+	return 0;
 }

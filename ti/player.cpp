@@ -333,7 +333,7 @@ void player_info::add_command_tokens(int value) {
 }
 
 int	player_info::getfleet() const {
-	return unit_info::getfleet(this);
+	return get(Fleet);
 }
 
 unit_info* player_info::gethomesystem() const {
@@ -348,12 +348,20 @@ void player_info::build_units(int value) {
 	if(!planet)
 		return;
 	auto solar = planet->get(TargetSystem);
+	auto dock = planet->find(SpaceDock, this);
+	auto dock_produce = 0;
+	if(dock)
+		dock_produce = dock->getproduce();
 	if(iscomputer()) {
 
 	} else {
-		if(build(result, planet, solar, value, getfleet(), 2, true))
+		if(build(result, planet, solar, getresource(), getfleet(), 0, dock_produce, true))
 			unit_info::update_control();
 	}
+}
+
+int	player_info::getresource() const {
+	return planet_info::get(this, &planet_info::getresource);
 }
 
 unit_info* player_info::choose(army& source, const char* format) const {

@@ -36,6 +36,29 @@ int table::rowheader(const rect& rc_original) const {
 	return height;
 }
 
+int	table::gettotal(int column) const {
+	auto result = 0;
+	auto row_maximum = getmaximum();
+	for(auto i = 0; i < row_maximum; i++)
+		result += getnumber(i, column);
+	return result;
+}
+
+const column* table::find(const char* id) const {
+	for(auto p = columns; *p; p++) {
+		if(strcmp(p->id, id) == 0)
+			return p;
+	}
+	return 0;
+}
+
+int	table::gettotal(const char* id) const {
+	auto p = find(id);
+	if(!p)
+		return 0;
+	return gettotal(p - columns);
+}
+
 void table::row(const rect &rc_origin, int index) {
 	auto rc = rc_origin;
 	char temp[260];

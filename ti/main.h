@@ -153,7 +153,7 @@ struct player_info : name_info, cost_info {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
-	bool						build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, bool cancel_button);
+	bool						build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
@@ -218,6 +218,7 @@ struct unit_info {
 	~unit_info();
 	bool						build(unit_type_s object, bool run);
 	void						destroy();
+	unit_info*					find(unit_type_s v, const player_info* player) const;
 	unit_info*					get(unit_type_s parent_type);
 	unit_info*					get(target_s v) const;
 	static int					getavailable(unit_type_s type);
@@ -235,6 +236,9 @@ struct unit_info {
 	static int					getproduction(unit_type_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
+	planet_info*				getplanet();
+	int							getproduce() const;
+	static int					getproduce(unit_type_s type);
 	const char*					getsolarname() const;
 	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }

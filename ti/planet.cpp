@@ -206,6 +206,11 @@ bool unit_info::isplanet() const {
 	return this >= planets && this < (planets + sizeof(planets) / sizeof(planets[0]));
 }
 
+planet_info* unit_info::getplanet() {
+	return (this >= planets && this < (planets + sizeof(planets) / sizeof(planets[0]))) ?
+		static_cast<planet_info*>(this) : 0;
+}
+
 const char* unit_info::getsolarname() const {
 	for(auto& e : planets) {
 		if(!e)

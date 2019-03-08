@@ -974,7 +974,8 @@ struct unit_table : table {
 	static const int table_maximum = (WarSun - GroundForces + 1);
 	adat<element, table_maximum> source;
 	bool			focusable;
-	int				fleet, resource, production;
+	int				fleet, resource, maximal;
+	int				total_fleet, total_resource, total_maximal;
 	int getmaximum() const override {
 		return source.getcount();
 	}
@@ -992,16 +993,19 @@ struct unit_table : table {
 			return source[line].count * unit_info::getproduction(source[line].unit.type);
 		if(columns[column] == "total")
 			return source[line].unit.getresource()*source[line].count;
+		if(columns[column] == "fleet")
+			return source[line].unit.isfleet() ? source[line].count*1 : 0;
 		return 0;
 	}
 	unit_type_s getvalue() const {
 		return source[current].unit.type;
 	}
 	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 224},
+		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
 		{Number | AlignRight, "resource", "Цена", 32},
 		{Number | AlignRight, "count_units", "К-во", 32},
 		{Number | AlignRight, "total", "Сумма", 48},
+		{Number | AlignRight, "fleet", "Флот", 48},
 		{}};
 		return columns;
 	}
@@ -1029,23 +1033,34 @@ struct unit_table : table {
 		auto h = y2 - y1;
 		auto focused = (index == current);
 		disabled = false;
+		if(total_maximal >= maximal)
+			disabled = true;
+		if(total_resource >= resource)
+			disabled = true;
+		if(total_fleet >= fleet)
+			disabled = true;
 		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "+", Alpha + '+', true)) {
 			execute(add_value, (int)this);
 		}
 		x -= h + 2;
-		disabled = (source[index].count <= 0);
+		disabled = false;
+		if(source[index].count <= 0)
+			disabled = true;
 		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "-", Alpha + '-', true)) {
 			execute(sub_value, (int)this);
 		}
 	}
 	void view(const rect& rc) {
+		total_maximal = gettotal("count_units");
+		total_resource = gettotal("total");
+		total_fleet = gettotal("fleet");
 		table::view(rc);
 		rect rv = {rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2};
 		string sb;
-		sb.add("Ваши ресурсы [%1i], флот [%2i], продукция [%3i]", resource, fleet, production);
+		sb.add("Ваши ресурсы [%1i], флот [%2i], продукция [%3i]", resource, fleet, maximal);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
 	}
-	unit_table(player_info* player) : table(getcolumns()), fleet(-1), resource(-1), production(0) {
+	unit_table(player_info* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
 		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
 		for(auto i = i1; i <= WarSun; i = (unit_type_s)(i + 1)) {
@@ -1055,7 +1070,6 @@ struct unit_table : table {
 			p->unit.type = i;
 			p->unit.player = player;
 		}
-		//qsort(source, table_maximum, sizeof(source[0]), compare);
 	}
 };
 
@@ -1099,11 +1113,12 @@ void player_info::slide(int hexagon) {
 	slide(pt.x, pt.y);
 }
 
-bool player_info::build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, bool cancel_button) {
+bool player_info::build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;
 	u1.resource = resources;
+	u1.maximal = maximal;
 	auto text_width = gui.window_width;
 	slide(system);
 	while(ismodal()) {

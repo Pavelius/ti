@@ -102,9 +102,12 @@ struct column {
 struct table : list {
 	const column*			columns;
 	constexpr table(const column* columns) : columns(columns) {}
+	const column*			find(const char* id) const;
 	virtual const char*		getheader(char* result, const char* result_max, int column) const;
 	const char*				getname(char* result, const char* result_max, int line, int column) const override { return ""; }
 	virtual int				getnumber(int line, int column) const { return 0; }
+	int						gettotal(int column) const;
+	int						gettotal(const char* id) const;
 	void					row(const rect &rc, int index) override;
 	int						rowheader(const rect& rc) const;
 };
