@@ -5,6 +5,8 @@
 
 #pragma once
 
+const unsigned short Blocked = 0xFFFF;
+
 bsreq player_type[];
 bsreq string_type[];
 
@@ -159,6 +161,7 @@ struct player_info : name_info, cost_info {
 	void						check_card_limin();
 	unit_info*					choose(army& source, const char* format) const;
 	player_info*				choose_opponent(const char* text);
+	unit_info*					choose_solar() const;
 	bool						choose_trade() const { return true; }
 	void						create(const char* id);
 	unit_info*					create(unit_type_s id, unit_info* planet);
@@ -172,6 +175,7 @@ struct player_info : name_info, cost_info {
 	bool						isally(player_info* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
+	void						moveships(unit_info* solar);
 	static player_info*			find(const char* id);
 	int							get(action_s id) const;
 	int							getcardscount() const;
@@ -209,13 +213,14 @@ struct unit_info {
 	unit_type_s					type;
 	player_info*				player;
 	unit_info*					parent;
-	bool						used;
-	constexpr unit_info() : type(NoUnit), player(0), parent(0), used(false) {}
-	constexpr unit_info(unit_type_s type) : type(type), player(0), parent(0), used(false) {}
+	constexpr unit_info() : type(NoUnit), player(0), parent(0), activate_flags(0) {}
+	constexpr unit_info(unit_type_s type) : type(type), player(0), parent(0), activate_flags(0) {}
 	explicit operator bool() const { return type != NoUnit; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
 	~unit_info();
+	void						activate();
+	void						activate(const player_info* player, bool setvalue = true);
 	bool						build(unit_type_s object, bool run);
 	void						destroy();
 	unit_info*					find(unit_type_s v, const player_info* player) const;
@@ -240,12 +245,14 @@ struct unit_info {
 	int							getproduce() const;
 	static int					getproduce(unit_type_s type);
 	const char*					getsolarname() const;
+	short unsigned				getsolarindex() const;
 	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weapon_info					getweapon() const;
 	weapon_info					getweapon(bool attacker, const player_info* opponent, char round) const;
 	int							getweight() const;
 	static int					gmi(int x, int y) { return y * 8 + x; }
+	bool						isactivated(const player_info* player) const;
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
 	bool						isinvaders() const;
@@ -257,6 +264,8 @@ struct unit_info {
 	bool						in(const unit_info* parent) const;
 	static unsigned				select(unit_info** result, unit_info* const* result_max, unit_info* parent);
 	static void					update_control();
+protected:
+	unsigned					activate_flags;
 };
 extern unit_info				solars[48];
 struct planet_info : unit_info {

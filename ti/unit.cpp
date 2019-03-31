@@ -484,3 +484,22 @@ unit_info* unit_info::find(unit_type_s v, const player_info* player) const {
 	}
 	return 0;
 }
+
+bool unit_info::isactivated(const player_info* player) const {
+	if(!player)
+		return true;
+	return (activate_flags & (1 << (player->getindex()))) != 0;
+}
+
+void unit_info::activate() {
+	activate_flags = 0xFFFFFFFF;
+}
+
+void unit_info::activate(const player_info* player, bool setvalue) {
+	if(!player)
+		return;
+	if(setvalue)
+		activate_flags |= 1 << (player->getindex());
+	else
+		activate_flags &= ~(1 << (player->getindex()));
+}

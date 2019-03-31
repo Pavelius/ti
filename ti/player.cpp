@@ -387,6 +387,10 @@ static void refresh_players() {
 	}
 }
 
+unit_info* player_info::choose_solar() const {
+	return 0;
+}
+
 void player_info::add_peace_pact(int value) {
 	string sb;
 	sb.player = this;
@@ -458,6 +462,12 @@ static void strategy_secondanary_action(player_info* p, strategy_s id) {
 	}
 }
 
+static void tactical_action(player_info* player) {
+	auto solar = player->choose_solar();
+	solar->activate(player);
+	player->moveships(solar);
+}
+
 static action_s choose_action(player_info* p) {
 	string sb;
 	answer_info ai;
@@ -474,6 +484,8 @@ static void play_action(player_info* p, action_s id) {
 	switch(id) {
 	case StrategyAction:
 		strategy_primary_action(p, p->strategy);
+		break;
+	case TacticalAction:
 		break;
 	}
 }
@@ -561,4 +573,8 @@ void player_info::select(army& result, unsigned flags) const {
 		}
 		break;
 	}
+}
+
+void player_info::moveships(unit_info* solar) {
+
 }

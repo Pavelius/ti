@@ -2,6 +2,8 @@
 
 int			solar_map[8 * 8];
 unit_info	solars[48];
+short unsigned movement_rate[48];
+short unsigned movement_rate_block[48];
 
 static planet_info planets[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
@@ -113,7 +115,7 @@ int planet_info::get(const player_info* player, int(planet_info::*getproc)() con
 
 void planet_info::refresh() {
 	for(auto& e : planets)
-		e.used = false;
+		e.activate_flags = 0;
 }
 
 void planet_info::initialize() {
@@ -159,7 +161,7 @@ void planet_info::create_stars() {
 			for(auto x = 0; x < (3 - y); x++)
 				solar_map[gmi(x, y)] = -1;
 		} else {
-			for(auto x = 7 - (y-3); x < 8; x++)
+			for(auto x = 7 - (y - 3); x < 8; x++)
 				solar_map[gmi(x, y)] = -1;
 		}
 		solar_map[gmi(7, y)] = -1;
@@ -178,7 +180,7 @@ void planet_info::create_stars() {
 	for(auto& e : solar_map) {
 		if(e == -1)
 			continue;
-		if(index<solar_deck.getcount())
+		if(index < solar_deck.getcount())
 			e = solar_deck[index++];
 	}
 	solar_map[gmi(3, 3)] = 0; // Расположили Менкатол Рекс
@@ -202,6 +204,12 @@ bool unit_info::issolar() const {
 	return this >= solars && this < (solars + sizeof(solars) / sizeof(solars[0]));
 }
 
+short unsigned unit_info::getsolarindex() const {
+	if(this >= solars && this < (solars + sizeof(solars) / sizeof(solars[0])))
+		return this - solars;
+	return Blocked;
+}
+
 bool unit_info::isplanet() const {
 	return this >= planets && this < (planets + sizeof(planets) / sizeof(planets[0]));
 }
@@ -223,4 +231,33 @@ const char* unit_info::getsolarname() const {
 
 const char* unit_info::getplanetname() const {
 	return (static_cast<const planet_info*>(this))->name;
+}
+
+static short unsigned getmovement(short unsigned index, char d) {
+	return index;
+}
+
+static void make_wave(short unsigned start_index, const player_info* player, short unsigned* result, bool block) {
+	short unsigned stack[256 * 16];
+	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
+	char directions[] = {0, 1, 2, 3, 4, 5};
+	auto push_counter = stack;
+	auto pop_counter = stack;
+	result[start_index] = 0;
+	*push_counter++ = start_index;
+	while(pop_counter < push_counter) {
+		auto index = *pop_counter++;
+		auto cost = result[index] + 1;
+		for(auto d : directions) {
+			auto i1 = getmovement(index, d);
+			if(i1 == Blocked)
+				continue;
+			if(result[index] < cost)
+				continue;
+			if(push_counter >= stack_end)
+				return;
+			result[i1] = cost;
+			*push_counter++ = i1;
+		}
+	}
 }
