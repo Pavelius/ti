@@ -3,6 +3,7 @@
 
 using namespace draw;
 using namespace draw::controls;
+static unit_info* hilited_solar;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
 static color player_colors[sizeof(players) / sizeof(players[0])][2];
@@ -459,7 +460,6 @@ static bool control_board() {
 		break;
 	default:
 		if(draw::drag::active(last_board)) {
-			hot.cursor = CursorAll;
 			if(hot.mouse.x >= 0 && hot.mouse.y >= 0)
 				camera = camera_drag + (draw::drag::mouse - hot.mouse);
 			return true;
@@ -599,6 +599,14 @@ void draw::domodal() {
 		exit(0);
 }
 
+const int size2 = size - 4;
+static const point hexagon_offset2[6] = {{(short)(size2 * cos_30), -(short)(size2 / 2)},
+{(short)(size2 * cos_30), (short)(size2 / 2)},
+{0, size2},
+{-(short)(size2 * cos_30), (short)(size2 / 2)},
+{-(short)(size2 * cos_30), -(short)(size2 / 2)},
+{0, -size2},
+};
 static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size / 2)},
 {(short)(size * cos_30), (short)(size / 2)},
 {0, size},
@@ -671,6 +679,23 @@ static point p2h(point pt) {
 	auto q = ((sqrt_3 / 3.0) * (double)pt.x - (1.0 / 3.0) * (double)pt.y) / (double)size;
 	auto r = ((2.0 / 3.0) * (double)pt.y) / (double)size;
 	return cube_to_oddr(cube_round(axial_to_cube({(short)q, (short)r})));
+}
+
+static void hexagon2(point pt) {
+	auto push_linw = linw;
+	auto push_fore = fore;
+	linw = 2.0;
+	fore = colors::red;
+	for(auto i = 0; i < 5; i++) {
+		auto p1 = pt + hexagon_offset2[i];
+		auto p2 = pt + hexagon_offset2[i + 1];
+		line(p1.x, p1.y, p2.x, p2.y);
+	}
+	auto p1 = pt + hexagon_offset2[5];
+	auto p2 = pt + hexagon_offset2[0];
+	line(p1.x, p1.y, p2.x, p2.y);
+	linw = push_linw;
+	fore = push_fore;
 }
 
 static void hexagon(point pt) {
@@ -858,7 +883,7 @@ static void draw_planet(point pt, planet_info* p) {
 	draw_units(pt.x, pt.y, p, true);
 }
 
-static int render_right() {
+static int render_left() {
 	int x = gui.border;
 	int y = gui.border;
 	for(auto& e : players) {
@@ -883,10 +908,11 @@ static int render_right() {
 	return y;
 }
 
-static void render_board() {
+static void render_board(bool use_hilite_solar = false) {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
 	area(last_board);
+	hilited_solar = 0;
 	for(auto y = 0; y < 8; y++) {
 		for(auto x = 0; x < 8; x++) {
 			auto pt = h2p({(short)x, (short)y}) - camera;
@@ -898,6 +924,14 @@ static void render_board() {
 			if(!p)
 				continue;
 			hexagon(pt);
+			if(use_hilite_solar) {
+				auto dx = size2 / 2;
+				rect rc = {pt.x - dx, pt.y - dx, pt.x + dx, pt.y + dx};
+				if(areb(rc))
+					hilited_solar = p;
+			}
+			if(hilited_solar==p)
+				hexagon2(pt);
 			if(p->type == SolarSystem) {
 				adat<planet_info*, 3> source;
 				source.count = planet_info::select(source.begin(), source.endof(), p);
@@ -944,7 +978,7 @@ int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture
 	int x, y;
 	while(ismodal()) {
 		render_board();
-		render_right();
+		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
 		y += render_report(x, y, picture, format);
@@ -1097,6 +1131,23 @@ void player_info::slide(int x, int y) {
 	camera.y = y1;
 }
 
+unit_info* player_info::choose_solar() const {
+	while(ismodal()) {
+		render_board(true);
+		render_left();
+		auto x = getwidth() - gui.window_width - gui.border * 2;
+		auto y = gui.border * 2;
+		y += window(x, y, gui.window_width, "Выбирайте звездную систему", gui.window_width);
+		x = getwidth() - gui.right_width - gui.border * 2;
+		domodal();
+		control_standart();
+		if(hot.pressed && hot.key == MouseLeft && hilited_solar)
+			breakmodal((int)hilited_solar);
+	}
+	auto p = reinterpret_cast<unit_info*>(getresult());
+	return p;
+}
+
 void player_info::slide(int hexagon) {
 	if(hexagon == -1)
 		return;
@@ -1117,7 +1168,7 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 	slide(system);
 	while(ismodal()) {
 		render_board();
-		render_right();
+		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
 		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};

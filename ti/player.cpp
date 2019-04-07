@@ -387,10 +387,6 @@ static void refresh_players() {
 	}
 }
 
-unit_info* player_info::choose_solar() const {
-	return 0;
-}
-
 void player_info::add_peace_pact(int value) {
 	string sb;
 	sb.player = this;
