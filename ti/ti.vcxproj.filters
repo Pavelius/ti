@@ -129,9 +129,6 @@
     <ClCompile Include="draw_control.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
-    <ClCompile Include="view_dialogs.cpp">
-      <Filter>Графика</Filter>
-    </ClCompile>
     <ClCompile Include="draw_table.cpp">
       <Filter>Графика</Filter>
     </ClCompile>

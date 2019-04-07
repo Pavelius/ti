@@ -237,6 +237,7 @@ struct unit_info {
 	short unsigned				getindex() const;
 	int							getfightersupport();
 	static int					getfleet(const player_info* player);
+	static int					getfleet(const player_info* player, const unit_info* solar);
 	int							getjoincount(unit_type_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;

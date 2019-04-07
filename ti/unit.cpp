@@ -23,7 +23,7 @@ static struct unit_data_info {
 {"Carrier", "Транспорт", 4, 3, 1, 1, 1, 9},
 {"Cruiser", "Крейсер", 8, 2, 1, 2, 1, 7},
 {"Destroyer", "Эсминец", 8, 1, 1, 2, 1, 9},
-{"Dreadnought", "Дредноут", 5, 5, 1, 1, 1, 5},
+{"Dreadnought", "Линкор", 5, 5, 1, 1, 1, 5},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
 };
 getstr_enum(unit_type);
@@ -398,6 +398,20 @@ int unit_info::getweight() const {
 }
 
 void unit_info::destroy() {
+}
+
+int	unit_info::getfleet(const player_info* player, const unit_info* solar) {
+	auto result = 0;
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(e.parent != solar)
+			continue;
+		if(!e.isfleet())
+			continue;
+		result++;
+	}
+	return result;
 }
 
 int	unit_info::getfleet(const player_info* player) {

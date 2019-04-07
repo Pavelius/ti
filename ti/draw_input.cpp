@@ -731,14 +731,14 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 		circle(x, y, r * 3, c2);
 		break;
 	case Carrier:
-		zcat(temp, "T");
+		zcat(temp, "Т");
 		n = r + r;
 		rectf({x - r, y - r, x + n, y + r}, c1);
 		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y, c1, c2);
 		break;
 	case Destroyer:
-		zcat(temp, "D");
+		zcat(temp, "Э");
 		n = r + r / 2;
 		rectf({x - r, y - r, x + n, y + r}, c1);
 		rectb({x - r, y - r, x + n, y + r}, c2);
@@ -746,7 +746,7 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 		cannon(x + n, y + 2, c1, c2);
 		break;
 	case Cruiser:
-		zcat(temp, "C");
+		zcat(temp, "К");
 		n = r + r / 2;
 		rectf({x - r, y - r, x + n, y + r}, c1);
 		rectb({x - r, y - r, x + n, y + r}, c2);
@@ -755,7 +755,7 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 		cannon(x + n, y + 3, c1, c2);
 		break;
 	case Dreadnought:
-		zcat(temp, "R");
+		zcat(temp, "Л");
 		n = r + r;
 		rectf({x - r, y - r, x + n, y + r}, c1);
 		rectb({x - r, y - r, x + n, y + r}, c2);
@@ -765,7 +765,7 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 		cannon(x + n, y + 3, c1, c2);
 		break;
 	case WarSun:
-		zcat(temp, "W");
+		zcat(temp, "ВС");
 		circlef(x + r, y + r, r * 2, c1);
 		circle(x + r, y + r, r * 2, c2);
 		break;
@@ -967,7 +967,7 @@ struct unit_table : table {
 	static const int table_maximum = (WarSun - GroundForces + 1);
 	adat<element, table_maximum> source;
 	bool			focusable;
-	int				fleet, resource, maximal;
+	int				fleet, fleet_used, resource, maximal;
 	int				total_fleet, total_resource, total_maximal;
 	int getmaximum() const override {
 		return source.getcount();
@@ -1030,7 +1030,7 @@ struct unit_table : table {
 			disabled = true;
 		if(total_resource >= resource)
 			disabled = true;
-		if(total_fleet >= fleet)
+		if(source[index].unit.isfleet() && total_fleet >= fleet)
 			disabled = true;
 		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "+", Alpha + '+', true)) {
 			execute(add_value, (int)this);
@@ -1046,11 +1046,11 @@ struct unit_table : table {
 	void view(const rect& rc) {
 		total_maximal = gettotal("count_units");
 		total_resource = gettotal("total");
-		total_fleet = gettotal("fleet");
+		total_fleet = gettotal("fleet") + fleet_used;
 		table::view(rc);
 		rect rv = {rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2};
 		string sb;
-		sb.add("Ваши ресурсы [%1i], флот [%2i], продукция [%3i]", resource, fleet, maximal);
+		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], продукция [%3i]", resource, fleet, maximal, total_fleet);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
 	}
 	unit_table(player_info* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
@@ -1110,6 +1110,7 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;
+	u1.fleet_used = system->getfleet(this, system);
 	u1.resource = resources;
 	u1.maximal = maximal;
 	auto text_width = gui.window_width;
