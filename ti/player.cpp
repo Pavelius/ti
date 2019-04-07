@@ -458,10 +458,11 @@ static void strategy_secondanary_action(player_info* p, strategy_s id) {
 	}
 }
 
-static void tactical_action(player_info* player) {
-	auto solar = player->choose_solar();
-	solar->activate(player);
-	player->moveships(solar);
+void player_info::tactical_action() {
+	//auto solar = choose_solar();
+	auto solar = gethomesystem();
+	solar->activate(this);
+	moveships(solar);
 }
 
 static action_s choose_action(player_info* p) {
@@ -563,8 +564,4 @@ void player_info::select(army& result, unsigned flags) const {
 		}
 		break;
 	}
-}
-
-void player_info::moveships(unit_info* solar) {
-
 }

@@ -516,4 +516,5 @@ void unit_info::activate(const player_info* player, bool setvalue) {
 		activate_flags |= 1 << (player->getindex());
 	else
 		activate_flags &= ~(1 << (player->getindex()));
+	player->slide(this);
 }

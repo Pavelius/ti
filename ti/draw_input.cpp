@@ -908,7 +908,7 @@ static int render_left() {
 	return y;
 }
 
-static void render_board(bool use_hilite_solar = false) {
+static void render_board(bool use_hilite_solar = false, bool show_movement = false) {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
 	area(last_board);
@@ -920,7 +920,8 @@ static void render_board(bool use_hilite_solar = false) {
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
-			auto p = unit_info::getsolar(planet_info::gmi(x, y));
+			auto index = planet_info::gmi(x, y);
+			auto p = unit_info::getsolar(index);
 			if(!p)
 				continue;
 			hexagon(pt);
@@ -958,6 +959,16 @@ static void render_board(bool use_hilite_solar = false) {
 			else if(p->type == Supernova)
 				image(pt.x, pt.y, planets, 18, 0);
 			draw_units(pt.x - size / 3, pt.y - size / 3, p, false);
+			if(show_movement) {
+				auto push_font = font;
+				auto value = unit_info::getmovement(index);
+				if(value && value!=Blocked) {
+					font = metrics::h1;
+					char temp[16]; zprint(temp, "%1i", value);
+					font = push_font;
+					text(pt.x - textw(temp), pt.y - texth() / 2, temp, -1, TextStroke);
+				}
+			}
 		}
 	}
 }
@@ -1129,6 +1140,20 @@ void player_info::slide(int x, int y) {
 	}
 	camera.x = x1;
 	camera.y = y1;
+}
+
+bool player_info::choose_movement(unit_info* solar) const {
+	while(ismodal()) {
+		render_board(false, true);
+		render_left();
+		auto x = getwidth() - gui.window_width - gui.border * 2;
+		auto y = gui.border * 2;
+		x = getwidth() - gui.right_width - gui.border * 2;
+		domodal();
+		control_standart();
+	}
+	auto p = reinterpret_cast<unit_info*>(getresult());
+	return p;
 }
 
 unit_info* player_info::choose_solar() const {

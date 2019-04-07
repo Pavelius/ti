@@ -200,6 +200,12 @@ void planet_info::create_stars() {
 	}
 }
 
+int unit_info::getmovement(short unsigned index) {
+	if(index == Blocked)
+		return 0;
+	return movement_rate[index];
+}
+
 bool unit_info::issolar() const {
 	return this >= solars && this < (solars + sizeof(solars) / sizeof(solars[0]));
 }
@@ -259,7 +265,7 @@ static short unsigned getmovement(short unsigned index, direction_s d) {
 	if(index == Blocked)
 		return Blocked;
 	auto x = unit_info::gmx(index);
-	auto y = unit_info::gmx(index);
+	auto y = unit_info::gmy(index);
 	switch(d) {
 	case Left: x--; break;
 	case Right: x++; break;
@@ -289,9 +295,9 @@ static void make_wave(short unsigned start_index, const player_info* player, sho
 		auto cost = result[index] + 1;
 		for(auto d : directions) {
 			auto i1 = getmovement(index, d);
-			if(i1 == Blocked || result[index] == Blocked)
+			if(i1 == Blocked || result[i1] == Blocked)
 				continue;
-			if(result[index] < cost)
+			if(result[i1] < cost)
 				continue;
 			result[i1] = cost;
 			*push_counter++ = i1;
@@ -299,4 +305,24 @@ static void make_wave(short unsigned start_index, const player_info* player, sho
 				push_counter = stack;
 		}
 	}
+}
+
+static void make_wave(short unsigned start_index, const player_info* player) {
+	for(auto& e : movement_rate)
+		e = DefaultCost;
+	for(auto& e : solars) {
+		if(!e)
+			continue;
+		if(e.type != SolarSystem && e.type != AsteroidField && e.type != Nebula) {
+			auto index = e.getindex();
+			movement_rate[index] = Blocked;
+		}
+	}
+	memcpy(movement_rate_block, movement_rate, sizeof(movement_rate));
+	make_wave(start_index, player, movement_rate, false);
+}
+
+void player_info::moveships(unit_info* solar) {
+	make_wave(solar->getindex(), this);
+	choose_movement(solar);
 }

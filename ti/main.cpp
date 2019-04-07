@@ -15,7 +15,7 @@ int main() {
 	players[5].create("xxcha");
 	planet_info::create_stars();
 	player_info::setup();
-	player_info::gethuman()->choose_solar();
+	player_info::gethuman()->tactical_action();
 	player_info::gethuman()->make_move();
 	return 0;
 }

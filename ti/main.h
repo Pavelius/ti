@@ -162,6 +162,7 @@ struct player_info : name_info, cost_info {
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	unit_info*					choose(army& source, const char* format) const;
+	bool						choose_movement(unit_info* solar) const;
 	player_info*				choose_opponent(const char* text);
 	unit_info*					choose_solar() const;
 	bool						choose_trade() const { return true; }
@@ -206,6 +207,7 @@ struct player_info : name_info, cost_info {
 	unsigned					select(unit_info** result, unit_info* const* result_maximum, unsigned flags, unit_type_s type) const;
 	static void					setup();
 	void						sethuman();
+	void						tactical_action();
 private:
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
@@ -241,6 +243,7 @@ struct unit_info {
 	int							getjoincount(unit_type_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
+	static int					getmovement(short unsigned index);
 	const char*					getname() const;
 	static int					getproduction(unit_type_s type);
 	int							getproduction() const { return getproduction(type); }
