@@ -883,13 +883,6 @@ static int render_right() {
 	return y;
 }
 
-static unit_info* get_system_index(int index) {
-	auto n = solar_map[index];
-	if(n == -1)
-		return 0;
-	return solars + n;
-}
-
 static void render_board() {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
@@ -901,7 +894,7 @@ static void render_board() {
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
-			auto p = get_system_index(planet_info::gmi(x, y));
+			auto p = unit_info::getsolar(planet_info::gmi(x, y));
 			if(!p)
 				continue;
 			hexagon(pt);

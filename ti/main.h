@@ -5,7 +5,9 @@
 
 #pragma once
 
+const int map_scan_line = 8;
 const unsigned short Blocked = 0xFFFF;
+const unsigned short DefaultCost = Blocked - 1;
 
 bsreq player_type[];
 bsreq string_type[];
@@ -232,6 +234,7 @@ struct unit_info {
 	int							getcarried() const;
 	int							getcount() const;
 	static int					getcount(unit_type_s type, const player_info* player, unit_info* location = 0);
+	short unsigned				getindex() const;
 	int							getfightersupport();
 	static int					getfleet(const player_info* player);
 	int							getjoincount(unit_type_s object) const;
@@ -245,13 +248,16 @@ struct unit_info {
 	int							getproduce() const;
 	static int					getproduce(unit_type_s type);
 	const char*					getsolarname() const;
+	static unit_info*			getsolar(int index);
 	short unsigned				getsolarindex() const;
 	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weapon_info					getweapon() const;
 	weapon_info					getweapon(bool attacker, const player_info* opponent, char round) const;
 	int							getweight() const;
-	static int					gmi(int x, int y) { return y * 8 + x; }
+	static short unsigned		gmi(int x, int y) { return y * map_scan_line + x; }
+	static short unsigned		gmx(short unsigned index) { return index % map_scan_line; }
+	static short unsigned		gmy(short unsigned index) { return index / map_scan_line; }
 	bool						isactivated(const player_info* player) const;
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
@@ -328,6 +334,6 @@ private:
 };
 extern deck<action_s>			action_deck;
 extern player_info				players[6];
-extern int						solar_map[8 * 8];
+//extern int						solar_map[8 * 8];
 extern strategy_info			strategy_data[];
 extern adat<unit_info, 256>		units;

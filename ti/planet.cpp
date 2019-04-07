@@ -1,9 +1,9 @@
 #include "main.h"
 
-int			solar_map[8 * 8];
-unit_info	solars[48];
-short unsigned movement_rate[48];
-short unsigned movement_rate_block[48];
+unit_info		solars[48];
+static int		solar_indecies[map_scan_line * map_scan_line];
+short unsigned	movement_rate[48];
+short unsigned	movement_rate_block[48];
 
 static planet_info planets[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
@@ -145,7 +145,7 @@ void planet_info::setup() {
 
 int get_system_count() {
 	auto result = 0;
-	for(auto e : solar_map) {
+	for(auto e : solar_indecies) {
 		if(e == -1)
 			continue;
 		result++;
@@ -155,35 +155,35 @@ int get_system_count() {
 
 void planet_info::create_stars() {
 	char player_pos[][2] = {{3, 0}, {6, 0}, {0, 3}, {6, 3}, {0, 6}, {3, 6}};
-	memset(solar_map, 0, sizeof(solar_map));
+	memset(solar_indecies, 0, sizeof(solar_indecies));
 	for(auto y = 0; y < 7; y++) {
 		if(y < 3) {
 			for(auto x = 0; x < (3 - y); x++)
-				solar_map[gmi(x, y)] = -1;
+				solar_indecies[gmi(x, y)] = -1;
 		} else {
 			for(auto x = 7 - (y - 3); x < 8; x++)
-				solar_map[gmi(x, y)] = -1;
+				solar_indecies[gmi(x, y)] = -1;
 		}
-		solar_map[gmi(7, y)] = -1;
+		solar_indecies[gmi(7, y)] = -1;
 	}
 	for(auto x = 0; x < 8; x++)
-		solar_map[gmi(x, 7)] = -1;
+		solar_indecies[gmi(x, 7)] = -1;
 	adat<int, 32> solar_deck;
 	for(auto i = 1; i <= 32; i++)
 		solar_deck.add(i);
 	zshuffle(solar_deck.data, solar_deck.count);
-	solar_map[gmi(3, 3)] = -1; // Мекатор рекс
+	solar_indecies[gmi(3, 3)] = -1; // Мекатор рекс
 	for(auto e : player_pos)
-		solar_map[gmi(e[0], e[1])] = -1;
+		solar_indecies[gmi(e[0], e[1])] = -1;
 	auto allowed_system = get_system_count();
 	auto index = 0;
-	for(auto& e : solar_map) {
+	for(auto& e : solar_indecies) {
 		if(e == -1)
 			continue;
 		if(index < solar_deck.getcount())
 			e = solar_deck[index++];
 	}
-	solar_map[gmi(3, 3)] = 0; // Расположили Менкатол Рекс
+	solar_indecies[gmi(3, 3)] = 0; // Расположили Менкатол Рекс
 	// Расопложим игроков
 	index = 33;
 	int player_index = 0;
@@ -194,7 +194,7 @@ void planet_info::create_stars() {
 			if(strcmp(pn.home, e.id) == 0)
 				pn.parent = solars + index;
 		}
-		solar_map[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
+		solar_indecies[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
 		player_index++;
 		index++;
 	}
@@ -219,6 +219,24 @@ planet_info* unit_info::getplanet() {
 		static_cast<planet_info*>(this) : 0;
 }
 
+unit_info* unit_info::getsolar(int index) {
+	auto n = solar_indecies[index];
+	if(n == -1)
+		return 0;
+	return solars + n;
+}
+
+short unsigned unit_info::getindex() const {
+	auto index = getsolarindex();
+	if(index != Blocked) {
+		for(unsigned i = 0; i < sizeof(solar_indecies) / sizeof(solar_indecies[0]); i++) {
+			if(solar_indecies[i] == index)
+				return i;
+		}
+	}
+	return Blocked;
+}
+
 const char* unit_info::getsolarname() const {
 	for(auto& e : planets) {
 		if(!e)
@@ -233,31 +251,52 @@ const char* unit_info::getplanetname() const {
 	return (static_cast<const planet_info*>(this))->name;
 }
 
-static short unsigned getmovement(short unsigned index, char d) {
-	return index;
+enum direction_s : unsigned char {
+	LeftUp, RightUp, Left, Right, LeftDown, RightDown
+};
+
+static short unsigned getmovement(short unsigned index, direction_s d) {
+	if(index == Blocked)
+		return Blocked;
+	auto x = unit_info::gmx(index);
+	auto y = unit_info::gmx(index);
+	switch(d) {
+	case Left: x--; break;
+	case Right: x++; break;
+	case LeftUp: y--; break;
+	case LeftDown: y++; x--; break;
+	case RightUp: y--; x++; break;
+	case RightDown: y++; break;
+	default: return Blocked;
+	}
+	if(x < 0 || x >= map_scan_line || y<0 || y>= map_scan_line)
+		return Blocked;
+	return unit_info::gmi(x, y);
 }
 
 static void make_wave(short unsigned start_index, const player_info* player, short unsigned* result, bool block) {
-	short unsigned stack[256 * 16];
+	static direction_s directions[] = {LeftUp, RightUp, Left, Right, LeftDown, RightDown};
+	short unsigned stack[256 * 8];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
-	char directions[] = {0, 1, 2, 3, 4, 5};
 	auto push_counter = stack;
 	auto pop_counter = stack;
 	result[start_index] = 0;
 	*push_counter++ = start_index;
-	while(pop_counter < push_counter) {
+	while(pop_counter != push_counter) {
 		auto index = *pop_counter++;
+		if(pop_counter >= stack_end)
+			pop_counter = stack;
 		auto cost = result[index] + 1;
 		for(auto d : directions) {
 			auto i1 = getmovement(index, d);
-			if(i1 == Blocked)
+			if(i1 == Blocked || result[index] == Blocked)
 				continue;
 			if(result[index] < cost)
 				continue;
-			if(push_counter >= stack_end)
-				return;
 			result[i1] = cost;
 			*push_counter++ = i1;
+			if(push_counter >= stack_end)
+				push_counter = stack;
 		}
 	}
 }

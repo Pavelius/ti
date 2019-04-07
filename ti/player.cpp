@@ -516,18 +516,12 @@ void player_info::make_move() {
 	action_phase();
 }
 
-int get_solar_map_index(int index) {
-	for(unsigned i = 0; i < sizeof(solar_map) / sizeof(solar_map[0]); i++) {
-		if(solar_map[i] == index)
-			return i;
-	}
-	return -1;
-}
-
 void player_info::slide(const unit_info* p) {
-	if(!p->issolar())
+	if(!p)
 		return;
-	auto index = get_solar_map_index(p - solars);
+	auto index = p->getindex();
+	if(index == Blocked)
+		return;
 	slide(index);
 }
 
