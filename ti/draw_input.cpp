@@ -1004,6 +1004,32 @@ int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture
 	return getresult();
 }
 
+struct unit_ref_table : table {
+	army&		source;
+	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
+		if(columns[column] == "name")
+			return source[line]->getname();
+		return 0;
+	}
+	int getnumber(int line, int column) const override {
+		return 0;
+	}
+	unit_info* getvalue() const {
+		return source[current];
+	}
+	static const column* getcolumns() {
+		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
+		{}};
+		return columns;
+	}
+	static int compare(const void* p1, const void* p2) {
+		auto u1 = *((unit_info**)p1);
+		auto u2 = *((unit_info**)p2);
+		return strcmp(u1->getname(), u2->getname());
+	}
+	constexpr unit_ref_table(army& source) : table(getcolumns()), source(source) {}
+};
+
 struct unit_table : table {
 	struct element {
 		unit_info	unit;
@@ -1219,4 +1245,27 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 		}
 	}
 	return result;
+}
+
+bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_button) const {
+	int x, y;
+	unit_ref_table u1(a1);
+	unit_ref_table u2(a2);
+	while(ismodal()) {
+		render_board();
+		render_left();
+		x = getwidth() - gui.window_width - gui.border * 2;
+		y = gui.border * 2;
+		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};
+		window(rc, false, false);
+		u1.view(rc);
+		x = getwidth() - gui.right_width - gui.border * 2;
+		y += rc.height() + gui.padding + gui.border * 2;
+		y += windowb(x, y, gui.right_width, action, cmd(buttonok), 0, KeyEnter);
+		if(cancel_button)
+			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
+		domodal();
+		control_standart();
+	}
+	return getresult() != 0;
 }

@@ -162,6 +162,7 @@ struct player_info : name_info, cost_info {
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	unit_info*					choose(army& source, const char* format) const;
+	bool						choose(army& a1, army& a2, const char* action, bool cancel_button) const;
 	bool						choose_movement(unit_info* solar) const;
 	player_info*				choose_opponent(const char* text);
 	unit_info*					choose_solar() const;
