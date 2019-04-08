@@ -281,6 +281,7 @@ static short unsigned getmovement(short unsigned index, direction_s d) {
 }
 
 static void make_wave(short unsigned start_index, const player_info* player, short unsigned* result, bool block) {
+	const int cost_bocked = 4;
 	static direction_s directions[] = {LeftUp, RightUp, Left, Right, LeftDown, RightDown};
 	short unsigned stack[256 * 8];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
@@ -293,6 +294,11 @@ static void make_wave(short unsigned start_index, const player_info* player, sho
 		if(pop_counter >= stack_end)
 			pop_counter = stack;
 		auto cost = result[index] + 1;
+		auto p = solars + solar_indecies[index];
+		if(p->type == Nebula)
+			cost += cost_bocked;
+		else if(p->player && p->player->isenemy(player) && !player->is(LightWaveDeflector))
+			cost += cost_bocked;
 		for(auto d : directions) {
 			auto i1 = getmovement(index, d);
 			if(i1 == Blocked || result[i1] == Blocked)
@@ -313,10 +319,14 @@ static void make_wave(short unsigned start_index, const player_info* player) {
 	for(auto& e : solars) {
 		if(!e)
 			continue;
-		if(e.type != SolarSystem && e.type != AsteroidField && e.type != Nebula) {
-			auto index = e.getindex();
-			movement_rate[index] = Blocked;
-		}
+		if(e.type == SolarSystem)
+			continue;
+		if(e.type == Nebula)
+			continue;
+		if(e.type == AsteroidField && player->is(AntimassDeflectors))
+			continue;
+		auto index = e.getindex();
+		movement_rate[index] = Blocked;
 	}
 	memcpy(movement_rate_block, movement_rate, sizeof(movement_rate));
 	make_wave(start_index, player, movement_rate, false);

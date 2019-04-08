@@ -175,9 +175,9 @@ struct player_info : name_info, cost_info {
 	bool						is(tech_s value) const { return technologies.is(value); }
 	bool						isallow(play_s type, action_s id) const;
 	bool						isallow(unit_type_s id) const;
-	bool						isally(player_info* enemy) const;
+	bool						isally(const player_info* enemy) const;
 	bool						iscomputer() const;
-	bool						isenemy(player_info* enemy) const { return !isally(enemy); }
+	bool						isenemy(const player_info* enemy) const { return !isally(enemy); }
 	void						moveships(unit_info* solar);
 	static player_info*			find(const char* id);
 	int							get(action_s id) const;

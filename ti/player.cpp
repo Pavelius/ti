@@ -100,7 +100,7 @@ bool player_info::iscomputer() const {
 	return this != human_player;
 }
 
-bool player_info::isally(player_info* enemy) const {
+bool player_info::isally(const player_info* enemy) const {
 	return (this == enemy)
 		|| (diplomacy_players[0] == this && diplomacy_players[1] == enemy)
 		|| (diplomacy_players[0] == enemy && diplomacy_players[1] == this);
@@ -459,8 +459,7 @@ static void strategy_secondanary_action(player_info* p, strategy_s id) {
 }
 
 void player_info::tactical_action() {
-	//auto solar = choose_solar();
-	auto solar = gethomesystem();
+	auto solar = choose_solar();
 	solar->activate(this);
 	moveships(solar);
 }

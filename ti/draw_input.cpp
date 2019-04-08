@@ -1176,8 +1176,8 @@ unit_info* player_info::choose_solar() const {
 void player_info::slide(int hexagon) {
 	if(hexagon == -1)
 		return;
-	auto x = hexagon % 8;
-	auto y = hexagon / 8;
+	auto x = unit_info::gmx(hexagon);
+	auto y = unit_info::gmy(hexagon);
 	point pt = h2p({(short)x, (short)y});
 	slide(pt.x, pt.y);
 }
