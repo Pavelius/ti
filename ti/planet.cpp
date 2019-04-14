@@ -349,5 +349,12 @@ void player_info::moveships(unit_info* solar) {
 	army a1, a2;
 	make_wave(solar->getindex(), this);
 	select_units(a1, this);
-	choose(a1, a2, "Переместить", true);
+	// Перемещение кораблей в систему
+	if(choose(a1, a2, "Переместить", true)) {
+		for(auto p : a2)
+			p->parent = solar;
+	}
+	// Берем под контроль нейтральную систему
+	if(!solar->player)
+		solar->player = this;
 }

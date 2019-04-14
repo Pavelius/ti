@@ -1006,6 +1006,7 @@ int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture
 
 struct unit_ref_table : table {
 	army&		source;
+	bool		choosed;
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
 			return source[line]->getname();
@@ -1017,6 +1018,19 @@ struct unit_ref_table : table {
 	unit_info* getvalue() const {
 		return source[current];
 	}
+	int	getmaximum() const override {
+		return source.getcount();
+	}
+	bool keyinput(unsigned id) override {
+		switch(id) {
+		case KeyEnter:
+			if(getmaximum()>0)
+				choosed = true;
+			break;
+		default: return table::keyinput(id);
+		}
+		return true;
+	}
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
 		{}};
@@ -1027,7 +1041,11 @@ struct unit_ref_table : table {
 		auto u2 = *((unit_info**)p2);
 		return strcmp(u1->getname(), u2->getname());
 	}
-	constexpr unit_ref_table(army& source) : table(getcolumns()), source(source) {}
+	void view(const rect& rc) override {
+		choosed = false;
+		table::view(rc);
+	}
+	constexpr unit_ref_table(army& source) : table(getcolumns()), source(source), choosed(false) {}
 };
 
 struct unit_table : table {
@@ -1235,20 +1253,21 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 
 bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_button) const {
 	int x, y;
-	unit_ref_table u1(a1);
-	unit_ref_table u2(a2);
+	unit_ref_table u1(a1); u1.show_header = false;
+	unit_ref_table u2(a2); u2.show_header = false;
+	auto maximum = imax(u1.getmaximum(), u2.getmaximum()) + 1;
 	while(ismodal()) {
-		render_board(false, true);
+		render_board();
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};
+		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*maximum + 1};
 		auto w2 = rc.width() / 2 - gui.padding / 2;
 		rect rc1 = {rc.x1, rc.y1, rc.x1 + w2, rc.y2};
 		rect rc2 = {rc1.x2 + gui.padding, rc.y1, rc.x2, rc.y2};
 		window(rc, false, false);
 		u1.view(rc1);
-		u1.view(rc2);
+		u2.view(rc2);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
 		y += windowb(x, y, gui.right_width, action, cmd(buttonok), 0, KeyEnter);
@@ -1256,6 +1275,15 @@ bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_but
 			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
 		domodal();
 		control_standart();
+		if(u1.choosed) {
+			auto p = u1.getvalue();
+			a1.remove(u1.current);
+			a2.add(p);
+		} else if(u2.choosed) {
+			auto p = u2.getvalue();
+			a2.remove(u2.current);
+			a1.add(p);
+		}
 	}
 	return getresult() != 0;
 }
