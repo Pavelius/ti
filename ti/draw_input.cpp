@@ -931,7 +931,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 				if(areb(rc))
 					hilited_solar = p;
 			}
-			if(hilited_solar==p)
+			if(hilited_solar == p)
 				hexagon2(pt);
 			if(p->type == SolarSystem) {
 				adat<planet_info*, 3> source;
@@ -962,7 +962,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			if(show_movement) {
 				auto push_font = font;
 				auto value = unit_info::getmovement(index);
-				if(value && value!=Blocked) {
+				if(value && value != Blocked) {
 					font = metrics::h1;
 					char temp[16]; zprint(temp, "%1i", value);
 					font = push_font;
@@ -1058,7 +1058,7 @@ struct unit_table : table {
 		if(columns[column] == "total")
 			return source[line].unit.getresource()*source[line].count;
 		if(columns[column] == "fleet")
-			return source[line].unit.isfleet() ? source[line].count*1 : 0;
+			return source[line].unit.isfleet() ? source[line].count * 1 : 0;
 		return 0;
 	}
 	unit_type_s getvalue() const {
@@ -1168,20 +1168,6 @@ void player_info::slide(int x, int y) {
 	camera.y = y1;
 }
 
-bool player_info::choose_movement(unit_info* solar) const {
-	while(ismodal()) {
-		render_board(false, true);
-		render_left();
-		auto x = getwidth() - gui.window_width - gui.border * 2;
-		auto y = gui.border * 2;
-		x = getwidth() - gui.right_width - gui.border * 2;
-		domodal();
-		control_standart();
-	}
-	auto p = reinterpret_cast<unit_info*>(getresult());
-	return p;
-}
-
 unit_info* player_info::choose_solar() const {
 	while(ismodal()) {
 		render_board(true);
@@ -1252,13 +1238,17 @@ bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_but
 	unit_ref_table u1(a1);
 	unit_ref_table u2(a2);
 	while(ismodal()) {
-		render_board();
+		render_board(false, true);
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
 		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};
+		auto w2 = rc.width() / 2 - gui.padding / 2;
+		rect rc1 = {rc.x1, rc.y1, rc.x1 + w2, rc.y2};
+		rect rc2 = {rc1.x2 + gui.padding, rc.y1, rc.x2, rc.y2};
 		window(rc, false, false);
-		u1.view(rc);
+		u1.view(rc1);
+		u1.view(rc2);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
 		y += windowb(x, y, gui.right_width, action, cmd(buttonok), 0, KeyEnter);
@@ -1268,4 +1258,18 @@ bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_but
 		control_standart();
 	}
 	return getresult() != 0;
+}
+
+bool player_info::choose_movement(unit_info* solar) const {
+	while(ismodal()) {
+		render_board(false, true);
+		render_left();
+		auto x = getwidth() - gui.window_width - gui.border * 2;
+		auto y = gui.border * 2;
+		x = getwidth() - gui.right_width - gui.border * 2;
+		domodal();
+		control_standart();
+	}
+	auto p = reinterpret_cast<unit_info*>(getresult());
+	return p;
 }

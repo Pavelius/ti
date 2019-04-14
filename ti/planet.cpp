@@ -330,7 +330,24 @@ static void make_wave(short unsigned start_index, const player_info* player) {
 	make_wave(start_index, player, movement_rate, false);
 }
 
+static void select_units(army& a1, const player_info* player) {
+	for(auto& e : units) {
+		if(!e)
+			continue;
+		if(e.player != player)
+			continue;
+		if(!e.isfleet())
+			continue;
+		auto move_cost = e.getmovement(e.parent->getindex());
+		if(e.getmovement() < move_cost)
+			continue;
+		a1.add(&e);
+	}
+}
+
 void player_info::moveships(unit_info* solar) {
+	army a1, a2;
 	make_wave(solar->getindex(), this);
-	choose_movement(solar);
+	select_units(a1, this);
+	choose(a1, a2, "Переместить", true);
 }
