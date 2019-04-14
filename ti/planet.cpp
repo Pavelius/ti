@@ -3,7 +3,6 @@
 unit_info		solars[48];
 static int		solar_indecies[map_scan_line * map_scan_line];
 short unsigned	movement_rate[48];
-short unsigned	movement_rate_block[48];
 
 static planet_info planets[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
@@ -328,7 +327,6 @@ static void make_wave(short unsigned start_index, const player_info* player) {
 		auto index = e.getindex();
 		movement_rate[index] = Blocked;
 	}
-	memcpy(movement_rate_block, movement_rate, sizeof(movement_rate));
 	make_wave(start_index, player, movement_rate, false);
 }
 
