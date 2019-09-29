@@ -113,10 +113,17 @@ void playeri::sethuman() {
 	human_player = this;
 }
 
-uniti* playeri::create(group_s id, uniti* planet) {
+uniti* playeri::create(group_s id, solari* solar) {
 	auto p = new uniti(id);
-	p->player = this;
-	p->parent = planet;
+	p->setplayer(this);
+	p->setsolar(solar);
+	return p;
+}
+
+uniti* playeri::create(group_s id, planeti* planet) {
+	auto p = new uniti(id);
+	p->setplayer(this);
+	p->setplanet(planet);
 	return p;
 }
 
@@ -136,19 +143,20 @@ static void create_start_units(playeri* player) {
 	assert(planets.count);
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
-	auto solar_system = planets.data[0]->parent;
+	auto solar_system = planets.data[0]->getsolar();
 	player->create(SpaceDock, base_planet);
 	for(auto e : p->start_units) {
 		if(!e)
 			break;
-		auto base = solar_system;
 		switch(e) {
 		case GroundForces:
 		case PDS:
-			base = base_planet;
+			player->create(e, base_planet);
+			break;
+		default:
+			player->create(e, solar_system);
 			break;
 		}
-		player->create(e, base);
 	}
 }
 
@@ -338,7 +346,7 @@ void playeri::build_units(int value) {
 	auto planet = static_cast<planeti*>(choose(result, "”кажите планету, на которой будете строить"));
 	if(!planet)
 		return;
-	auto solar = planet->get(TargetSystem);
+	auto solar = static_cast<solari*>(planet->get(TargetSystem));
 	auto dock = planet->find(SpaceDock, this);
 	auto dock_produce = 0;
 	if(dock)
@@ -517,7 +525,7 @@ unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, group
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(flags&Friendly && e.player != this)
+		if(flags&Friendly && e.getplayer() != this)
 			continue;
 		if(e.type != SpaceDock)
 			continue;
@@ -539,7 +547,7 @@ void playeri::select(army& result, unsigned flags) const {
 		for(auto& e : bsmeta<solari>()) {
 			if(!e)
 				continue;
-			if(flags&Friendly && e.player != this)
+			if(flags&Friendly && e.getplayer() != this)
 				continue;
 			result.add(&e);
 		}
@@ -548,7 +556,7 @@ void playeri::select(army& result, unsigned flags) const {
 		for(auto& e : bsmeta<planeti>()) {
 			if(!e)
 				continue;
-			if(flags&Friendly && e.player != this)
+			if(flags&Friendly && e.getplayer() != this)
 				continue;
 			result.add(&e);
 		}

@@ -3,7 +3,7 @@
 
 using namespace draw;
 using namespace draw::controls;
-static uniti* hilited_solar;
+static solari* hilited_solar;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
 static color player_colors[6][2];
@@ -831,17 +831,18 @@ static void draw_units(int x, int y, uniti* parent, bool ground) {
 			count = 0;
 		}
 	};
-	auto player_index = parent->player->getid();
+	auto parent_player = parent->getplayer();
+	if(!parent_player)
+		return;
+	auto player_index = parent_player->getid();
 	auto c1 = player_colors[player_index][0];
 	auto c2 = player_colors[player_index][1];
 	adat<uniti*, 32> source;
 	source.count = uniti::select(source.begin(), source.endof(), parent);
 	if(!source) {
 		if(ground) {
-			if(parent->player) {
-				circlef(x, y, unit_size, c1, 128);
-				circle(x, y, unit_size, c2);
-			}
+			circlef(x, y, unit_size, c1, 128);
+			circle(x, y, unit_size, c2);
 		}
 		return;
 	}
@@ -1163,7 +1164,7 @@ struct unit_table : table {
 				continue;
 			auto p = source.add();
 			p->unit.type = i;
-			p->unit.player = player;
+			p->unit.setplayer(player);
 		}
 	}
 };
@@ -1199,7 +1200,7 @@ void playeri::slide(int x, int y) {
 	camera.y = y1;
 }
 
-uniti* playeri::choose_solar() const {
+solari* playeri::choose_solar() const {
 	while(ismodal()) {
 		render_board(true);
 		render_left();
@@ -1212,7 +1213,7 @@ uniti* playeri::choose_solar() const {
 		if(hot.pressed && hot.key == MouseLeft && hilited_solar)
 			breakmodal((int)hilited_solar);
 	}
-	auto p = reinterpret_cast<uniti*>(getresult());
+	auto p = reinterpret_cast<solari*>(getresult());
 	return p;
 }
 
@@ -1225,7 +1226,7 @@ void playeri::slide(int hexagon) {
 	slide(pt.x, pt.y);
 }
 
-bool playeri::build(army& units, const planeti* planet, uniti* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
+bool playeri::build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;

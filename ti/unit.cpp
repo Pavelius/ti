@@ -24,7 +24,7 @@ unsigned select(uniti** result, uniti** result_max, const uniti* location, const
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.player != player)
+		if(e.getplayer() != player)
 			continue;
 		if(location && !e.in(location))
 			continue;
@@ -426,25 +426,34 @@ unsigned uniti::select(uniti** result, uniti* const* result_max, uniti* parent) 
 	return p - result;
 }
 
-static uniti* get_first_unit(const uniti* parent) {
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.parent == parent)
-			return &e;
+solari* uniti::getsolar() const {
+	switch(type) {
+	case Planet:
+	case Fighters:
+	case Carrier:
+	case Cruiser:
+	case Destroyer:
+	case Dreadnought:
+	case WarSun:
+		return static_cast<solari*>(parent);
+	default:
+		return 0;
 	}
-	return 0;
 }
 
 void uniti::update_control() {
 	for(auto& e : bsmeta<solari>()) {
 		if(!e)
 			continue;
-		auto p = get_first_unit(&e);
-		if(p)
-			e.player = p->player;
-		else
-			e.player = 0;
+		e.setplayer(0);
+		for(auto& u : bsmeta<uniti>()) {
+			if(!u)
+				continue;
+			if(u.getsolar() == &e) {
+				u.setplayer(e.getplayer());
+				break;
+			}
+		}
 	}
 }
 
@@ -507,4 +516,20 @@ void uniti::activate(const playeri* player, bool setvalue) {
 	else
 		activate_flags &= ~(1 << (player->getid()));
 	player->slide(this);
+}
+
+playeri* uniti::getplayer() const {
+	return player;
+}
+
+void uniti::setplayer(const playeri* v) {
+	player = const_cast<playeri*>(v);
+}
+
+void uniti::setplanet(const planeti* v) {
+	parent = (uniti*)v;
+}
+
+void uniti::setsolar(const solari* v) {
+	parent = (uniti*)v;
 }

@@ -1,9 +1,9 @@
 #include "main.h"
 
-solari			bsmeta<solari>::elements[48];
-unsigned		bsmeta<solari>::count = sizeof(bsmeta<solari>::elements)/sizeof(bsmeta<solari>::elements[0]);
-static int		solar_indecies[map_scan_line * map_scan_line];
-short unsigned	movement_rate[48];
+solari					bsmeta<solari>::elements[48];
+unsigned				bsmeta<solari>::count = sizeof(bsmeta<solari>::elements)/sizeof(bsmeta<solari>::elements[0]);
+static short unsigned	solar_indecies[map_scan_line * map_scan_line];
+static short unsigned	movement_rate[map_scan_line * map_scan_line];
 
 planeti bsmeta<planeti>::elements[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
@@ -94,10 +94,10 @@ unsigned planeti::select(planeti** result, planeti* const*result_max, const char
 	return p - result;
 }
 
-unsigned planeti::select(planeti** result, planeti* const* result_max, uniti* parent) {
+unsigned planeti::select(planeti** result, planeti* const* result_max, const solari* parent) {
 	auto p = result;
 	for(auto& e : bsmeta<planeti>()) {
-		if(e.parent != parent)
+		if(e.getsolar() != parent)
 			continue;
 		if(p < result_max)
 			*p++ = &e;
@@ -108,7 +108,7 @@ unsigned planeti::select(planeti** result, planeti* const* result_max, uniti* pa
 int planeti::get(const playeri* player, int(planeti::*getproc)() const) {
 	auto result = 0;
 	for(auto& e : bsmeta<planeti>()) {
-		if(e.player != player)
+		if(e.getplayer() != player)
 			continue;
 		result += (e.*getproc)();
 	}
@@ -129,11 +129,11 @@ void planeti::initialize() {
 	}
 	for(auto& e : bsmeta<planeti>()) {
 		e.type = Planet;
-		e.player = 0;
+		e.setplayer(0);
 		if(e.solar == -1)
-			e.parent = 0;
+			e.setsolar(0);
 		else
-			e.parent = bsmeta<solari>::elements + e.solar;
+			e.setsolar(bsmeta<solari>::elements + e.solar);
 	}
 }
 
@@ -141,14 +141,14 @@ void planeti::setup() {
 	for(auto& e : bsmeta<planeti>()) {
 		if(!e.home)
 			continue;
-		e.player = playeri::find(e.home);
+		e.setplayer(playeri::find(e.home));
 	}
 }
 
 int get_system_count() {
 	auto result = 0;
 	for(auto e : solar_indecies) {
-		if(e == -1)
+		if(e == Blocked)
 			continue;
 		result++;
 	}
@@ -161,26 +161,26 @@ void planeti::create_stars() {
 	for(auto y = 0; y < 7; y++) {
 		if(y < 3) {
 			for(auto x = 0; x < (3 - y); x++)
-				solar_indecies[gmi(x, y)] = -1;
+				solar_indecies[gmi(x, y)] = Blocked;
 		} else {
 			for(auto x = 7 - (y - 3); x < 8; x++)
-				solar_indecies[gmi(x, y)] = -1;
+				solar_indecies[gmi(x, y)] = Blocked;
 		}
-		solar_indecies[gmi(7, y)] = -1;
+		solar_indecies[gmi(7, y)] = Blocked;
 	}
 	for(auto x = 0; x < 8; x++)
-		solar_indecies[gmi(x, 7)] = -1;
+		solar_indecies[gmi(x, 7)] = Blocked;
 	adat<int, 32> solar_deck;
 	for(auto i = 1; i <= 32; i++)
 		solar_deck.add(i);
 	zshuffle(solar_deck.data, solar_deck.count);
-	solar_indecies[gmi(3, 3)] = -1; // Мекатор рекс
+	solar_indecies[gmi(3, 3)] = Blocked; // Мекатор рекс
 	for(auto e : player_pos)
-		solar_indecies[gmi(e[0], e[1])] = -1;
+		solar_indecies[gmi(e[0], e[1])] = Blocked;
 	auto allowed_system = get_system_count();
 	auto index = 0;
 	for(auto& e : solar_indecies) {
-		if(e == -1)
+		if(e == Blocked)
 			continue;
 		if(index < solar_deck.getcount())
 			e = solar_deck[index++];
@@ -194,7 +194,7 @@ void planeti::create_stars() {
 			if(!pn.home)
 				continue;
 			if(strcmp(pn.home, e.id) == 0)
-				pn.parent = bsmeta<solari>::elements + index;
+				pn.setsolar(bsmeta<solari>::elements + index);
 		}
 		solar_indecies[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
 		player_index++;
@@ -230,9 +230,9 @@ planeti* uniti::getplanet() {
 	return 0;
 }
 
-uniti* uniti::getsolar(int index) {
+solari* uniti::getsolar(int index) {
 	auto n = solar_indecies[index];
-	if(n == -1)
+	if(n == Blocked)
 		return 0;
 	return bsmeta<solari>::elements + n;
 }
@@ -282,7 +282,10 @@ static short unsigned getmovement(short unsigned index, direction_s d) {
 	}
 	if(x < 0 || x >= map_scan_line || y<0 || y>= map_scan_line)
 		return Blocked;
-	return uniti::gmi(x, y);
+	auto i = uniti::gmi(x, y);
+	if(solar_indecies[i] == Blocked)
+		return Blocked;
+	return i;
 }
 
 static void make_wave(short unsigned start_index, const playeri* player, short unsigned* result, bool block) {
@@ -300,9 +303,10 @@ static void make_wave(short unsigned start_index, const playeri* player, short u
 			pop_counter = stack;
 		auto cost = result[index] + 1;
 		auto p = uniti::getsolar(index);
+		auto p_player = p->getplayer();
 		if(p->type == Nebula)
 			cost += cost_bocked;
-		else if(p->player && p->player->isenemy(player) && !player->is(LightWaveDeflector))
+		else if(p_player && p_player->isenemy(player) && !p_player->is(LightWaveDeflector))
 			cost += cost_bocked;
 		for(auto d : directions) {
 			auto i1 = getmovement(index, d);
@@ -340,36 +344,37 @@ static void select_units(army& a1, const playeri* player) {
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.player != player)
+		if(e.getplayer() != player)
 			continue;
-		if(!e.isfleet())
+		auto solar = e.getsolar();
+		if(!solar)
 			continue;
-		auto move_cost = e.getmovement(e.parent->getindex());
+		auto move_cost = e.getmovement(solar->getindex());
 		if(e.getmovement() < move_cost)
 			continue;
 		a1.add(&e);
 	}
 }
 
-void playeri::moveships(uniti* solar) {
+void playeri::moveships(solari* solar) {
 	army a1, a2;
 	make_wave(solar->getindex(), this);
 	select_units(a1, this);
 	// Перемещение кораблей в систему
 	if(choose(a1, a2, "Переместить", true)) {
 		for(auto p : a2)
-			p->parent = solar;
+			p->setsolar(solar);
 	}
 	// Берем под контроль нейтральную систему
-	if(!solar->player)
-		solar->player = this;
+	if(!solar->getplayer())
+		solar->setplayer(this);
 }
 
 planeti* planeti::find(const uniti* parent, int index) {
 	if(!index)
 		return 0;
 	for(auto& e : bsmeta<planeti>()) {
-		if(e.parent == parent) {
+		if(e.getplanet() == parent) {
 			if(--index == 0)
 				return &e;
 		}

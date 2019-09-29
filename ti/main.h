@@ -79,10 +79,11 @@ enum target_s : unsigned {
 	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
 	DockPresent = 0x100,
 };
-struct uniti;
 struct planeti;
 struct playeri;
 struct string;
+struct solari;
+class uniti;
 typedef adat<playeri*, 6> playera;
 struct army : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
@@ -164,7 +165,7 @@ struct playeri : namei, costi {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
-	bool						build(army& units, const planeti* planet, uniti* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
+	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
@@ -172,10 +173,11 @@ struct playeri : namei, costi {
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button) const;
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
-	uniti*						choose_solar() const;
+	solari*						choose_solar() const;
 	bool						choose_trade() const { return true; }
 	playeri&					create(const char* id);
-	uniti*						create(group_s id, uniti* planet);
+	uniti*						create(group_s id, solari* solar);
+	uniti*						create(group_s id, planeti* planet);
 	static void					create_action_deck();
 	void						draw_political_card(int value) {}
 	bool						is(action_s value) const { return costi::get(value); }
@@ -186,7 +188,7 @@ struct playeri : namei, costi {
 	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
-	void						moveships(uniti* solar);
+	void						moveships(solari* solar);
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
 	int							getcardscount() const;
@@ -219,10 +221,13 @@ private:
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
 };
-struct uniti {
-	group_s						type;
+class uniti {
 	playeri*					player;
 	uniti*						parent;
+protected:
+	unsigned					activate_flags;
+public:
+	group_s						type;
 	constexpr uniti() : type(NoUnit), player(0), parent(0), activate_flags(0) {}
 	constexpr uniti(group_s type) : type(type), player(0), parent(0), activate_flags(0) {}
 	explicit operator bool() const { return type != NoUnit; }
@@ -252,6 +257,7 @@ struct uniti {
 	int							getmovement() const;
 	static int					getmovement(short unsigned index);
 	const char*					getname() const;
+	playeri*					getplayer() const;
 	static int					getproduction(group_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
@@ -259,7 +265,8 @@ struct uniti {
 	int							getproduce() const;
 	static int					getproduce(group_s type);
 	const char*					getsolarname() const;
-	static uniti*				getsolar(int index);
+	solari*						getsolar() const;
+	static solari*				getsolar(int index);
 	short unsigned				getsolarindex() const;
 	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
@@ -280,9 +287,10 @@ struct uniti {
 	bool						isunit() const;
 	bool						in(const uniti* parent) const;
 	static unsigned				select(uniti** result, uniti* const* result_max, uniti* parent);
+	void						setplanet(const planeti* v);
+	void						setplayer(const playeri* v);
+	void						setsolar(const solari* v);
 	static void					update_control();
-protected:
-	unsigned					activate_flags;
 };
 struct solari : uniti {
 };
@@ -317,7 +325,7 @@ struct planeti : uniti {
 	int							getone() const { return 1; }
 	int							getresource() const;
 	static void					refresh();
-	static unsigned				select(planeti** result, planeti* const* result_max, uniti* parent);
+	static unsigned				select(planeti** result, planeti* const* result_max, const solari* parent);
 	static unsigned				select(planeti** result, planeti* const* result_max, const char* home);
 	static void					setup();
 };
