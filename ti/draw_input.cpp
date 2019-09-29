@@ -367,23 +367,24 @@ static int window(int x, int y, int width, const char* string, int right_width =
 }
 
 static int render_picture(int x, int y, const char* id, areas* pa = 0) {
-	//static amap<const char*, surface> avatars;
-	//auto p = avatars.find(id);
-	//if(!p) {
-	//	p = avatars.add(id, surface());
-	//	p->value.resize(gui.hero_width, gui.hero_width, 32, true);
-	//	char temp[260];
-	//	zprint(temp, "art/portraits/%1.bmp", id);
-	//	surface e(temp, 0);
-	//	if(e)
-	//		blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
-	//}
-	//blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
-	//rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
-	//rectb(rc, colors::border);
-	//if(pa)
-	//	*pa = area(rc);
-	//return gui.hero_width;
+	static amap<const char*, surface> avatars;
+	auto p = avatars.find(id);
+	if(!p) {
+		p = avatars.add();
+		memset(p, 0, sizeof(*p));
+		p->key = id;
+		p->value.resize(gui.hero_width, gui.hero_width, 32, true);
+		char temp[260]; zprint(temp, "art/portraits/%1.bmp", id);
+		surface e(temp, 0);
+		if(e)
+			blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
+	}
+	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
+	rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
+	rectb(rc, colors::border);
+	if(pa)
+		*pa = area(rc);
+	return gui.hero_width;
 	return 0;
 }
 
@@ -476,23 +477,24 @@ void control_standart() {
 }
 
 static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id) {
-	//static amap<const char*, draw::surface> source;
-	//auto p = source.find(id);
-	//if(!p) {
-	//	char temp[260]; zprint(temp, "art/icons/%1.png", id);
-	//	p = source.add(id, surface());
-	//	memset(p, 0, sizeof(*p));
-	//	p->value.read(temp);
-	//}
-	//auto dy = draw::texth();
-	//w = p->value.width;
-	//if(x + w > x2) {
-	//	if(max_width)
-	//		*max_width = imax(*max_width, x - x0);
-	//	x = x0;
-	//	y += draw::texth();
-	//}
-	//draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
+	static amap<const char*, draw::surface> source;
+	auto p = source.find(id);
+	if(!p) {
+		char temp[260]; zprint(temp, "art/icons/%1.png", id);
+		p = source.add();
+		memset(p, 0, sizeof(*p));
+		p->key = id;
+		p->value.read(temp);
+	}
+	auto dy = draw::texth();
+	w = p->value.width;
+	if(x + w > x2) {
+		if(max_width)
+			*max_width = imax(*max_width, x - x0);
+		x = x0;
+		y += draw::texth();
+	}
+	draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
 }
 
 void draw::tooltips(int x1, int y1, int width, const char* format, ...) {
@@ -1023,7 +1025,7 @@ struct unit_ref_table : table {
 	bool keyinput(unsigned id) override {
 		switch(id) {
 		case KeyEnter:
-			if(getmaximum()>0)
+			if(getmaximum() > 0)
 				choosed = true;
 			break;
 		default: return table::keyinput(id);

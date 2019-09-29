@@ -14,13 +14,16 @@ namespace metrics {
 const codepage_s			code = CP1251;
 }
 void*						loadb(const char* url, unsigned* size = 0, unsigned additional = 0);
+unsigned					rmoptimal(unsigned need_count);
+void						rmremove(void* data, unsigned size, unsigned index, unsigned& count, int elements_count);
+void*						rmreserve(void* data, unsigned new_size);
+void						rmreserve(void** data, unsigned count, unsigned& count_maximum, unsigned size);
 int							szcmpi(const char* p1, const char* p2);
 int							szcmpi(const char* p1, const char* p2, int count);
 void						szencode(char* output, int output_count, codepage_s output_code, const char* input, int input_count, codepage_s input_code);
 unsigned					szget(const char** input, codepage_s page = metrics::code);
 const char*					szdup(const char* text);
 void						szput(char** output, unsigned u, codepage_s page = metrics::code);
-//char*						szput(char* output, unsigned u, codepages page = metrics::code); // Fast symbol put function. Return 'output'.
 char*						szprint(char* result, const char* result_maximum, const char* format, ...);
 char*						szprintv(char* result, const char* result_maximum, const char* format, const char* format_param);
 template<unsigned N> inline char*	zprint(char(&result)[N], const char* format, ...) { return szprintv(result, result + N - 1, format, (const char*)&format + sizeof(format)); }
@@ -124,6 +127,30 @@ template<typename T> struct aref {
 	int						indexof(const T* t) const { if(t<data || t>data + count) return -1; return t - data; }
 	int						indexof(const T t) const { for(unsigned i = 0; i < count; i++) if(data[i] == t) return i; return -1; }
 	bool					is(const T t) const { return indexof(t) != -1; }
+};
+// Autogrow typized array
+template<class T> struct arem : aref<T> {
+	unsigned				count_maximum;
+	constexpr arem() : aref<T>(), count_maximum(0) {}
+	~arem() { if(aref<T>::data) delete aref<T>::data; }
+	T*						add() { reserve(aref<T>::count + 1); return &aref<T>::data[aref<T>::count++]; }
+	void					add(const T& e) { *(add()) = e; }
+	void					clear() { aref<T>::count = 0; }
+	void					remove(int index, int elements_count = 1) { rmremove(aref<T>::data, sizeof(T), index, aref<T>::count, elements_count); }
+	void					reserve(unsigned count) { rmreserve((void**)&(aref<T>::data), count, count_maximum, sizeof(T)); }
+};
+// Abstract pair element
+template<typename K, typename V> struct pair {
+	K						key;
+	V						value;
+};
+// Abstract map collection
+template<typename K, typename V> struct amap : arem<pair<K, V>> {
+	pair<K, V>*				find(K key) { for(auto& e : *this) if(e.key == key) return &e; return 0; }
+	pair<K, V>*				findv(V value) { for(auto& e : *this) if(e.value == value) return &e; return 0; }
+	V						get(K key) const { auto p = find(key); if(p) return p->value; return V(); }
+	K						getv(V value) const { auto p = findv(value); if(p) return p->key; return K(); }
+	bool					is(const K& key) const { return find(key) != 0; }
 };
 // Common access to data types
 template<typename T> struct bsmeta {

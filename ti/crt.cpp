@@ -1,6 +1,10 @@
 #include "crt.h"
 #include "io.h"
 
+extern "C" void* malloc(unsigned size);
+extern "C" void* realloc(void *ptr, unsigned size);
+extern "C" void	free(void* pointer);
+
 unsigned szupper(unsigned u) {
 	if(u >= 0x61 && u <= 0x7A)
 		return u - 0x61 + 0x41;
@@ -10,7 +14,7 @@ unsigned szupper(unsigned u) {
 }
 
 char* szupper(char* p, int count) {
-	char* s1 = p;
+	auto s1 = p;
 	const char* p1 = p;
 	while(count-- > 0)
 		szput(&s1, szupper(szget(&p1)));
@@ -77,34 +81,8 @@ bool matchuc(const char* name, const char* filter) {
 	return false;
 }
 
-bool ischa(unsigned u) {
-	return (u >= 'A' && u <= 'Z')
-		|| (u >= 'a' && u <= 'z')
-		|| (u >= 0x410 && u <= 0x44F);
-}
-
-int getdigitscount(unsigned number) {
-	if(number < 10)
-		return 1;
-	if(number < 100)
-		return 2;
-	if(number < 1000)
-		return 3;
-	if(number < 10000)
-		return 4;
-	if(number < 100000)
-		return 5;
-	if(number < 1000000)
-		return 6;
-	if(number < 10000000)
-		return 7;
-	if(number < 100000000)
-		return 8;
-	return 9;
-}
-
 void szlower(char* p, int count) {
-	char* s1 = p;
+	auto s1 = p;
 	const char* p1 = p;
 	if(count == -1) {
 		while(true) {
@@ -206,10 +184,10 @@ char* szput(char* result, unsigned sym, codepage_s page) {
 }
 
 void szencode(char* output, int output_count, codepage_s output_code, const char* input, int input_count, codepage_s input_code) {
-	char* s1 = output;
-	char* s2 = s1 + output_count;
-	const char* p1 = input;
-	const char* p2 = p1 + input_count;
+	auto s1 = output;
+	auto s2 = s1 + output_count;
+	auto p1 = input;
+	auto p2 = p1 + input_count;
 	while(p1 < p2 && s1 < s2)
 		szput(&s1, szget(&p1, input_code), output_code);
 	if(s1 < s2) {
@@ -217,4 +195,37 @@ void szencode(char* output, int output_count, codepage_s output_code, const char
 		if((output_code == CPU16BE || output_code == CPU16LE) && (s1 + 1) < s2)
 			s1[1] = 0;
 	}
+}
+
+unsigned rmoptimal(unsigned need_count) {
+	const unsigned mc = 256 * 256 * 256;
+	unsigned m = 16;
+	while(m < mc) {
+		if(need_count < m)
+			return m;
+		m = m << 1;
+	}
+	return m;
+}
+
+void* rmreserve(void* data, unsigned new_size) {
+	if(data)
+		return realloc(data, new_size);
+	return malloc(new_size);
+}
+
+void rmreserve(void** data, unsigned count, unsigned& count_maximum, unsigned size) {
+	if(count >= count_maximum) {
+		count_maximum = rmoptimal(count + 1);
+		*data = rmreserve(*data, count_maximum * size);
+	}
+}
+
+void rmremove(void* data, unsigned size, unsigned index, unsigned& count, int elements_count) {
+	if(index >= count)
+		return;
+	count -= elements_count;
+	if(index >= count)
+		return;
+	memmove((char*)data + index * size, (char*)data + (index + elements_count)*size, (count - index)*size);
 }
