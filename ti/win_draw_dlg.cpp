@@ -1,4 +1,4 @@
-#include "crt.h"
+#include "stringbuilder.h"
 #include "win.h"
 
 void dlgmsg(const char* title, const char* text) {
@@ -10,8 +10,8 @@ void dlginf(const char* title, const char* text) {
 }
 
 void dlgerr(const char* title, const char* format, ...) {
-	char temp[4096];
-	szprintvs(temp, temp + sizeof(temp) - 1, format, xva_start(format));
+	char temp[4096]; stringbuilder sb(temp);
+	sb.addv(format, xva_start(format));
 	MessageBoxA(GetActiveWindow(), temp, title, MB_OK | MB_ICONERROR);
 }
 

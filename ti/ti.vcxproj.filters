@@ -7,17 +7,8 @@
     <ClInclude Include="main.h">
       <Filter>Логика</Filter>
     </ClInclude>
-    <ClInclude Include="collection.h">
-      <Filter>Коллекция</Filter>
-    </ClInclude>
     <ClInclude Include="io.h">
       <Filter>Поддержка</Filter>
-    </ClInclude>
-    <ClInclude Include="stringcreator.h">
-      <Filter>Поддержка</Filter>
-    </ClInclude>
-    <ClInclude Include="initializer_list.h">
-      <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="color.h">
       <Filter>Графика</Filter>
@@ -43,8 +34,8 @@
     <ClInclude Include="rect.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
-    <ClInclude Include="bsreq.h">
-      <Filter>Коллекция</Filter>
+    <ClInclude Include="stringbuilder.h">
+      <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -60,16 +51,10 @@
     <ClCompile Include="unit.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="collection.cpp">
-      <Filter>Коллекция</Filter>
-    </ClCompile>
     <ClCompile Include="io.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="szdup.cpp">
-      <Filter>Поддержка</Filter>
-    </ClCompile>
-    <ClCompile Include="stringcreator.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="planet.cpp">
@@ -159,11 +144,11 @@
     <ClCompile Include="cost.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="bsreq.cpp">
-      <Filter>Коллекция</Filter>
-    </ClCompile>
     <ClCompile Include="abstract_deck.cpp">
       <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="stringbuilder.cpp">
+      <Filter>Поддержка</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

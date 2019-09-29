@@ -3,11 +3,11 @@
 
 using namespace draw;
 using namespace draw::controls;
-static unit_info* hilited_solar;
+static uniti* hilited_solar;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
-static color player_colors[sizeof(players) / sizeof(players[0])][2];
-const int unit_size = 12;
+static color player_colors[6][2];
+const auto unit_size = 12;
 
 int isqrt(int num);
 
@@ -62,7 +62,6 @@ struct gui_info {
 	short				button_width, window_width, window_height, hero_width;
 	short				tips_width, control_border, right_width;
 	short				padding;
-
 	void initialize() {
 		memset(this, 0, sizeof(*this));
 		opacity = 220;
@@ -76,7 +75,6 @@ struct gui_info {
 		button_width = 64;
 		opacity_hilighted = 200;
 	}
-
 } gui;
 
 static void set_focus_callback() {
@@ -369,23 +367,24 @@ static int window(int x, int y, int width, const char* string, int right_width =
 }
 
 static int render_picture(int x, int y, const char* id, areas* pa = 0) {
-	static amap<const char*, surface> avatars;
-	auto p = avatars.find(id);
-	if(!p) {
-		p = avatars.add(id, surface());
-		p->value.resize(gui.hero_width, gui.hero_width, 32, true);
-		char temp[260];
-		zprint(temp, "art/portraits/%1.bmp", id);
-		surface e(temp, 0);
-		if(e)
-			blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
-	}
-	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
-	rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
-	rectb(rc, colors::border);
-	if(pa)
-		*pa = area(rc);
-	return gui.hero_width;
+	//static amap<const char*, surface> avatars;
+	//auto p = avatars.find(id);
+	//if(!p) {
+	//	p = avatars.add(id, surface());
+	//	p->value.resize(gui.hero_width, gui.hero_width, 32, true);
+	//	char temp[260];
+	//	zprint(temp, "art/portraits/%1.bmp", id);
+	//	surface e(temp, 0);
+	//	if(e)
+	//		blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
+	//}
+	//blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
+	//rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
+	//rectb(rc, colors::border);
+	//if(pa)
+	//	*pa = area(rc);
+	//return gui.hero_width;
+	return 0;
 }
 
 static int window(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
@@ -477,23 +476,23 @@ void control_standart() {
 }
 
 static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id) {
-	static amap<const char*, draw::surface> source;
-	auto p = source.find(id);
-	if(!p) {
-		char temp[260];
-		p = source.add(id, surface());
-		memset(p, 0, sizeof(*p));
-		p->value.read(szurl(temp, "art/icons", id, "png"));
-	}
-	auto dy = draw::texth();
-	w = p->value.width;
-	if(x + w > x2) {
-		if(max_width)
-			*max_width = imax(*max_width, x - x0);
-		x = x0;
-		y += draw::texth();
-	}
-	draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
+	//static amap<const char*, draw::surface> source;
+	//auto p = source.find(id);
+	//if(!p) {
+	//	char temp[260]; zprint(temp, "art/icons/%1.png", id);
+	//	p = source.add(id, surface());
+	//	memset(p, 0, sizeof(*p));
+	//	p->value.read(temp);
+	//}
+	//auto dy = draw::texth();
+	//w = p->value.width;
+	//if(x + w > x2) {
+	//	if(max_width)
+	//		*max_width = imax(*max_width, x - x0);
+	//	x = x0;
+	//	y += draw::texth();
+	//}
+	//draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
 }
 
 void draw::tooltips(int x1, int y1, int width, const char* format, ...) {
@@ -567,10 +566,10 @@ void draw::initialize() {
 }
 
 static bool read_sprite(sprite** result, const char* name) {
-	char temp[260];
 	if(*result)
 		delete *result;
-	*result = (sprite*)loadb(szurl(temp, "art/sprites", name, "pma"));
+	char temp[260]; zprint(temp, "art/sprites/%1.pma", name);
+	*result = (sprite*)loadb(temp);
 	return (*result) != 0;
 }
 
@@ -731,7 +730,7 @@ static void cannon(int x, int y, color c1, color c2) {
 	line(x, y, x + unit_size / 2, y, c2);
 }
 
-static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color c2) {
+static void draw_unit(int x, int y, group_s type, int count, color c1, color c2) {
 	int n;
 	char temp[32]; zprint(temp, "%1i", count);
 	const int r = unit_size;
@@ -804,25 +803,25 @@ static void draw_unit(int x, int y, unit_type_s type, int count, color c1, color
 }
 
 static int compare_units(const void* v1, const void* v2) {
-	auto e1 = *((unit_info**)v1);
-	auto e2 = *((unit_info**)v2);
+	auto e1 = *((uniti**)v1);
+	auto e2 = *((uniti**)v2);
 	return (int)e1->type - (int)e2->type;
 }
 
-static void draw_units(int x, int y, unit_info* parent, bool ground) {
+static void draw_units(int x, int y, uniti* parent, bool ground) {
 	struct unit_draw_info {
-		unit_type_s		type;
+		group_s		type;
 		char			count;
 		void clear() {
 			type = NoUnit;
 			count = 0;
 		}
 	};
-	auto player_index = parent->player->getindex();
+	auto player_index = parent->player->getid();
 	auto c1 = player_colors[player_index][0];
 	auto c2 = player_colors[player_index][1];
-	adat<unit_info*, 32> source;
-	source.count = unit_info::select(source.begin(), source.endof(), parent);
+	adat<uniti*, 32> source;
+	source.count = uniti::select(source.begin(), source.endof(), parent);
 	if(!source) {
 		if(ground) {
 			if(parent->player) {
@@ -870,7 +869,7 @@ static void draw_units(int x, int y, unit_info* parent, bool ground) {
 	}
 }
 
-static void draw_planet(point pt, planet_info* p) {
+static void draw_planet(point pt, planeti* p) {
 	auto push_font = font;
 	auto push_stro = fore_stroke;
 	fore_stroke = colors::black;
@@ -886,9 +885,9 @@ static void draw_planet(point pt, planet_info* p) {
 static int render_left() {
 	int x = gui.border;
 	int y = gui.border;
-	for(auto& e : players) {
+	for(auto& e : bsmeta<playeri>()) {
 		areas a = AreaNormal;
-		auto w = render_picture(x, y, e.getid(), &a);
+		auto w = render_picture(x, y, e.id, &a);
 		rect rc = {x, y, x + w, y + w};
 		if(e.gethuman() == &e) {
 			rectb(rc, colors::white);
@@ -920,8 +919,8 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
-			auto index = planet_info::gmi(x, y);
-			auto p = unit_info::getsolar(index);
+			auto index = planeti::gmi(x, y);
+			auto p = uniti::getsolar(index);
 			if(!p)
 				continue;
 			hexagon(pt);
@@ -934,8 +933,8 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			if(hilited_solar == p)
 				hexagon2(pt);
 			if(p->type == SolarSystem) {
-				adat<planet_info*, 3> source;
-				source.count = planet_info::select(source.begin(), source.endof(), p);
+				adat<planeti*, 3> source;
+				source.count = planeti::select(source.begin(), source.endof(), p);
 				switch(source.count) {
 				case 0:
 					break;
@@ -961,7 +960,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			draw_units(pt.x - size / 3, pt.y - size / 3, p, false);
 			if(show_movement) {
 				auto push_font = font;
-				auto value = unit_info::getmovement(index);
+				auto value = uniti::getmovement(index);
 				if(value && value != Blocked) {
 					font = metrics::h1;
 					char temp[16]; zprint(temp, "%1i", value);
@@ -985,7 +984,7 @@ static int render_report(int x, int y, const char* picture, const char* format) 
 	return y - y0;
 }
 
-int	answer_info::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
+int	answeri::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
 	int x, y;
 	while(ismodal()) {
 		render_board();
@@ -1015,7 +1014,7 @@ struct unit_ref_table : table {
 	int getnumber(int line, int column) const override {
 		return 0;
 	}
-	unit_info* getvalue() const {
+	uniti* getvalue() const {
 		return source[current];
 	}
 	int	getmaximum() const override {
@@ -1037,8 +1036,8 @@ struct unit_ref_table : table {
 		return columns;
 	}
 	static int compare(const void* p1, const void* p2) {
-		auto u1 = *((unit_info**)p1);
-		auto u2 = *((unit_info**)p2);
+		auto u1 = *((uniti**)p1);
+		auto u2 = *((uniti**)p2);
 		return strcmp(u1->getname(), u2->getname());
 	}
 	void view(const rect& rc) override {
@@ -1050,7 +1049,7 @@ struct unit_ref_table : table {
 
 struct unit_table : table {
 	struct element {
-		unit_info	unit;
+		uniti	unit;
 		int			count;
 	};
 	static const int table_maximum = (WarSun - GroundForces + 1);
@@ -1072,14 +1071,14 @@ struct unit_table : table {
 		if(columns[column] == "count")
 			return source[line].count;
 		if(columns[column] == "count_units")
-			return source[line].count * unit_info::getproduction(source[line].unit.type);
+			return source[line].count * uniti::getproduction(source[line].unit.type);
 		if(columns[column] == "total")
 			return source[line].unit.getresource()*source[line].count;
 		if(columns[column] == "fleet")
 			return source[line].unit.isfleet() ? source[line].count * 1 : 0;
 		return 0;
 	}
-	unit_type_s getvalue() const {
+	group_s getvalue() const {
 		return source[current].unit.type;
 	}
 	static const column* getcolumns() {
@@ -1092,8 +1091,8 @@ struct unit_table : table {
 		return columns;
 	}
 	static int compare(const void* p1, const void* p2) {
-		auto i1 = *((unit_type_s*)p1);
-		auto i2 = *((unit_type_s*)p2);
+		auto i1 = *((group_s*)p1);
+		auto i2 = *((group_s*)p2);
 		return strcmp(getstr(i1), getstr(i2));
 	}
 	static void add_value() {
@@ -1142,10 +1141,10 @@ struct unit_table : table {
 		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], продукция [%3i]", resource, fleet, maximal, total_fleet);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
 	}
-	unit_table(player_info* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
+	unit_table(playeri* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
 		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
-		for(auto i = i1; i <= WarSun; i = (unit_type_s)(i + 1)) {
+		for(auto i = i1; i <= WarSun; i = (group_s)(i + 1)) {
 			if(!player->isallow(i))
 				continue;
 			auto p = source.add();
@@ -1155,7 +1154,7 @@ struct unit_table : table {
 	}
 };
 
-void player_info::slide(int x, int y) {
+void playeri::slide(int x, int y) {
 	const auto step = 16;
 	auto x0 = camera.x;
 	auto y0 = camera.y;
@@ -1186,7 +1185,7 @@ void player_info::slide(int x, int y) {
 	camera.y = y1;
 }
 
-unit_info* player_info::choose_solar() const {
+uniti* playeri::choose_solar() const {
 	while(ismodal()) {
 		render_board(true);
 		render_left();
@@ -1199,20 +1198,20 @@ unit_info* player_info::choose_solar() const {
 		if(hot.pressed && hot.key == MouseLeft && hilited_solar)
 			breakmodal((int)hilited_solar);
 	}
-	auto p = reinterpret_cast<unit_info*>(getresult());
+	auto p = reinterpret_cast<uniti*>(getresult());
 	return p;
 }
 
-void player_info::slide(int hexagon) {
+void playeri::slide(int hexagon) {
 	if(hexagon == -1)
 		return;
-	auto x = unit_info::gmx(hexagon);
-	auto y = unit_info::gmy(hexagon);
+	auto x = uniti::gmx(hexagon);
+	auto y = uniti::gmy(hexagon);
 	point pt = h2p({(short)x, (short)y});
 	slide(pt.x, pt.y);
 }
 
-bool player_info::build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
+bool playeri::build(army& units, const planeti* planet, uniti* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;
@@ -1240,9 +1239,9 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 	auto result = getresult() != 0;
 	if(result) {
 		for(auto& e : u1.source) {
-			for(auto i = e.count * unit_info::getproduction(e.unit.type); i > 0; i--) {
+			for(auto i = e.count * uniti::getproduction(e.unit.type); i > 0; i--) {
 				if(e.unit.isplanetary())
-					create(e.unit.type, const_cast<planet_info*>(planet));
+					create(e.unit.type, const_cast<planeti*>(planet));
 				else
 					create(e.unit.type, system);
 			}
@@ -1251,7 +1250,7 @@ bool player_info::build(army& units, const planet_info* planet, unit_info* syste
 	return result;
 }
 
-bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_button) const {
+bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button) const {
 	int x, y;
 	unit_ref_table u1(a1); u1.show_header = false;
 	unit_ref_table u2(a2); u2.show_header = false;
@@ -1288,7 +1287,7 @@ bool player_info::choose(army& a1, army& a2, const char* action, bool cancel_but
 	return getresult() != 0;
 }
 
-bool player_info::choose_movement(unit_info* solar) const {
+bool playeri::choose_movement(uniti* solar) const {
 	while(ismodal()) {
 		render_board(false, true);
 		render_left();
@@ -1298,6 +1297,6 @@ bool player_info::choose_movement(unit_info* solar) const {
 		domodal();
 		control_standart();
 	}
-	auto p = reinterpret_cast<unit_info*>(getresult());
+	auto p = reinterpret_cast<uniti*>(getresult());
 	return p;
 }

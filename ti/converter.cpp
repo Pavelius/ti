@@ -4,7 +4,14 @@
 converter* converter::first;
 
 converter::converter(const char* name) :name(name) {
-	seqlink(this);
+	if(!first)
+		first = this;
+	else {
+		auto p = first;
+		while(p->next)
+			p = p->next;
+		p->next = this;
+	}
 }
 
 converter* converter::find(const char* name) {

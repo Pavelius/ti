@@ -2,21 +2,21 @@
 #include "draw.h"
 
 int main() {
-	srand((int)time(0));
+	srand(1231);
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
-	planet_info::initialize();
-	players[0].create("jelnar");
-	players[1].create("hacan");
-	players[2].create("barony");
-	players[3].create("sol"); players[3].sethuman();
-	players[4].create("norr");
-	players[5].create("xxcha");
-	planet_info::create_stars();
-	player_info::setup();
-	player_info::gethuman()->tactical_action();
-	player_info::gethuman()->make_move();
+	planeti::initialize();
+	bsmeta<playeri>::add()->create("jelnar");
+	bsmeta<playeri>::add()->create("hacan");
+	bsmeta<playeri>::add()->create("barony");
+	bsmeta<playeri>::add()->create("sol").sethuman();
+	bsmeta<playeri>::add()->create("norr");
+	bsmeta<playeri>::add()->create("xxcha");
+	planeti::create_stars();
+	playeri::setup();
+	playeri::gethuman()->tactical_action();
+	playeri::gethuman()->make_move();
 	return 0;
 }
 

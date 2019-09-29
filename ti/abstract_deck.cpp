@@ -11,7 +11,7 @@ unsigned char abstract_deck::draw() {
 }
 
 void abstract_deck::clear() {
-	adat<unsigned char>::clear();
+	adat::clear();
 	discarded.clear();
 }
 

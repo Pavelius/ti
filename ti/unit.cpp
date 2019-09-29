@@ -1,16 +1,6 @@
 #include "main.h"
 
-static struct unit_data_info {
-	const char*	id;
-	const char*	name;
-	char		available;
-	char		cost;
-	char		production;
-	char		movements;
-	char		count;
-	char		production_count;
-	weapon_info	combat;
-} unit_type_data[] = {{""},
+groupi bsmeta<groupi>::elements[] = {{""},
 {"Solar", "Звездная система", 0, 0, 0, 0},
 {"AsteroidField", "Поле астероидов", 0, 0, 0, 0},
 {"Nebula", "Небула", 0, 0, 0, 0},
@@ -26,13 +16,12 @@ static struct unit_data_info {
 {"Dreadnought", "Линкор", 5, 5, 1, 1, 1, 5},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
 };
-getstr_enum(unit_type);
-assert_enum(unit_type, WarSun);
-adat<unit_info, 256>	units;
+assert_enum(group, WarSun);
+DECLBASE(uniti, 32*6);
 
-unsigned select(unit_info** result, unit_info** result_max, const unit_info* location, const player_info* player, bool (unit_info::*test)() const) {
+unsigned select(uniti** result, uniti** result_max, const uniti* location, const playeri* player, bool (uniti::*test)() const) {
 	auto p = result;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.player != player)
@@ -47,7 +36,7 @@ unsigned select(unit_info** result, unit_info** result_max, const unit_info* loc
 	return p - result;
 }
 
-unit_info* getminimal(unit_info** result, unsigned count, int (unit_info::*get)() const) {
+uniti* getminimal(uniti** result, unsigned count, int (uniti::*get)() const) {
 	int value = 0;
 	int index = -1;
 	for(unsigned i = 0; i < count; i++) {
@@ -62,28 +51,28 @@ unit_info* getminimal(unit_info** result, unsigned count, int (unit_info::*get)(
 	return result[index];
 }
 
-void* unit_info::operator new(unsigned size) {
-	for(auto& e : units) {
+void* uniti::operator new(unsigned size) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			return &e;
 	}
-	return units.add();
+	return bsmeta<uniti>::add();
 }
 
-unit_info::~unit_info() {
+uniti::~uniti() {
 	type = NoUnit;
 }
 
-const char* unit_info::getname() const {
+const char* uniti::getname() const {
 	if(issolar())
 		return getsolarname();
 	if(isplanet())
 		return getplanetname();
-	return getstr(type);
+	return bsmeta<groupi>::elements[type].name;
 }
 
-int unit_info::getmovement() const {
-	auto result = unit_type_data[type].movements;
+int uniti::getmovement() const {
+	auto result = getgroup().movements;
 	switch(type) {
 	case Carrier:
 		if(player->is(XRDTransporters))
@@ -105,8 +94,8 @@ int unit_info::getmovement() const {
 	return result;
 }
 
-int	unit_info::getresource() const {
-	auto result = unit_type_data[type].cost;
+int	uniti::getresource() const {
+	auto result = getgroup().cost;
 	switch(type) {
 	case Dreadnought:
 		if(player->is(BonusCostDreadnought))
@@ -116,18 +105,18 @@ int	unit_info::getresource() const {
 	return result;
 }
 
-unit_info* unit_info::get(unit_type_s parent_type) {
+uniti* uniti::get(group_s parent_type) {
 	auto result = this;
 	while(result && result->type != parent_type)
 		result = result->parent;
 	return result;
 }
 
-int	unit_info::getavailable(unit_type_s type) {
-	return unit_type_data[type].available;
+int	uniti::getavailable(group_s type) {
+	return bsmeta<groupi>::elements[type].available;
 }
 
-int	unit_info::getproduce() const {
+int	uniti::getproduce() const {
 	if(!parent)
 		return 0;
 	auto result = getproduce(type);
@@ -139,15 +128,15 @@ int	unit_info::getproduce() const {
 	return result;
 }
 
-int	unit_info::getproduce(unit_type_s type) {
-	return unit_type_data[type].production_count;
+int	uniti::getproduce(group_s type) {
+	return bsmeta<groupi>::elements[type].production_count;
 }
 
-int	unit_info::getproduction(unit_type_s type) {
-	return unit_type_data[type].production;
+int	uniti::getproduction(group_s type) {
+	return bsmeta<groupi>::elements[type].production;
 }
 
-int unit_info::getmaxhits() const {
+int uniti::getmaxhits() const {
 	switch(type) {
 	case Dreadnought:
 	case WarSun:
@@ -157,8 +146,8 @@ int unit_info::getmaxhits() const {
 	}
 }
 
-weapon_info unit_info::getweapon() const {
-	auto w = unit_type_data[type].combat;
+weaponi uniti::getweapon() const {
+	auto w = getgroup().combat;
 	if(player) {
 		if(player->is(CombatBonusAll))
 			w.bonus++;
@@ -195,7 +184,7 @@ weapon_info unit_info::getweapon() const {
 	return w;
 }
 
-weapon_info unit_info::getweapon(bool attacker, const player_info* opponent, char round) const {
+weaponi uniti::getweapon(bool attacker, const playeri* opponent, char round) const {
 	auto w = getweapon();
 	if(type == GroundForces && attacker && player->is(CombatBonusGroundForcesAttack))
 		w.bonus++;
@@ -204,7 +193,7 @@ weapon_info unit_info::getweapon(bool attacker, const player_info* opponent, cha
 	return w;
 }
 
-bool unit_info::isfleet() const {
+bool uniti::isfleet() const {
 	switch(type) {
 	case Carrier:
 	case Cruiser:
@@ -217,7 +206,7 @@ bool unit_info::isfleet() const {
 	}
 }
 
-bool unit_info::isinvaders() const {
+bool uniti::isinvaders() const {
 	switch(type) {
 	case GroundForces:
 		return true;
@@ -228,7 +217,7 @@ bool unit_info::isinvaders() const {
 	}
 }
 
-bool unit_info::isplanetary(unit_type_s type) {
+bool uniti::isplanetary(group_s type) {
 	switch(type) {
 	case GroundForces:
 	case PDS:
@@ -239,13 +228,13 @@ bool unit_info::isplanetary(unit_type_s type) {
 	}
 }
 
-int	unit_info::getcount() const {
-	return unit_type_data[type].count;
+int	uniti::getcount() const {
+	return getgroup().count;
 }
 
-int	unit_info::getcount(unit_type_s type, const player_info* player, unit_info* location) {
+int	uniti::getcount(group_s type, const playeri* player, uniti* location) {
 	auto result = 0;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.type == type && e.player == player)
@@ -256,7 +245,7 @@ int	unit_info::getcount(unit_type_s type, const player_info* player, unit_info* 
 	return result;
 }
 
-int	unit_info::getcapacity() const {
+int	uniti::getcapacity() const {
 	switch(type) {
 	case Carrier:
 	case WarSun:
@@ -271,7 +260,7 @@ int	unit_info::getcapacity() const {
 	}
 }
 
-unit_type_s unit_info::getcapacitylimit() const {
+group_s uniti::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
@@ -283,9 +272,9 @@ unit_type_s unit_info::getcapacitylimit() const {
 	}
 }
 
-int	unit_info::getcarried() const {
+int	uniti::getcarried() const {
 	auto result = 0;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent == this)
@@ -294,7 +283,7 @@ int	unit_info::getcarried() const {
 	return result;
 }
 
-int unit_info::getjoincount(unit_type_s object) const {
+int uniti::getjoincount(group_s object) const {
 	auto maximum = getcapacity();
 	if(!maximum)
 		return 0;
@@ -305,9 +294,9 @@ int unit_info::getjoincount(unit_type_s object) const {
 	return maximum - current;
 }
 
-int	unit_info::getfightersupport() {
+int	uniti::getfightersupport() {
 	auto result = 0;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.player != player)
@@ -329,7 +318,7 @@ int	unit_info::getfightersupport() {
 	return result;
 }
 
-bool unit_info::build(unit_type_s object, bool run) {
+bool uniti::build(group_s object, bool run) {
 	auto solar_system = get(SolarSystem);
 	if(!solar_system)
 		return false;
@@ -367,7 +356,7 @@ bool unit_info::build(unit_type_s object, bool run) {
 		return false;
 	if(run) {
 		for(auto i = 0; i < produce_count; i++) {
-			auto p = new unit_info(object);
+			auto p = new uniti(object);
 			p->parent = build_base;
 			p->player = player;
 		}
@@ -375,7 +364,7 @@ bool unit_info::build(unit_type_s object, bool run) {
 	return true;
 }
 
-bool unit_info::in(const unit_info* object) const {
+bool uniti::in(const uniti* object) const {
 	for(auto p = this; p; p = p->parent) {
 		if(p == object)
 			return true;
@@ -383,12 +372,12 @@ bool unit_info::in(const unit_info* object) const {
 	return false;
 }
 
-int unit_info::getweight() const {
+int uniti::getweight() const {
 	auto result = getresource()*2;
 	auto build_count = getproduction(type);
 	if(build_count)
 		result = result / build_count;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent == this)
@@ -397,12 +386,12 @@ int unit_info::getweight() const {
 	return result;
 }
 
-void unit_info::destroy() {
+void uniti::destroy() {
 }
 
-int	unit_info::getfleet(const player_info* player, const unit_info* solar) {
+int	uniti::getfleet(const playeri* player, const uniti* solar) {
 	auto result = 0;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent != solar)
@@ -414,9 +403,9 @@ int	unit_info::getfleet(const player_info* player, const unit_info* solar) {
 	return result;
 }
 
-int	unit_info::getfleet(const player_info* player) {
+int	uniti::getfleet(const playeri* player) {
 	auto result = 0;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(!e.isfleet())
@@ -426,9 +415,9 @@ int	unit_info::getfleet(const player_info* player) {
 	return result;
 }
 
-unsigned unit_info::select(unit_info** result, unit_info* const* result_max, unit_info* parent) {
+unsigned uniti::select(uniti** result, uniti* const* result_max, uniti* parent) {
 	auto p = result;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(e.parent != parent)
 			continue;
 		if(p < result_max)
@@ -437,8 +426,8 @@ unsigned unit_info::select(unit_info** result, unit_info* const* result_max, uni
 	return p - result;
 }
 
-static unit_info* get_first_unit(const unit_info* parent) {
-	for(auto& e : units) {
+static uniti* get_first_unit(const uniti* parent) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent == parent)
@@ -447,8 +436,8 @@ static unit_info* get_first_unit(const unit_info* parent) {
 	return 0;
 }
 
-void unit_info::update_control() {
-	for(auto& e : solars) {
+void uniti::update_control() {
+	for(auto& e : bsmeta<solari>()) {
 		if(!e)
 			continue;
 		auto p = get_first_unit(&e);
@@ -459,35 +448,36 @@ void unit_info::update_control() {
 	}
 }
 
-bool unit_info::isunit() const {
-	return this >= units.data && this < (units.data + sizeof(units.data) / sizeof(units.data[0]));
+bool uniti::isunit() const {
+	return this >= bsmeta<uniti>::elements
+		&& this < (bsmeta<uniti>::elements + bsmeta<uniti>::count);
 }
 
-unit_info* unit_info::get(target_s v) const {
+uniti* uniti::get(target_s v) const {
 	if(!this)
 		return 0;
 	switch(v) {
 	case TargetSystem:
 		if(issolar())
-			return const_cast<unit_info*>(this);
+			return const_cast<uniti*>(this);
 		else if(isplanet())
-			return const_cast<unit_info*>(parent);
+			return const_cast<uniti*>(parent);
 		return parent->get(v);
 	case TargetPlanet:
 		if(issolar())
 			return 0;
 		if(isplanet())
-			return const_cast<unit_info*>(this);
+			return const_cast<uniti*>(this);
 		return parent->get(v);
 	default:
 		if(issolar() || isplanet())
 			return 0;
-		return const_cast<unit_info*>(this);
+		return const_cast<uniti*>(this);
 	}
 }
 
-unit_info* unit_info::find(unit_type_s v, const player_info* player) const {
-	for(auto& e : units) {
+uniti* uniti::find(group_s v, const playeri* player) const {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent != this)
@@ -499,22 +489,22 @@ unit_info* unit_info::find(unit_type_s v, const player_info* player) const {
 	return 0;
 }
 
-bool unit_info::isactivated(const player_info* player) const {
+bool uniti::isactivated(const playeri* player) const {
 	if(!player)
 		return true;
-	return (activate_flags & (1 << (player->getindex()))) != 0;
+	return (activate_flags & (1 << (player->getid()))) != 0;
 }
 
-void unit_info::activate() {
+void uniti::activate() {
 	activate_flags = 0xFFFFFFFF;
 }
 
-void unit_info::activate(const player_info* player, bool setvalue) {
+void uniti::activate(const playeri* player, bool setvalue) {
 	if(!player)
 		return;
 	if(setvalue)
-		activate_flags |= 1 << (player->getindex());
+		activate_flags |= 1 << (player->getid());
 	else
-		activate_flags &= ~(1 << (player->getindex()));
+		activate_flags &= ~(1 << (player->getid()));
 	player->slide(this);
 }

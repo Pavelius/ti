@@ -1,16 +1,11 @@
-#include "bsreq.h"
-#include "collection.h"
 #include "crt.h"
-#include "stringcreator.h"
+#include "stringbuilder.h"
 
 #pragma once
 
 const int map_scan_line = 8;
 const unsigned short Blocked = 0xFFFF;
 const unsigned short DefaultCost = Blocked - 1;
-
-bsreq player_type[];
-bsreq string_type[];
 
 enum play_s : unsigned char {
 	NoPlay,
@@ -70,7 +65,7 @@ enum tech_color_s : unsigned char {
 enum wormhole_s : unsigned char {
 	NoHole, WormholeAlpha, WormholeBeta
 };
-enum unit_type_s : unsigned char {
+enum group_s : unsigned char {
 	NoUnit,
 	SolarSystem, AsteroidField, Nebula, Supernova,
 	Planet,
@@ -84,23 +79,24 @@ enum target_s : unsigned {
 	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
 	DockPresent = 0x100,
 };
-struct unit_info;
-struct planet_info;
-struct player_info;
+struct uniti;
+struct planeti;
+struct playeri;
+typedef adat<playeri*, 6> playera;
 struct string;
-struct army : adat<unit_info*, 32> {
-	void						removecasualty(const player_info* player);
+struct army : adat<uniti*, 32> {
+	void						removecasualty(const playeri* player);
 	void						rollup();
-	void						sort(int (unit_info::*proc)() const);
+	void						sort(int (uniti::*proc)() const);
 	void						transform(target_s v);
 };
-struct name_info {
+struct namei {
 	const char*					id;
 	const char*					name;
 	const char*					getid() const { return id; }
 	const char*					getname() const { return name; }
 };
-struct abstract_deck : adat<unsigned char> {
+struct abstract_deck : adat<unsigned char, 256> {
 	void						clear();
 	unsigned char				draw();
 	void						discard(unsigned char);
@@ -114,22 +110,33 @@ struct deck : abstract_deck {
 	T							draw() { return (T)abstract_deck::draw(); }
 	void						discard(T e) { abstract_deck::discard(e); }
 };
-struct weapon_info {
+struct weaponi {
 	char						chance;
 	char						count;
 	char						bonus;
 	char						reroll;
-	constexpr weapon_info() : chance(0), count(1), bonus(0), reroll(0) {}
-	constexpr weapon_info(char chance) : chance(chance), count(1), bonus(0), reroll(0) {}
-	constexpr weapon_info(char chance, char count) : chance(chance), count(count), bonus(0), reroll(0) {}
+	constexpr weaponi() : chance(0), count(1), bonus(0), reroll(0) {}
+	constexpr weaponi(char chance) : chance(chance), count(1), bonus(0), reroll(0) {}
+	constexpr weaponi(char chance, char count) : chance(chance), count(count), bonus(0), reroll(0) {}
 	explicit operator bool() const { return chance != 0; }
 	void						clear();
 	int							roll() const;
 };
+struct groupi {
+	const char*					id;
+	const char*					name;
+	char						available;
+	char						cost;
+	char						production;
+	char						movements;
+	char						count;
+	char						production_count;
+	weaponi						combat;
+};
 struct tactic_info {};
-struct cost_info {
+struct costi {
 	void						add(action_s id, int v);
-	void						difference(string& sb, const cost_info& e);
+	void						difference(string& sb, const costi& e);
 	int							get(action_s id) const { return actions[id]; }
 	void						initialize();
 	bool						is(action_s value) const { return actions[value] > 0; }
@@ -137,18 +144,18 @@ struct cost_info {
 private:
 	char						actions[LastAction + 1];
 };
-struct strategy_info {
+struct strategyi {
 	const char*					id;
 	const char*					name;
 	const char*					text;
 	char						initiative;
 	char						bonus;
 };
-struct player_info : name_info, cost_info {
+struct playeri : namei, costi {
 	strategy_s					strategy;
 	//
 	explicit operator bool() const { return id != 0; }
-	void						add(action_s id, int v) { cost_info::add(id, v); }
+	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
 	void						add_peace_pact(int value);
@@ -157,43 +164,42 @@ struct player_info : name_info, cost_info {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
-	bool						build(army& units, const planet_info* planet, unit_info* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
+	bool						build(army& units, const planeti* planet, uniti* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
-	unit_info*					choose(army& source, const char* format) const;
+	uniti*						choose(army& source, const char* format) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button) const;
-	bool						choose_movement(unit_info* solar) const;
-	player_info*				choose_opponent(const char* text);
-	unit_info*					choose_solar() const;
+	bool						choose_movement(uniti* solar) const;
+	playeri*					choose_opponent(const char* text);
+	uniti*						choose_solar() const;
 	bool						choose_trade() const { return true; }
-	void						create(const char* id);
-	unit_info*					create(unit_type_s id, unit_info* planet);
+	playeri&					create(const char* id);
+	uniti*						create(group_s id, uniti* planet);
 	static void					create_action_deck();
 	void						draw_political_card(int value) {}
-	bool						is(action_s value) const { return cost_info::get(value); }
+	bool						is(action_s value) const { return costi::get(value); }
 	bool						is(bonus_s value) const { return bonuses.is(value); }
 	bool						is(tech_s value) const { return technologies.is(value); }
 	bool						isallow(play_s type, action_s id) const;
-	bool						isallow(unit_type_s id) const;
-	bool						isally(const player_info* enemy) const;
+	bool						isallow(group_s id) const;
+	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
-	bool						isenemy(const player_info* enemy) const { return !isally(enemy); }
-	void						moveships(unit_info* solar);
-	static player_info*			find(const char* id);
+	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
+	void						moveships(uniti* solar);
+	static playeri*				find(const char* id);
 	int							get(action_s id) const;
 	int							getcardscount() const;
 	int							getfleet() const;
-	static player_info*			gethuman();
-	const char*					getid() const;
-	int							getindex() const;
+	static playeri*				gethuman();
+	int							getid() const;
 	void						getinfo(string& sb) const;
 	int							getinitiative() const;
 	static int					getinitiative(strategy_s value);
-	unit_info*					gethomesystem() const;
+	uniti*						gethomesystem() const;
 	const char*					getname() const;
 	int							getresource() const;
-	static player_info*			getspeaker();
+	static playeri*				getspeaker();
 	const char*					getyouname() const;
 	static void					make_move();
 	void						open_trade_negatiation() {}
@@ -202,10 +208,10 @@ struct player_info : name_info, cost_info {
 	static action_s				report(const string& sb);
 	void						return_command_from_board(int value) {}
 	static void					slide(int x, int y);
-	static void					slide(const unit_info* p);
+	static void					slide(const uniti* p);
 	static void					slide(int hexagon);
 	void						select(army& source, unsigned flags) const;
-	unsigned					select(unit_info** result, unit_info* const* result_maximum, unsigned flags, unit_type_s type) const;
+	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, group_s type) const;
 	static void					setup();
 	void						sethuman();
 	void						tactical_action();
@@ -213,73 +219,74 @@ private:
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
 };
-typedef adat<player_info*, 6>	player_array;
-struct unit_info {
-	unit_type_s					type;
-	player_info*				player;
-	unit_info*					parent;
-	constexpr unit_info() : type(NoUnit), player(0), parent(0), activate_flags(0) {}
-	constexpr unit_info(unit_type_s type) : type(type), player(0), parent(0), activate_flags(0) {}
+struct uniti {
+	group_s						type;
+	playeri*					player;
+	uniti*						parent;
+	constexpr uniti() : type(NoUnit), player(0), parent(0), activate_flags(0) {}
+	constexpr uniti(group_s type) : type(type), player(0), parent(0), activate_flags(0) {}
 	explicit operator bool() const { return type != NoUnit; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
-	~unit_info();
+	~uniti();
 	void						activate();
-	void						activate(const player_info* player, bool setvalue = true);
-	bool						build(unit_type_s object, bool run);
+	void						activate(const playeri* player, bool setvalue = true);
+	bool						build(group_s object, bool run);
 	void						destroy();
-	unit_info*					find(unit_type_s v, const player_info* player) const;
-	unit_info*					get(unit_type_s parent_type);
-	unit_info*					get(target_s v) const;
-	static int					getavailable(unit_type_s type);
+	uniti*						find(group_s v, const playeri* player) const;
+	uniti*						get(group_s parent_type);
+	uniti*						get(target_s v) const;
+	static int					getavailable(group_s type);
 	int							getcapacity() const;
-	unit_type_s					getcapacitylimit() const;
+	group_s						getcapacitylimit() const;
 	int							getcarried() const;
 	int							getcount() const;
-	static int					getcount(unit_type_s type, const player_info* player, unit_info* location = 0);
+	static int					getcount(group_s type, const playeri* player, uniti* location = 0);
 	short unsigned				getindex() const;
 	int							getfightersupport();
-	static int					getfleet(const player_info* player);
-	static int					getfleet(const player_info* player, const unit_info* solar);
-	int							getjoincount(unit_type_s object) const;
+	static int					getfleet(const playeri* player);
+	static int					getfleet(const playeri* player, const uniti* solar);
+	const groupi&				getgroup() const { return bsmeta<groupi>::elements[type]; }
+	int							getjoincount(group_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
 	static int					getmovement(short unsigned index);
 	const char*					getname() const;
-	static int					getproduction(unit_type_s type);
+	static int					getproduction(group_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
-	planet_info*				getplanet();
+	planeti*					getplanet();
 	int							getproduce() const;
-	static int					getproduce(unit_type_s type);
+	static int					getproduce(group_s type);
 	const char*					getsolarname() const;
-	static unit_info*			getsolar(int index);
+	static uniti*				getsolar(int index);
 	short unsigned				getsolarindex() const;
 	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
-	weapon_info					getweapon() const;
-	weapon_info					getweapon(bool attacker, const player_info* opponent, char round) const;
+	weaponi						getweapon() const;
+	weaponi						getweapon(bool attacker, const playeri* opponent, char round) const;
 	int							getweight() const;
 	static short unsigned		gmi(int x, int y) { return y * map_scan_line + x; }
 	static short unsigned		gmx(short unsigned index) { return index % map_scan_line; }
 	static short unsigned		gmy(short unsigned index) { return index / map_scan_line; }
-	bool						isactivated(const player_info* player) const;
+	bool						isactivated(const playeri* player) const;
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
 	bool						isinvaders() const;
 	bool						issolar() const;
 	bool						isplanet() const;
 	bool						isplanetary() const { return isplanetary(type); }
-	static bool					isplanetary(unit_type_s type);
+	static bool					isplanetary(group_s type);
 	bool						isunit() const;
-	bool						in(const unit_info* parent) const;
-	static unsigned				select(unit_info** result, unit_info* const* result_max, unit_info* parent);
+	bool						in(const uniti* parent) const;
+	static unsigned				select(uniti** result, uniti* const* result_max, uniti* parent);
 	static void					update_control();
 protected:
 	unsigned					activate_flags;
 };
-extern unit_info				solars[48];
-struct planet_info : unit_info {
+struct solari : uniti {
+};
+struct planeti : uniti {
 	const char*					name;
 	const char*					home;
 	char						solar;
@@ -288,57 +295,73 @@ struct planet_info : unit_info {
 	char						resource;
 	char						influence;
 	char						index;
-	constexpr planet_info(const char* name, char planet_parent, char resource, char influence, char index,
-		tech_color_s tech_color, wormhole_s wormhole = NoHole) : unit_info(Planet),
+	constexpr planeti(const char* name, char planet_parent, char resource, char influence, char index,
+		tech_color_s tech_color, wormhole_s wormhole = NoHole) : uniti(Planet),
 		name(name), home(0), solar(planet_parent),
 		resource(resource), influence(influence), index(index),
 		tech_color(tech_color),
 		wormhole(wormhole) {}
-	constexpr planet_info(const char* name, const char* home, char resource, char influence, char index) : unit_info(Planet),
+	constexpr planeti(const char* name, const char* home, char resource, char influence, char index) : uniti(Planet),
 		name(name), home(home), solar(-1),
 		resource(resource), influence(influence), index(index),
 		tech_color(NoTech),
 		wormhole(NoHole) {}
 	static void					create_stars();
 	static void					initialize();
-	unit_info*					get(target_s v) const { return unit_info::get(v); }
-	static int					get(const player_info* player, int(planet_info::*getproc)() const);
+	uniti*						find(group_s v, const playeri* player) const { return uniti::find(v, player); }
+	static planeti*				find(const uniti* parent, int index);
+	uniti*						get(target_s v) const { return uniti::get(v); }
+	static int					get(const playeri* player, int(planeti::*getproc)() const);
 	const char*					getname() const { return name; }
 	int							getinfluence() const;
 	int							getone() const { return 1; }
 	int							getresource() const;
 	static void					refresh();
-	static unsigned				select(planet_info** result, planet_info* const* result_max, unit_info* parent);
-	static unsigned				select(planet_info** result, planet_info* const* result_max, const char* home);
+	static unsigned				select(planeti** result, planeti* const* result_max, uniti* parent);
+	static unsigned				select(planeti** result, planeti* const* result_max, const char* home);
 	static void					setup();
 };
-struct string : stringcreator {
-	const player_info*			player;
+struct actioni {
+	typedef bool(*test_proc)(const playeri* player);
+	struct proc_info {
+		play_s		type;
+		test_proc	test;
+		constexpr proc_info() : type(NoPlay), test(0) {}
+		constexpr proc_info(play_s type) : type(type), test(0) {}
+		constexpr proc_info(test_proc proc) : type(AsAction), test(proc) {}
+	};
+	const char*					id;
+	const char*					name;
+	int							count;
+	proc_info					proc;
+	const char*					description;
+};
+struct string : stringbuilder {
+	const playeri*				player;
 	string();
 	void						addidentifier(const char* identifier) override;
 private:
 	char						buffer[8192];
 };
-struct answer_info : stringcreator {
+struct answeri : stringbuilder {
 	struct element {
 		int						param;
 		const char*				text;
 		const char*				getname() const { return text; }
 	};
-	typedef void(*tips_proc)(stringcreator& sb, const element& e);
+	typedef void(*tips_proc)(stringbuilder& sb, const element& e);
 	adat<element, 8>			elements;
 	constexpr explicit operator bool() const { return elements.count != 0; }
-	answer_info();
+	answeri();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(const char* format, const player_info* player) const;
+	int							choose(const char* format, const playeri* player) const;
 	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
 	void						sort();
 private:
 	char						buffer[4096];
 };
 extern deck<action_s>			action_deck;
-extern player_info				players[6];
-//extern int						solar_map[8 * 8];
-extern strategy_info			strategy_data[];
-extern adat<unit_info, 256>		units;
+DECLENUM(action);
+DECLENUM(group);
+DECLENUM(strategy);

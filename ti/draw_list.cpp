@@ -226,7 +226,7 @@ bool list::keyinput(unsigned id) {
 				search_text[0] = 0;
 			search_time = time_clock;
 			char* p = zend(search_text);
-			szput(&p, hot.param); p[0] = 0;
+			p[0] = hot.param; p[0] = 0;
 			int i1 = find(-1, -1, search_text);
 			if(i1 != -1) {
 				current = i1;
@@ -269,7 +269,7 @@ int list::find(int line, int column, const char* value, int lenght) const {
 	while(line < m) {
 		char temp[260]; temp[0] = 0;
 		auto p = getname(temp, temp + sizeof(temp) - 1, line, column);
-		if(p && szcmpi(p, value, lenght) == 0)
+		if(p && strncmp(p, value, lenght) == 0)
 			return line;
 		line++;
 	}

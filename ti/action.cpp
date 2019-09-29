@@ -1,31 +1,16 @@
 #include "main.h"
 
-static bool has_tactic(const player_info* player) {
+static bool has_tactic(const playeri* player) {
 	return player->get(Command) > 0;
 }
 
-static bool allow_pass(const player_info* player) {
+static bool allow_pass(const playeri* player) {
 	if(player->get(StrategyAction) > 0)
 		return false;
 	return true;
 }
 
-struct action_info {
-	typedef bool (*test_proc)(const player_info* player);
-	struct proc_info {
-		play_s		type;
-		test_proc	test;
-		constexpr proc_info() : type(NoPlay), test(0) {}
-		constexpr proc_info(play_s type) : type(type), test(0) {}
-		constexpr proc_info(test_proc proc) : type(AsAction), test(proc) {}
-	};
-	const char*		id;
-	const char*		name;
-	int				count;
-	proc_info		proc;
-	const char*		description;
-};
-static action_info action_data[] = {{"NoAction", "Нет действия"},
+actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"Armistice", "Перемирие", 1, AsAction, "Выберите оппонента и планету, находящуюся под вашим контролем. Данный игрок не может совершать вторжение на выбранную планету в этот раунд."},
 {"ChemicalWarfare", "", 1, BeforeInvasion, "Играйте данной картой, если вы имеете дредноут в системе, содержащей планету, находящуюся под контролем оппонента. Уничтожьте половину пехоты (округлить в большую сторону). Действует даже при наличии на планете PDS."},
 {"CivilDefense", "", 1, AsAction, "Расположите два юнита планетарной обороны на вашу планету, которая не содержит юнитов данного типа."},
@@ -121,22 +106,20 @@ static action_info action_data[] = {{"NoAction", "Нет действия"},
 {"Goods", "товары", 0, NoPlay, ""},
 };
 assert_enum(action, LastAction);
-getstr_enum(action);
-
 deck<action_s>	action_deck;
 
-bool player_info::isallow(play_s type, action_s id) const {
-	if(type != action_data[id].proc.type)
+bool playeri::isallow(play_s type, action_s id) const {
+	if(type != bsmeta<actioni>::elements[id].proc.type)
 		return false;
-	if(action_data[id].proc.test && !action_data[id].proc.test(this))
+	if(bsmeta<actioni>::elements[id].proc.test && !bsmeta<actioni>::elements[id].proc.test(this))
 		return false;
 	return true;
 }
 
-void player_info::create_action_deck() {
+void playeri::create_action_deck() {
 	action_deck.clear();
 	for(auto i = Armistice; i <= WarFooting; i=(action_s)(i+1)) {
-		for(auto j = 0; j < action_data[i].count; j++)
+		for(auto j = 0; j < bsmeta<actioni>::elements[i].count; j++)
 			action_deck.add(i);
 	}
 	action_deck.shuffle();

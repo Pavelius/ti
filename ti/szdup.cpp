@@ -1,5 +1,17 @@
 #include "crt.h"
 
+template<class T>
+static void seqclear(T* p) {
+	T* z = p->next;
+	while(z) {
+		T* n = z->next;
+		z->next = 0;
+		delete z;
+		z = n;
+	}
+	p->next = 0;
+}
+
 // Support class making string copy from strings storage.
 template <class T> struct strcol {
 
@@ -7,8 +19,7 @@ template <class T> struct strcol {
 	int		count;
 	T		data[256 * 255 / sizeof(T)]; // Inner buffer
 
-	strcol() : next(0), count(0) {
-	}
+	strcol() : next(0), count(0) {}
 
 	~strcol() {
 		seqclear(this);
@@ -90,32 +101,4 @@ const char* szdup(const char* text) {
 		return small.add(text, lenght);
 	else
 		return big.add(text, lenght);
-}
-
-static bool ischa(unsigned char u) {
-	return (u >= 'A' && u <= 'Z')
-		|| (u >= 'a' && u <= 'z')
-		|| (u >= ((unsigned char)'À') && u <= ((unsigned char)'ß'))
-		|| (u >= ((unsigned char)'à') && u <= ((unsigned char)'ÿ'));
-}
-
-// Work only with english symbols
-const char* sztag(const char* p) {
-	char temp[128];
-	char* s = temp;
-	bool upper = true;
-	while(*p) {
-		if(*p != '_' && !ischa((unsigned char)*p) && !isnum(*p)) {
-			upper = true;
-			p++;
-			continue;
-		}
-		if(upper) {
-			szput(&s, szupper(szget(&p)));
-			upper = false;
-		} else
-			*s++ = *p++;
-	}
-	*s++ = 0;
-	return szdup(temp);
 }

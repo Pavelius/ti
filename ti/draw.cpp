@@ -1,6 +1,7 @@
 #include "color.h"
 #include "crt.h"
 #include "draw.h"
+#include "stringbuilder.h"
 
 #ifndef __GNUC__
 #pragma optimize("t", on)
@@ -86,6 +87,10 @@ int isqrt(int num) {
 	return res;
 }
 
+inline int ifloor(double v) {
+	return (int)v;
+}
+
 int distance(point p1, point p2) {
 	auto dx = p1.x - p2.x;
 	auto dy = p1.y - p2.y;
@@ -121,45 +126,45 @@ static bool correct(int& x1, int& y1, int& x2, int& y2, const rect& clip, bool i
 	return true;
 }
 
-char* key2str(char* result, int key) {
-	result[0] = 0;
-	if(key&Ctrl)
-		zcat(result, "Ctrl+");
-	if(key&Alt)
-		zcat(result, "Alt+");
-	if(key&Shift)
-		zcat(result, "Shift+");
-	key = key & 0xFFFF;
-	switch(key) {
-	case KeyDown: zcat(result, "Down"); break;
-	case KeyDelete: zcat(result, "Del"); break;
-	case KeyEnd: zcat(result, "End"); break;
-	case KeyEnter: zcat(result, "Enter"); break;
-	case KeyHome: zcat(result, "Home"); break;
-	case KeyLeft: zcat(result, "Left"); break;
-	case KeyPageDown: zcat(result, "Page Down"); break;
-	case KeyPageUp: zcat(result, "Page Up"); break;
-	case KeyRight: zcat(result, "Right"); break;
-	case KeyUp: zcat(result, "Up"); break;
-	case F1: zcat(result, "F1"); break;
-	case F2: zcat(result, "F2"); break;
-	case F3: zcat(result, "F3"); break;
-	case F4: zcat(result, "F4"); break;
-	case F5: zcat(result, "F5"); break;
-	case F6: zcat(result, "F6"); break;
-	case F7: zcat(result, "F7"); break;
-	case F8: zcat(result, "F8"); break;
-	case F9: zcat(result, "F9"); break;
-	case F10: zcat(result, "F10"); break;
-	case F11: zcat(result, "F11"); break;
-	case F12: zcat(result, "F12"); break;
-	case KeySpace: zcat(result, "Space"); break;
-	default:
-		zcat(result, char(szupper(key - Alpha)));
-		break;
-	}
-	return result;
-}
+//char* key2str(char* result, int key) {
+//	result[0] = 0;
+//	if(key&Ctrl)
+//		zcat(result, "Ctrl+");
+//	if(key&Alt)
+//		zcat(result, "Alt+");
+//	if(key&Shift)
+//		zcat(result, "Shift+");
+//	key = key & 0xFFFF;
+//	switch(key) {
+//	case KeyDown: zcat(result, "Down"); break;
+//	case KeyDelete: zcat(result, "Del"); break;
+//	case KeyEnd: zcat(result, "End"); break;
+//	case KeyEnter: zcat(result, "Enter"); break;
+//	case KeyHome: zcat(result, "Home"); break;
+//	case KeyLeft: zcat(result, "Left"); break;
+//	case KeyPageDown: zcat(result, "Page Down"); break;
+//	case KeyPageUp: zcat(result, "Page Up"); break;
+//	case KeyRight: zcat(result, "Right"); break;
+//	case KeyUp: zcat(result, "Up"); break;
+//	case F1: zcat(result, "F1"); break;
+//	case F2: zcat(result, "F2"); break;
+//	case F3: zcat(result, "F3"); break;
+//	case F4: zcat(result, "F4"); break;
+//	case F5: zcat(result, "F5"); break;
+//	case F6: zcat(result, "F6"); break;
+//	case F7: zcat(result, "F7"); break;
+//	case F8: zcat(result, "F8"); break;
+//	case F9: zcat(result, "F9"); break;
+//	case F10: zcat(result, "F10"); break;
+//	case F11: zcat(result, "F11"); break;
+//	case F12: zcat(result, "F12"); break;
+//	case KeySpace: zcat(result, "Space"); break;
+//	default:
+//		zcat(result, char(stringbuilder::upper(key - Alpha)));
+//		break;
+//	}
+//	return result;
+//}
 
 static void set32(unsigned char* d, int d_scan, int width, int height, color c1) {
 	while(height-- > 0) {
@@ -1420,12 +1425,12 @@ int draw::textw(const char* string, int count) {
 	if(count == -1) {
 		const char *s1 = string;
 		while(*s1)
-			x1 += textw(szget(&s1));
+			x1 += textw(*s1++);
 	} else {
 		const char *s1 = string;
 		const char *s2 = string + count;
 		while(s1 < s2)
-			x1 += textw(szget(&s1));
+			x1 += textw(*s1++);
 	}
 	return x1;
 }
@@ -1486,7 +1491,7 @@ void draw::text(int x, int y, const char* string, int count, unsigned flags) {
 	const char *s1 = string;
 	const char *s2 = string + count;
 	while(s1 < s2) {
-		int sm = szget(&s1);
+		int sm = *s1++;
 		if(sm >= 0x21)
 			glyph(x, y, sm, flags);
 		x += textw(sm);
@@ -1507,7 +1512,7 @@ int draw::textbc(const char* string, int width) {
 	int w = 0;
 	const char* s1 = string;
 	while(true) {
-		unsigned s = szget(&s1);
+		unsigned s = *s1++;
 		if(s == 0x20 || s == 9)
 			p = s1 - string;
 		else if(s == 0) {
@@ -1640,7 +1645,7 @@ int draw::hittest(int x, int hit_x, const char* p, int lenght) {
 	int index = 0;
 	int syw = 0;
 	while(index < lenght) {
-		syw = draw::textw(szget(&p));
+		syw = draw::textw(*p++);
 		if(hit_x <= x + 1 + syw / 2)
 			break;
 		x += syw;
@@ -2056,7 +2061,14 @@ surface::surface(int width, int height, int bpp) : surface() {
 }
 
 surface::plugin::plugin(const char* name, const char* filter) : name(name), filter(filter), next(0) {
-	seqlink(this);
+	if(!first)
+		first = this;
+	else {
+		auto p = first;
+		while(p->next)
+			p = p->next;
+		p->next = this;
+	}
 }
 
 unsigned char* surface::ptr(int x, int y) {
@@ -2114,42 +2126,42 @@ void surface::convert(int new_bpp, color* pallette) {
 	bpp = iabs(new_bpp);
 }
 
-char* draw::key2str(char* result, int key) {
-	result[0] = 0;
-	if(key&Ctrl)
-		zcat(result, "Ctrl+");
-	if(key&Alt)
-		zcat(result, "Alt+");
-	if(key&Shift)
-		zcat(result, "Shift+");
-	key = key & 0xFFFF;
-	switch(key) {
-	case KeyDown: zcat(result, "Down"); break;
-	case KeyDelete: zcat(result, "Del"); break;
-	case KeyEnd: zcat(result, "End"); break;
-	case KeyEnter: zcat(result, "Enter"); break;
-	case KeyHome: zcat(result, "Home"); break;
-	case KeyLeft: zcat(result, "Left"); break;
-	case KeyPageDown: zcat(result, "Page Down"); break;
-	case KeyPageUp: zcat(result, "Page Up"); break;
-	case KeyRight: zcat(result, "Right"); break;
-	case KeyUp: zcat(result, "Up"); break;
-	case F1: zcat(result, "F1"); break;
-	case F2: zcat(result, "F2"); break;
-	case F3: zcat(result, "F3"); break;
-	case F4: zcat(result, "F4"); break;
-	case F5: zcat(result, "F5"); break;
-	case F6: zcat(result, "F6"); break;
-	case F7: zcat(result, "F7"); break;
-	case F8: zcat(result, "F8"); break;
-	case F9: zcat(result, "F9"); break;
-	case F10: zcat(result, "F10"); break;
-	case F11: zcat(result, "F11"); break;
-	case F12: zcat(result, "F12"); break;
-	case KeySpace: zcat(result, "Space"); break;
-	default:
-		zcat(result, char(szupper(key - Alpha)));
-		break;
-	}
-	return result;
-}
+//char* draw::key2str(char* result, int key) {
+//	result[0] = 0;
+//	if(key&Ctrl)
+//		zcat(result, "Ctrl+");
+//	if(key&Alt)
+//		zcat(result, "Alt+");
+//	if(key&Shift)
+//		zcat(result, "Shift+");
+//	key = key & 0xFFFF;
+//	switch(key) {
+//	case KeyDown: zcat(result, "Down"); break;
+//	case KeyDelete: zcat(result, "Del"); break;
+//	case KeyEnd: zcat(result, "End"); break;
+//	case KeyEnter: zcat(result, "Enter"); break;
+//	case KeyHome: zcat(result, "Home"); break;
+//	case KeyLeft: zcat(result, "Left"); break;
+//	case KeyPageDown: zcat(result, "Page Down"); break;
+//	case KeyPageUp: zcat(result, "Page Up"); break;
+//	case KeyRight: zcat(result, "Right"); break;
+//	case KeyUp: zcat(result, "Up"); break;
+//	case F1: zcat(result, "F1"); break;
+//	case F2: zcat(result, "F2"); break;
+//	case F3: zcat(result, "F3"); break;
+//	case F4: zcat(result, "F4"); break;
+//	case F5: zcat(result, "F5"); break;
+//	case F6: zcat(result, "F6"); break;
+//	case F7: zcat(result, "F7"); break;
+//	case F8: zcat(result, "F8"); break;
+//	case F9: zcat(result, "F9"); break;
+//	case F10: zcat(result, "F10"); break;
+//	case F11: zcat(result, "F11"); break;
+//	case F12: zcat(result, "F12"); break;
+//	case KeySpace: zcat(result, "Space"); break;
+//	default:
+//		zcat(result, char(szupper(key - Alpha)));
+//		break;
+//	}
+//	return result;
+//}

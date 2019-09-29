@@ -118,35 +118,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="bsreq.h" />
     <ClInclude Include="bstream.h" />
-    <ClInclude Include="collection.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="converter.h" />
     <ClInclude Include="crt.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="draw_control.h" />
-    <ClInclude Include="initializer_list.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="point.h" />
     <ClInclude Include="rect.h" />
-    <ClInclude Include="stringcreator.h" />
+    <ClInclude Include="stringbuilder.h" />
     <ClInclude Include="win.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="abstract_deck.cpp" />
     <ClCompile Include="action.cpp" />
     <ClCompile Include="answer.cpp" />
-    <ClCompile Include="bsreq.cpp" />
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />
-    <ClCompile Include="collection.cpp" />
     <ClCompile Include="color.cpp" />
     <ClCompile Include="converter.cpp" />
-    <ClCompile Include="crt.cpp" />
+    <ClCompile Include="crt.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
     <ClCompile Include="draw_control.cpp" />
@@ -164,8 +161,10 @@
     <ClCompile Include="point.cpp" />
     <ClCompile Include="strategy.cpp" />
     <ClCompile Include="string.cpp" />
-    <ClCompile Include="stringcreator.cpp" />
-    <ClCompile Include="string_value.cpp" />
+    <ClCompile Include="stringbuilder.cpp" />
+    <ClCompile Include="string_value.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="unit.cpp" />

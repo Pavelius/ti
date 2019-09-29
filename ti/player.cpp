@@ -1,17 +1,13 @@
 #include "main.h"
 
-bsreq player_type[] = {
-	BSREQ(player_info, id, text_type),
-	BSREQ(player_info, name, text_type),
-{}};
-
+DECLBASE(playeri, 6);
 struct player_pregen_info {
 	const char*			id;
 	const char*			name;
 	char				tokens[3];
 	cflags<bonus_s>		bonus;
 	adat<action_s, 8>	actions;
-	unit_type_s			start_units[16];
+	group_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
 static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3},
@@ -74,20 +70,18 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 {DeepSpaceCannon, HylarVAssaultLaser}
 },
 };
-
-player_info				players[6];
-static player_info*		speaker;
-static player_info*		human_player;
-static player_info*		diplomacy_players[2];
+static playeri*		speaker;
+static playeri*		human_player;
+static playeri*		diplomacy_players[2];
 
 static int compare_planets(const void* p1, const void* p2) {
-	auto e1 = *((planet_info**)p1);
-	auto e2 = *((planet_info**)p2);
+	auto e1 = *((planeti**)p1);
+	auto e2 = *((planeti**)p2);
 	return e2->resource - e1->resource;
 }
 
-player_info* player_info::find(const char* id) {
-	for(auto& e : players) {
+playeri* playeri::find(const char* id) {
+	for(auto& e : bsmeta<playeri>()) {
 		if(!e)
 			continue;
 		if(strcmp(e.id, id) == 0)
@@ -96,17 +90,17 @@ player_info* player_info::find(const char* id) {
 	return 0;
 }
 
-bool player_info::iscomputer() const {
+bool playeri::iscomputer() const {
 	return this != human_player;
 }
 
-bool player_info::isally(const player_info* enemy) const {
+bool playeri::isally(const playeri* enemy) const {
 	return (this == enemy)
 		|| (diplomacy_players[0] == this && diplomacy_players[1] == enemy)
 		|| (diplomacy_players[0] == enemy && diplomacy_players[1] == this);
 }
 
-bool player_info::isallow(unit_type_s id) const {
+bool playeri::isallow(group_s id) const {
 	switch(id) {
 	case WarSun:
 		return is(WarSunTech);
@@ -115,12 +109,12 @@ bool player_info::isallow(unit_type_s id) const {
 	}
 }
 
-void player_info::sethuman() {
+void playeri::sethuman() {
 	human_player = this;
 }
 
-unit_info* player_info::create(unit_type_s id, unit_info* planet) {
-	auto p = new unit_info(id);
+uniti* playeri::create(group_s id, uniti* planet) {
+	auto p = new uniti(id);
 	p->player = this;
 	p->parent = planet;
 	return p;
@@ -134,11 +128,11 @@ const player_pregen_info* find_by_id(const char* id) {
 	return 0;
 }
 
-static void create_start_units(player_info* player) {
+static void create_start_units(playeri* player) {
 	auto p = find_by_id(player->id);
 	assert(p);
-	adat<planet_info*, 8> planets;
-	planets.count = planet_info::select(planets.data, planets.endof(), p->id);
+	adat<planeti*, 8> planets;
+	planets.count = planeti::select(planets.data, planets.endof(), p->id);
 	assert(planets.count);
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets.data[0];
@@ -158,7 +152,7 @@ static void create_start_units(player_info* player) {
 	}
 }
 
-void player_info::create(const char* id) {
+playeri& playeri::create(const char* id) {
 	memset(this, 0, sizeof(*this));
 	auto p = find_by_id(id);
 	assert(p);
@@ -170,45 +164,42 @@ void player_info::create(const char* id) {
 	set(Strategy, p->tokens[0]);
 	set(Command, p->tokens[1]);
 	set(Fleet, p->tokens[2]);
+	return *this;
 }
 
-const char* player_info::getid() const {
-	return id;
-}
-
-int	player_info::getindex() const {
+int	playeri::getid() const {
 	if(!this)
 		return 0;
-	return this - players;
+	return this - bsmeta<playeri>::elements;
 }
 
-const char* player_info::getname() const {
+const char* playeri::getname() const {
 	return name;
 }
 
-const char* player_info::getyouname() const {
+const char* playeri::getyouname() const {
 	if(this == gethuman())
 		return "Вы";
 	return getname();
 }
 
-int	player_info::getinitiative() const {
+int	playeri::getinitiative() const {
 	auto result = getinitiative(strategy);
 	if(is(BonusInitiative))
 		result = 0;
 	return result;
 }
 
-player_info* player_info::getspeaker() {
+playeri* playeri::getspeaker() {
 	return speaker;
 }
 
-player_info* player_info::gethuman() {
+playeri* playeri::gethuman() {
 	return human_player;
 }
 
-int	player_info::get(action_s id) const {
-	int r = cost_info::get(id);
+int	playeri::get(action_s id) const {
+	int r = costi::get(id);
 	switch(id) {
 	case Fleet:
 		if(is(BonusFleetTokens))
@@ -218,12 +209,12 @@ int	player_info::get(action_s id) const {
 	return r;
 }
 
-void player_info::getinfo(string& sb) const {
+void playeri::getinfo(string& sb) const {
 	sb.add("###%1", getname());
 	if(strategy)
-		sb.addn("[+%1 стратегия]", getstr(strategy));
-	sb.addn("%1i ресурсов", planet_info::get(this, &planet_info::getresource));
-	sb.addn("%1i влияния", planet_info::get(this, &planet_info::getinfluence));
+		sb.addn("[+%1 стратегия]", bsmeta<strategyi>::elements[strategy].name);
+	sb.addn("%1i ресурсов", planeti::get(this, &planeti::getresource));
+	sb.addn("%1i влияния", planeti::get(this, &planeti::getinfluence));
 	sb.addn("%1i стратегических маркеров", get(Strategy));
 	sb.addn("%1i тактических маркеров", get(Command));
 	sb.addn("%1i маркеров флота", get(Fleet));
@@ -234,30 +225,30 @@ void player_info::getinfo(string& sb) const {
 		sb.addn("Это [ваша] нация.");
 }
 
-void player_info::setup() {
+void playeri::setup() {
 	create_action_deck();
-	speaker = &players[rand() % (sizeof(players) / sizeof(players[0]))];
-	planet_info::setup();
-	for(auto& e : players)
+	speaker = &bsmeta<playeri>::elements[rand() % (sizeof(bsmeta<playeri>::elements) / sizeof(bsmeta<playeri>::elements[0]))];
+	planeti::setup();
+	for(auto& e : bsmeta<playeri>())
 		create_start_units(&e);
-	unit_info::update_control();
+	uniti::update_control();
 }
 
-static void select(player_array& source, const player_info* start) {
-	auto index = start - players;
-	for(unsigned i = 0; i < lenghtof(players); i++) {
-		source.add(&players[index++]);
-		if(index >= (int)lenghtof(players))
+static void select(playera& source, const playeri* start) {
+	auto index = start->getid();
+	for(auto& e : bsmeta<playeri>()) {
+		source.add(&bsmeta<playeri>::elements[index++]);
+		if(index >= (int)bsmeta<playeri>::count)
 			index = 0;
 	}
 }
 
 static void strategic_phase() {
-	player_array source;
-	select(source, player_info::getspeaker());
+	playera source;
+	select(source, playeri::getspeaker());
 	for(auto p : source)
 		p->strategy = NoStrategy;
-	answer_info ai;
+	answeri ai;
 	adat<strategy_s, Imperial + 1> politics;
 	for(auto i = Initiative; i <= Imperial; i = (strategy_s)(i + 1))
 		politics.add(i);
@@ -273,54 +264,54 @@ static void strategic_phase() {
 			p->strategy = politics.data[rand() % politics.getcount()];
 			string sb;
 			sb.add("Наши враги [%1] определились со своим курсом действий на ближайшее время. По их решению это стала [%2] стратегия. Будьте внимательны и осторожны.", p->getname(), getstr(p->strategy));
-			player_info::report(sb);
+			playeri::report(sb);
 		}
 		politics.remove(politics.indexof(p->strategy));
 	}
 }
 
-int player_info::getcardscount() const {
+int playeri::getcardscount() const {
 	auto result = 0;
 	for(auto i = FirstActionCard; i <= LastActionCard; i = (action_s)(i + 1))
 		result += get(i);
 	return result;
 }
 
-void player_info::check_card_limin() {
+void playeri::check_card_limin() {
 
 }
 
-action_s player_info::report(const string& sb) {
-	answer_info ai;
+action_s playeri::report(const string& sb) {
+	answeri ai;
 	ai.add(0, "Принять");
-	return (action_s)ai.choosev(false, 0, gethuman()->getid(), sb);
+	return (action_s)ai.choosev(false, 0, gethuman()->id, sb);
 }
 
-player_info* player_info::choose_opponent(const char* text) {
-	answer_info ai;
-	for(auto& e : players) {
+playeri* playeri::choose_opponent(const char* text) {
+	answeri ai;
+	for(auto& e : bsmeta<playeri>()) {
 		if(this == &e)
 			continue;
 		ai.add((int)&e, e.getname());
 	}
-	return (player_info*)ai.choose(text, this);
+	return (playeri*)ai.choose(text, this);
 }
 
-void player_info::add_action_cards(int value) {
+void playeri::add_action_cards(int value) {
 	for(auto i = 0; i < value; i++) {
 		auto a = action_deck.draw();
 		add(a, 1);
 	}
 	string sb;
-	sb.add("%1 получили %2i получили карт действий.", getyouname(), value);
+	sb.add("%1 получили [%2i] карт действий.", getyouname(), value);
 	report(sb);
 }
 
-void player_info::add_command_tokens(int value) {
+void playeri::add_command_tokens(int value) {
 	static action_s command_area[] = {Strategy, Command, Fleet};
 	while(value > 0) {
 		string sb;
-		answer_info ai;
+		answeri ai;
 		sb.add("%1 получили %2i командных очков.", getyouname(), value);
 		sb.adds("Распределите [%1i] очко.", value);
 		ai.clear();
@@ -332,19 +323,19 @@ void player_info::add_command_tokens(int value) {
 	}
 }
 
-int	player_info::getfleet() const {
+int	playeri::getfleet() const {
 	return get(Fleet);
 }
 
-unit_info* player_info::gethomesystem() const {
-	auto index = getindex();
-	return solars + 33 + index;
+uniti* playeri::gethomesystem() const {
+	auto index = getid();
+	return bsmeta<solari>::elements + 33 + index;
 }
 
-void player_info::build_units(int value) {
+void playeri::build_units(int value) {
 	army result;
 	select(result, TargetPlanet | Friendly | DockPresent);
-	auto planet = static_cast<planet_info*>(choose(result, "Укажите планету, на которой будете строить"));
+	auto planet = static_cast<planeti*>(choose(result, "Укажите планету, на которой будете строить"));
 	if(!planet)
 		return;
 	auto solar = planet->get(TargetSystem);
@@ -356,26 +347,26 @@ void player_info::build_units(int value) {
 
 	} else {
 		if(build(result, planet, solar, getresource(), getfleet(), 0, dock_produce, true))
-			unit_info::update_control();
+			uniti::update_control();
 	}
 }
 
-int	player_info::getresource() const {
-	return planet_info::get(this, &planet_info::getresource);
+int	playeri::getresource() const {
+	return planeti::get(this, &planeti::getresource);
 }
 
-unit_info* player_info::choose(army& source, const char* format) const {
-	answer_info ai;
+uniti* playeri::choose(army& source, const char* format) const {
+	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
 	if(!ai)
 		return 0;
-	return (unit_info*)ai.choose(format, this);
+	return (uniti*)ai.choose(format, this);
 }
 
 static void refresh_players() {
 	memset(diplomacy_players, 0, sizeof(diplomacy_players));
-	for(auto& e : players) {
+	for(auto& e : bsmeta<playeri>()) {
 		if(e.strategy == Initiative) {
 			e.set(StrategyAction, 0);
 			speaker = &e;
@@ -387,7 +378,7 @@ static void refresh_players() {
 	}
 }
 
-void player_info::add_peace_pact(int value) {
+void playeri::add_peace_pact(int value) {
 	string sb;
 	sb.player = this;
 	sb.add("Выбирайте оппонента с которым вы будете в сознических отношениях до конца этого хода. Ни он не вы не сможете нападать друг на друга.");
@@ -399,7 +390,7 @@ void player_info::add_peace_pact(int value) {
 	}
 }
 
-static void strategy_primary_action(player_info* p, strategy_s id) {
+static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Diplomacy:
 		p->add_peace_pact(1);
@@ -434,7 +425,7 @@ static void strategy_primary_action(player_info* p, strategy_s id) {
 	}
 }
 
-static void strategy_secondanary_action(player_info* p, strategy_s id) {
+static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Diplomacy:
 		p->refresh_planets(1);
@@ -458,15 +449,15 @@ static void strategy_secondanary_action(player_info* p, strategy_s id) {
 	}
 }
 
-void player_info::tactical_action() {
+void playeri::tactical_action() {
 	auto solar = choose_solar();
 	solar->activate(this);
 	moveships(solar);
 }
 
-static action_s choose_action(player_info* p) {
+static action_s choose_action(playeri* p) {
 	string sb;
-	answer_info ai;
+	answeri ai;
 	sb.add("Что вы предпочитаете делать в свой ход?");
 	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
 		if(!p->is(a) || !p->isallow(AsAction, a))
@@ -476,7 +467,7 @@ static action_s choose_action(player_info* p) {
 	return (action_s)ai.choose(sb, p);
 }
 
-static void play_action(player_info* p, action_s id) {
+static void play_action(playeri* p, action_s id) {
 	switch(id) {
 	case StrategyAction:
 		strategy_primary_action(p, p->strategy);
@@ -493,7 +484,7 @@ static void action_phase() {
 	while(someone_move) {
 		someone_move = false;
 		for(auto i = 0; i <= last_initiative; i++) {
-			for(auto& e : players) {
+			for(auto& e : bsmeta<playeri>()) {
 				if(e.get(Pass) == 0)
 					continue;
 				if(e.getinitiative() != i)
@@ -507,12 +498,12 @@ static void action_phase() {
 	}
 }
 
-void player_info::make_move() {
+void playeri::make_move() {
 	strategic_phase();
 	action_phase();
 }
 
-void player_info::slide(const unit_info* p) {
+void playeri::slide(const uniti* p) {
 	if(!p)
 		return;
 	auto index = p->getindex();
@@ -521,9 +512,9 @@ void player_info::slide(const unit_info* p) {
 	slide(index);
 }
 
-unsigned player_info::select(unit_info** result, unit_info* const* pe, unsigned flags, unit_type_s type) const {
+unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, group_s type) const {
 	auto ps = result;
-	for(auto& e : units) {
+	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(flags&Friendly && e.player != this)
@@ -536,7 +527,7 @@ unsigned player_info::select(unit_info** result, unit_info* const* pe, unsigned 
 	return ps - result;
 }
 
-void player_info::select(army& result, unsigned flags) const {
+void playeri::select(army& result, unsigned flags) const {
 	if(flags&DockPresent) {
 		result.count = select(result.begin(), result.endof(), flags, SpaceDock);
 		result.transform((target_s)(flags&TargetMask));
@@ -545,7 +536,7 @@ void player_info::select(army& result, unsigned flags) const {
 	}
 	switch(flags&TargetMask) {
 	case TargetSystem:
-		for(auto& e : solars) {
+		for(auto& e : bsmeta<solari>()) {
 			if(!e)
 				continue;
 			if(flags&Friendly && e.player != this)
@@ -554,7 +545,7 @@ void player_info::select(army& result, unsigned flags) const {
 		}
 		break;
 	case TargetPlanet:
-		for(auto& e : solars) {
+		for(auto& e : bsmeta<planeti>()) {
 			if(!e)
 				continue;
 			if(flags&Friendly && e.player != this)
