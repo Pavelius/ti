@@ -3,7 +3,7 @@
 
 using namespace draw;
 using namespace draw::controls;
-static solari* hilited_solar;
+static variant hilited;
 static sprite* planets = (sprite*)loadb("art/sprites/planets.pma");
 static sprite* font_small = (sprite*)loadb("art/fonts/small.pma");
 static color player_colors[6][2];
@@ -516,34 +516,38 @@ void draw::tooltips(int x1, int y1, int width, const char* format, ...) {
 	szprint(tooltips_text, tooltips_text + sizeof(tooltips_text) - 1, format, xva_start(format));
 }
 
-static void render_tooltips() {
-	if(!tooltips_text[0])
+static void render_tooltips(const char* format, int x, int y, int w) {
+	if(!format || !format[0])
 		return;
 	draw::state push;
 	draw::font = metrics::font;
-	if(draw::font) {
-		rect rc;
-		rc.x1 = tooltips_point.x + tooltips_width + gui.border * 2 + gui.padding;
-		rc.y1 = tooltips_point.y;
-		rc.x2 = rc.x1 + gui.tips_width;
-		rc.y2 = rc.y1;
-		draw::textf(rc, tooltips_text);
-		if(rc.x2 > getwidth() - gui.border - gui.padding) {
-			auto w = rc.width();
-			rc.x1 = tooltips_point.x - gui.border * 2 - gui.padding - w;
-			rc.x2 = rc.x1 + w;
-		}
-		// Correct border
-		int height = draw::getheight();
-		int width = draw::getwidth();
-		if(rc.y2 >= height)
-			rc.move(0, height - 2 - rc.y2);
-		if(rc.x2 >= width)
-			rc.move(width - 2 - rc.x2, 0);
-		window(rc);
-		draw::fore = colors::tips::text;
-		draw::textf(rc.x1, rc.y1, rc.width(), tooltips_text);
+	if(!draw::font)
+		return;
+	rect rc;
+	rc.x1 = x + w + gui.border * 2 + gui.padding;
+	rc.y1 = y;
+	rc.x2 = rc.x1 + gui.tips_width;
+	rc.y2 = rc.y1;
+	draw::textf(rc, format);
+	if(rc.x2 > getwidth() - gui.border - gui.padding) {
+		auto w = rc.width();
+		rc.x1 = x - gui.border * 2 - gui.padding - w;
+		rc.x2 = rc.x1 + w;
 	}
+	// Correct border
+	int height = draw::getheight();
+	int width = draw::getwidth();
+	if(rc.y2 >= height)
+		rc.move(0, height - 2 - rc.y2);
+	if(rc.x2 >= width)
+		rc.move(width - 2 - rc.x2, 0);
+	window(rc);
+	draw::fore = colors::tips::text;
+	draw::textf(rc.x1, rc.y1, rc.width(), format);
+}
+
+static void render_tooltips() {
+	render_tooltips(tooltips_text, tooltips_point.x, tooltips_point.y, tooltips_width);
 	tooltips_text[0] = 0;
 }
 
@@ -900,10 +904,15 @@ static void draw_planet(point pt, planeti* p) {
 static int render_left() {
 	int x = gui.border;
 	int y = gui.border;
+	int current_y, current_w;
 	for(auto& e : bsmeta<playeri>()) {
 		areas a = AreaNormal;
 		auto w = render_picture(x, y, e.id, &a);
 		rect rc = {x, y, x + w, y + w};
+		if(e.isactive()) {
+			current_y = y;
+			current_w = w;
+		}
 		if(e.gethuman() == &e) {
 			rectb(rc, colors::white);
 			rc.offset(-1, -1);
@@ -916,8 +925,15 @@ static int render_left() {
 			string sb;
 			e.getinfo(sb);
 			tooltips(x - gui.border, y + gui.border, w, sb);
+			hilited = &e;
 		}
 		y += w + gui.padding;
+	}
+	auto active = playeri::getactive();
+	if(active && hilited.type != Player) {
+		string sb;
+		active->getinfo(sb);
+		render_tooltips(sb, x - gui.border, current_y + gui.border, current_w);
 	}
 	return y;
 }
@@ -926,7 +942,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
 	area(last_board);
-	hilited_solar = 0;
+	hilited.clear();
 	for(auto y = 0; y < 8; y++) {
 		for(auto x = 0; x < 8; x++) {
 			auto pt = h2p({(short)x, (short)y}) - camera;
@@ -943,9 +959,9 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 				auto dx = size2 / 2;
 				rect rc = {pt.x - dx, pt.y - dx, pt.x + dx, pt.y + dx};
 				if(areb(rc))
-					hilited_solar = p;
+					hilited = p;
 			}
-			if(hilited_solar == p)
+			if(hilited == p)
 				hexagon2(pt);
 			if(p->type == SolarSystem) {
 				adat<planeti*, 3> source;
@@ -1210,8 +1226,10 @@ solari* playeri::choose_solar() const {
 		x = getwidth() - gui.right_width - gui.border * 2;
 		domodal();
 		control_standart();
-		if(hot.pressed && hot.key == MouseLeft && hilited_solar)
-			breakmodal((int)hilited_solar);
+		if(hot.pressed && hot.key == MouseLeft) {
+			if(hilited.type == Solar)
+				breakmodal((int)hilited.getsolar());
+		}
 	}
 	auto p = reinterpret_cast<solari*>(getresult());
 	return p;
@@ -1265,13 +1283,13 @@ bool playeri::build(army& units, const planeti* planet, solari* system, int reso
 	return result;
 }
 
-bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button) const {
+bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement) const {
 	int x, y;
 	unit_ref_table u1(a1); u1.show_header = false;
 	unit_ref_table u2(a2); u2.show_header = false;
 	auto maximum = imax(u1.getmaximum(), u2.getmaximum()) + 1;
 	while(ismodal()) {
-		render_board();
+		render_board(false, show_movement);
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;

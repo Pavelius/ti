@@ -289,7 +289,6 @@ static short unsigned getmovement(short unsigned index, direction_s d) {
 }
 
 static void make_wave(short unsigned start_index, const playeri* player, short unsigned* result, bool block) {
-	const int cost_bocked = 4;
 	static direction_s directions[] = {LeftUp, RightUp, Left, Right, LeftDown, RightDown};
 	short unsigned stack[256 * 8];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
@@ -304,20 +303,23 @@ static void make_wave(short unsigned start_index, const playeri* player, short u
 		auto cost = result[index] + 1;
 		auto p = uniti::getsolar(index);
 		auto p_player = p->getplayer();
+		auto allow_movement = true;
 		if(p->type == Nebula)
-			cost += cost_bocked;
+			allow_movement = false;
 		else if(p_player && p_player->isenemy(player) && !p_player->is(LightWaveDeflector))
-			cost += cost_bocked;
-		for(auto d : directions) {
-			auto i1 = getmovement(index, d);
-			if(i1 == Blocked || result[i1] == Blocked)
-				continue;
-			if(result[i1] < cost)
-				continue;
-			result[i1] = cost;
-			*push_counter++ = i1;
-			if(push_counter >= stack_end)
-				push_counter = stack;
+			allow_movement = false;
+		if(allow_movement) {
+			for(auto d : directions) {
+				auto i1 = getmovement(index, d);
+				if(i1 == Blocked || result[i1] == Blocked)
+					continue;
+				if(result[i1] < cost)
+					continue;
+				result[i1] = cost;
+				*push_counter++ = i1;
+				if(push_counter >= stack_end)
+					push_counter = stack;
+			}
 		}
 	}
 }

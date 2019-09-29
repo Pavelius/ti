@@ -9,12 +9,6 @@ static int control_name(int x, int y, int width, const char* id, int value, cons
 extern "C" int strcmp(const char* s1, const char* s2); // Compare two strings
 
 enum draw_event_s {
-	// common controls
-	NoField,
-	Label, Field, Check, Radio, Button, Image,
-	Tabs, Group,
-	ControlMask = 0xF,
-	// input events
 	InputSymbol = 0xED00, InputTimer, InputIdle, InputUpdate, InputNoUpdate, InputExecute,
 	// Keyboard and mouse input (can be overrided by flags)
 	MouseLeft = 0xEE00, MouseLeftDBL, MouseRight,
@@ -254,7 +248,6 @@ rect					getarea();
 int						getbpp();
 color					getcolor(color normal, unsigned flags);
 color					getcolor(rect rc, color normal, color hilite, unsigned flags);
-inline draw_event_s		getcontrol(unsigned flags) { return (draw_event_s)(flags&ControlMask); }
 int						getfocus();
 int						getheight();
 int						getnext(int id, int key);
@@ -299,7 +292,6 @@ void					setcaption(const char* string);
 void					setclip(rect rc);
 inline void				setclip() { clipping.set(0, 0, getwidth(), getheight()); }
 void					setfocus(int id, bool instant = false);
-void					settimer(unsigned milleseconds);
 const char*				skiptr(const char* string);
 void					spline(point* points, int n);
 void					stroke(int x, int y, const sprite* e, int id, int flags, unsigned char thin = 1, unsigned char* koeff = 0);

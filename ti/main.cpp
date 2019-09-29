@@ -1,8 +1,23 @@
 #include "main.h"
 #include "draw.h"
 
+static int test_variant() {
+	static variant s1[] = {bsmeta<playeri>::elements + 2, GroundForces};
+	auto result = 0;
+	for(auto& e : s1) {
+		switch(e.type) {
+		case Player:
+			result++;
+			break;
+		}
+	}
+	return result;
+}
+
 int main() {
 	srand(1231);
+	if(!test_variant())
+		return -1;
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");

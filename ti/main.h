@@ -79,12 +79,40 @@ enum target_s : unsigned {
 	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
 	DockPresent = 0x100,
 };
+enum variant_s : unsigned char {
+	NoVariant,
+	Group, Player, PlanetVar, Solar, TechnologyVar, Unit,
+};
 struct planeti;
 struct playeri;
 struct string;
 struct solari;
 class uniti;
 typedef adat<playeri*, 6> playera;
+struct variant {
+	variant_s					type;
+	union {
+		group_s					group;
+		tech_s					tech;
+		short unsigned			value;
+	};
+	constexpr variant() : type(NoVariant), value(0) {}
+	constexpr variant(variant_s t, short unsigned v) : type(t), value(v) {}
+	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
+	constexpr variant(group_s v) : type(Group), group(v) {}
+	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsmeta<T>::elements : 0) {}
+	constexpr variant(const planeti* v) : variant(PlanetVar, v) {}
+	constexpr variant(const playeri* v) : variant(Player, v) {}
+	constexpr variant(const solari* v) : variant(Solar, v) {}
+	constexpr variant(const uniti* v) : variant(Unit, v) {}
+	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
+	void						clear() { type = NoVariant; value = 0; }
+	template<class T> constexpr T* get() const { return &bsmeta<T>::elements[value]; }
+	constexpr planeti*			getplanet() const { return get<planeti>(); }
+	constexpr playeri*			getplayer() const { return get<playeri>(); }
+	constexpr solari*			getsolar() const { return get<solari>(); }
+	constexpr uniti*			getunit() const { return get<uniti>(); }
+};
 struct army : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
@@ -156,6 +184,7 @@ struct playeri : namei, costi {
 	strategy_s					strategy;
 	//
 	explicit operator bool() const { return id != 0; }
+	void						activate();
 	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
@@ -170,7 +199,7 @@ struct playeri : namei, costi {
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
-	bool						choose(army& a1, army& a2, const char* action, bool cancel_button) const;
+	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
 	solari*						choose_solar() const;
@@ -183,6 +212,7 @@ struct playeri : namei, costi {
 	bool						is(action_s value) const { return costi::get(value); }
 	bool						is(bonus_s value) const { return bonuses.is(value); }
 	bool						is(tech_s value) const { return technologies.is(value); }
+	bool						isactive() const { return getactive() == this; }
 	bool						isallow(play_s type, action_s id) const;
 	bool						isallow(group_s id) const;
 	bool						isally(const playeri* enemy) const;
@@ -191,6 +221,7 @@ struct playeri : namei, costi {
 	void						moveships(solari* solar);
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
+	static playeri*				getactive();
 	int							getcardscount() const;
 	int							getfleet() const;
 	static playeri*				gethuman();

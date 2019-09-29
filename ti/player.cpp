@@ -70,6 +70,7 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 {DeepSpaceCannon, HylarVAssaultLaser}
 },
 };
+static playeri*		active_player;
 static playeri*		speaker;
 static playeri*		human_player;
 static playeri*		diplomacy_players[2];
@@ -78,6 +79,14 @@ static int compare_planets(const void* p1, const void* p2) {
 	auto e1 = *((planeti**)p1);
 	auto e2 = *((planeti**)p2);
 	return e2->resource - e1->resource;
+}
+
+void playeri::activate() {
+	active_player = this;
+}
+
+playeri* playeri::getactive() {
+	return active_player;
 }
 
 playeri* playeri::find(const char* id) {
@@ -262,6 +271,7 @@ static void strategic_phase() {
 		politics.add(i);
 	for(auto p : source) {
 		ai.clear();
+		p->activate();
 		if(!p->iscomputer()) {
 			for(auto e : politics)
 				ai.add(e, getstr(e));
