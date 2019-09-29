@@ -82,7 +82,12 @@ static int compare_planets(const void* p1, const void* p2) {
 }
 
 void playeri::activate() {
-	active_player = this;
+	if(active_player != this) {
+		active_player = this;
+		auto solar = active_player->gethomesystem();
+		if(solar)
+			slide(solar->getindex());
+	}
 }
 
 playeri* playeri::getactive() {

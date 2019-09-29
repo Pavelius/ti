@@ -1,11 +1,11 @@
 #include "main.h"
 
-static bool has_tactic(const playeri* player) {
-	return player->get(Command) > 0;
+static bool has_tactic(const playeri& player) {
+	return player.get(Command) > 0;
 }
 
-static bool allow_pass(const playeri* player) {
-	if(player->get(StrategyAction) > 0)
+static bool allow_pass(const playeri& player) {
+	if(player.get(StrategyAction) > 0)
 		return false;
 	return true;
 }
@@ -111,7 +111,7 @@ deck<action_s>	action_deck;
 bool playeri::isallow(play_s type, action_s id) const {
 	if(type != bsmeta<actioni>::elements[id].proc.type)
 		return false;
-	if(bsmeta<actioni>::elements[id].proc.test && !bsmeta<actioni>::elements[id].proc.test(this))
+	if(bsmeta<actioni>::elements[id].proc.test && !bsmeta<actioni>::elements[id].proc.test(*this))
 		return false;
 	return true;
 }

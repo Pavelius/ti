@@ -361,13 +361,13 @@ struct planeti : uniti {
 	static void					setup();
 };
 struct actioni {
-	typedef bool(*test_proc)(const playeri* player);
+	typedef bool(*testp)(const playeri& player);
 	struct proc_info {
 		play_s		type;
-		test_proc	test;
+		testp		test;
 		constexpr proc_info() : type(NoPlay), test(0) {}
 		constexpr proc_info(play_s type) : type(type), test(0) {}
-		constexpr proc_info(test_proc proc) : type(AsAction), test(proc) {}
+		constexpr proc_info(testp proc) : type(AsAction), test(proc) {}
 	};
 	const char*					id;
 	const char*					name;

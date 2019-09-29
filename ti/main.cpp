@@ -30,7 +30,7 @@ int main() {
 	bsmeta<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
-	playeri::gethuman()->tactical_action();
+	//playeri::gethuman()->tactical_action();
 	playeri::gethuman()->make_move();
 	return 0;
 }
