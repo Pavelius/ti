@@ -136,14 +136,12 @@
     <ClCompile Include="action.cpp" />
     <ClCompile Include="answer.cpp" />
     <ClCompile Include="cost.cpp" />
+    <ClCompile Include="crt.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="color.cpp" />
     <ClCompile Include="converter.cpp" />
-    <ClCompile Include="crt.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
     <ClCompile Include="draw_control.cpp" />
@@ -162,9 +160,6 @@
     <ClCompile Include="strategy.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="stringbuilder.cpp" />
-    <ClCompile Include="string_value.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="unit.cpp" />

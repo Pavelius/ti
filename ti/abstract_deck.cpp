@@ -20,7 +20,7 @@ void abstract_deck::discard(unsigned char e) {
 }
 
 void abstract_deck::shuffle() {
-	if(discarded.count > 0) {
+	if(discarded) {
 		for(auto e : discarded)
 			add(e);
 		discarded.clear();

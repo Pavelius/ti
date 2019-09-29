@@ -9,9 +9,18 @@ template<class T> inline T	imax(T a, T b) { return a > b ? a : b; }
 template<class T> inline T	imin(T a, T b) { return a < b ? a : b; }
 template<class T> inline T	iabs(T a) { return a > 0 ? a : -a; }
 template<class T> inline void iswap(T& a, T& b) { T i = a; a = b; b = i; }
-//
+enum codepage_s { CPNONE, CP1251, CPUTF8, CPU16BE, CPU16LE };
+namespace metrics {
+const codepage_s			code = CP1251;
+}
 void*						loadb(const char* url, unsigned* size = 0, unsigned additional = 0);
+int							szcmpi(const char* p1, const char* p2);
+int							szcmpi(const char* p1, const char* p2, int count);
+void						szencode(char* output, int output_count, codepage_s output_code, const char* input, int input_count, codepage_s input_code);
+unsigned					szget(const char** input, codepage_s page = metrics::code);
 const char*					szdup(const char* text);
+void						szput(char** output, unsigned u, codepage_s page = metrics::code);
+//char*						szput(char* output, unsigned u, codepages page = metrics::code); // Fast symbol put function. Return 'output'.
 char*						szprint(char* result, const char* result_maximum, const char* format, ...);
 char*						szprintv(char* result, const char* result_maximum, const char* format, const char* format_param);
 template<unsigned N> inline char*	zprint(char(&result)[N], const char* format, ...) { return szprintv(result, result + N - 1, format, (const char*)&format + sizeof(format)); }

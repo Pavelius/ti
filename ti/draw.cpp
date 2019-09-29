@@ -1425,12 +1425,12 @@ int draw::textw(const char* string, int count) {
 	if(count == -1) {
 		const char *s1 = string;
 		while(*s1)
-			x1 += textw(*s1++);
+			x1 += textw(szget(&s1));
 	} else {
 		const char *s1 = string;
 		const char *s2 = string + count;
 		while(s1 < s2)
-			x1 += textw(*s1++);
+			x1 += textw(szget(&s1));
 	}
 	return x1;
 }
@@ -1491,7 +1491,7 @@ void draw::text(int x, int y, const char* string, int count, unsigned flags) {
 	const char *s1 = string;
 	const char *s2 = string + count;
 	while(s1 < s2) {
-		int sm = *s1++;
+		int sm = szget(&s1);
 		if(sm >= 0x21)
 			glyph(x, y, sm, flags);
 		x += textw(sm);
@@ -1512,7 +1512,7 @@ int draw::textbc(const char* string, int width) {
 	int w = 0;
 	const char* s1 = string;
 	while(true) {
-		unsigned s = *s1++;
+		unsigned s = szget(&s1);
 		if(s == 0x20 || s == 9)
 			p = s1 - string;
 		else if(s == 0) {

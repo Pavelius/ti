@@ -82,8 +82,8 @@ enum target_s : unsigned {
 struct uniti;
 struct planeti;
 struct playeri;
-typedef adat<playeri*, 6> playera;
 struct string;
+typedef adat<playeri*, 6> playera;
 struct army : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
@@ -96,13 +96,13 @@ struct namei {
 	const char*					getid() const { return id; }
 	const char*					getname() const { return name; }
 };
-struct abstract_deck : adat<unsigned char, 256> {
+class abstract_deck : public adat<unsigned char, 256> {
+	adat<unsigned char>			discarded;
+public:
 	void						clear();
 	unsigned char				draw();
 	void						discard(unsigned char);
 	void						shuffle();
-private:
-	adat<unsigned char>			discarded;
 };
 template<class T>
 struct deck : abstract_deck {

@@ -1,6 +1,30 @@
 #include "crt.h"
 #include "io.h"
 
+unsigned szupper(unsigned u) {
+	if(u >= 0x61 && u <= 0x7A)
+		return u - 0x61 + 0x41;
+	else if(u >= 0x430 && u <= 0x44F)
+		return u - 0x430 + 0x410;
+	return u;
+}
+
+char* szupper(char* p, int count) {
+	char* s1 = p;
+	const char* p1 = p;
+	while(count-- > 0)
+		szput(&s1, szupper(szget(&p1)));
+	return p;
+}
+
+unsigned szlower(unsigned u) {
+	if(u >= 0x41 && u <= 0x5A)
+		return u - 0x41 + 0x61;
+	else if(u >= 0x410 && u <= 0x42F)
+		return u - 0x410 + 0x430;
+	return u;
+}
+
 int szcmpi(const char* p1, const char* p2) {
 	while(*p2 && *p1) {
 		unsigned s1 = szupper(szget(&p1));
@@ -59,30 +83,6 @@ bool ischa(unsigned u) {
 		|| (u >= 0x410 && u <= 0x44F);
 }
 
-unsigned szupper(unsigned u) {
-	if(u >= 0x61 && u <= 0x7A)
-		return u - 0x61 + 0x41;
-	else if(u >= 0x430 && u <= 0x44F)
-		return u - 0x430 + 0x410;
-	return u;
-}
-
-char* szupper(char* p, int count) {
-	char* s1 = p;
-	const char* p1 = p;
-	while(count-- > 0)
-		szput(&s1, szupper(szget(&p1)));
-	return p;
-}
-
-unsigned szlower(unsigned u) {
-	if(u >= 0x41 && u <= 0x5A)
-		return u - 0x41 + 0x61;
-	else if(u >= 0x410 && u <= 0x42F)
-		return u - 0x410 + 0x430;
-	return u;
-}
-
 int getdigitscount(unsigned number) {
 	if(number < 10)
 		return 1;
@@ -120,7 +120,7 @@ void szlower(char* p, int count) {
 	}
 }
 
-unsigned szget(const char** input, codepages code) {
+unsigned szget(const char** input, codepage_s code) {
 	const unsigned char* p;
 	unsigned result;
 	switch(code) {
@@ -156,7 +156,7 @@ unsigned szget(const char** input, codepages code) {
 	}
 }
 
-void szput(char** output, unsigned value, codepages code) {
+void szput(char** output, unsigned value, codepage_s code) {
 	char* p;
 	switch(code) {
 	case CPUTF8:
@@ -198,14 +198,14 @@ void szput(char** output, unsigned value, codepages code) {
 	}
 }
 
-char* szput(char* result, unsigned sym, codepages page) {
+char* szput(char* result, unsigned sym, codepage_s page) {
 	char* p = result;
 	szput(&p, sym, page);
 	*p = 0;
 	return result;
 }
 
-void szencode(char* output, int output_count, codepages output_code, const char* input, int input_count, codepages input_code) {
+void szencode(char* output, int output_count, codepage_s output_code, const char* input, int input_count, codepage_s input_code) {
 	char* s1 = output;
 	char* s2 = s1 + output_count;
 	const char* p1 = input;

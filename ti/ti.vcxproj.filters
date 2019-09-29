@@ -39,9 +39,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="crt.cpp">
-      <Filter>Поддержка</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -120,9 +117,6 @@
     <ClCompile Include="action.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="string_value.cpp">
-      <Filter>Поддержка</Filter>
-    </ClCompile>
     <ClCompile Include="string.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -148,6 +142,9 @@
       <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="stringbuilder.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="crt.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
   </ItemGroup>

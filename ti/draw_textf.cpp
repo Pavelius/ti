@@ -18,14 +18,16 @@ static const char* skipcr(const char* p) {
 }
 
 static const char* skipsp(const char* p) {
-	while(*p == ' ' || *p == 9) p++; return p;
+	while(*p == ' ' || *p == 9)
+		p++;
+	return p;
 }
 
 static bool isnum(const char* p) {
 	return *p >= '0' && *p <= '9';
 }
 
-const char* sz2num(const char* p, int& result) {
+static const char* readnum(const char* p, int& result) {
 	result = 0;
 	auto sign = false;
 	if(*p == ' ') {
@@ -39,7 +41,7 @@ const char* sz2num(const char* p, int& result) {
 	return p;
 }
 
-static const char* psstr(const char* p, char* ps, const char* pe, char end_symbol) {
+static const char* readstr(const char* p, char* ps, const char* pe, char end_symbol) {
 	ps[0] = 0;
 	if(!p)
 		return 0;
@@ -140,10 +142,10 @@ static int render_control(const char** result, int x, int y, int width) {
 		if(*p == '=') {
 			p = skipsp(p + 1);
 			if(isnum(p) || *p == '-')
-				p = sz2num(p, value_number);
+				p = readnum(p, value_number);
 			else if(*p == '\"' || *p == '\'') {
 				value_text = pb;
-				p = psstr(p + 1, pb, pe, p[0]);
+				p = readstr(p + 1, pb, pe, p[0]);
 				pb = zend(pb);
 				if(pb < pe)
 					pb = pb + 1;
@@ -177,7 +179,7 @@ static const char* glink(const char* p, char* result, unsigned result_maximum) {
 	result[0] = 0;
 	if(*p == '\"') {
 		auto sym = *p++;
-		p = psstr(p, result, result + result_maximum - 1, sym);
+		p = readstr(p, result, result + result_maximum - 1, sym);
 	} else if(*p == '(') {
 		auto ps = result;
 		auto pe = ps + result_maximum;
@@ -364,23 +366,19 @@ int draw::textf(int x, int y, int width, const char* string, int* max_width,
 			*cashe_string = p;
 			*cashe_height = y - y0;
 		}
-		if(match(&p, "###")) // Header 3
-		{
+		if(match(&p, "###")) { // Header 3
 			p = skipsp(p);
 			font = metrics::h3;
 			y += textfln(x, y, width, &p, colors::h3, &mw2, tab_width, text_flags);
-		} else if(match(&p, "##")) // Header 2
-		{
+		} else if(match(&p, "##")) { // Header 2
 			p = skipsp(p);
 			font = metrics::h2;
 			y += textfln(x, y, width, &p, colors::h2, &mw2, tab_width, text_flags);
-		} else if(match(&p, "#")) // Header 1
-		{
+		} else if(match(&p, "#")) { // Header 1
 			p = skipsp(p);
 			font = metrics::h1;
 			y += textfln(x, y, width, &p, colors::h1, &mw2, tab_width, text_flags);
-		} else if(match(&p, "...")) // Без форматирования
-		{
+		} else if(match(&p, "...")) { // normal text
 			p = skipcr(p);
 			font = metrics::font;
 			color c1 = colors::window.mix(colors::edit, 256 - 32);
