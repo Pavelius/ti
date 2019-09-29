@@ -56,6 +56,34 @@ const short				size = 192;
 const double			sqrt_3 = 1.732050807568877;
 const double			cos_30 = 0.86602540378;
 
+struct piclib : arem<pair<const char*, surface>> {
+	typedef pair<const char*, surface> elementi;
+	elementi* find(const char* key) {
+		for(auto& e : *this) {
+			if(strcmp(e.key, key) == 0)
+				return &e;
+		}
+		return 0;
+	}
+	surface& get(const char* key, const char* folder, int width = 0, int height = 0) {
+		auto p = find(key);
+		if(!p) {
+			char temp[260]; zprint(temp, "art/%1/%2.bmp", folder, key);
+			p = add(); memset(p, 0, sizeof(*p));
+			p->key = key;
+			if(width && height) {
+				p->value.resize(width, height, 32, true);
+				surface e(temp, 0);
+				if(e)
+					blit(p->value, 0, 0, p->value.width, p->value.height, 0,
+						e, 0, 0, e.width, e.height);
+			} else
+				p->value.read(temp);
+		}
+		return p->value;
+	}
+};
+
 struct gui_info {
 	unsigned char		border;
 	unsigned char		opacity, opacity_disabled, opacity_hilighted;
@@ -367,19 +395,9 @@ static int window(int x, int y, int width, const char* string, int right_width =
 }
 
 static int render_picture(int x, int y, const char* id, areas* pa = 0) {
-	static amap<const char*, surface> avatars;
-	auto p = avatars.find(id);
-	if(!p) {
-		p = avatars.add();
-		memset(p, 0, sizeof(*p));
-		p->key = id;
-		p->value.resize(gui.hero_width, gui.hero_width, 32, true);
-		char temp[260]; zprint(temp, "art/portraits/%1.bmp", id);
-		surface e(temp, 0);
-		if(e)
-			blit(p->value, 0, 0, p->value.width, p->value.height, 0, e, 0, 0, e.width, e.height);
-	}
-	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, p->value, 0, 0);
+	static piclib avatars;
+	auto& e = avatars.get(id, "portraits", gui.hero_width, gui.hero_width);
+	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, e, 0, 0);
 	rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
 	rectb(rc, colors::border);
 	if(pa)
@@ -477,24 +495,18 @@ void control_standart() {
 }
 
 static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id) {
-	static amap<const char*, draw::surface> source;
-	auto p = source.find(id);
-	if(!p) {
-		char temp[260]; zprint(temp, "art/icons/%1.png", id);
-		p = source.add();
-		memset(p, 0, sizeof(*p));
-		p->key = id;
-		p->value.read(temp);
-	}
+	static piclib source;
+	auto& e = source.get(id, "icons");
 	auto dy = draw::texth();
-	w = p->value.width;
+	w = e.width;
 	if(x + w > x2) {
 		if(max_width)
 			*max_width = imax(*max_width, x - x0);
 		x = x0;
 		y += draw::texth();
 	}
-	draw::blit(*draw::canvas, x, y + dy - p->value.height - 2, w, p->value.height, ImageTransparent, p->value, 0, 0);
+	draw::blit(*draw::canvas, x, y + dy - e.height - 2, w, e.height, ImageTransparent,
+		e, 0, 0);
 }
 
 void draw::tooltips(int x1, int y1, int width, const char* format, ...) {

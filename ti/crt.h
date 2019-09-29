@@ -57,7 +57,8 @@ inline int					d100() { return rand() % 100; }
 template<class T> inline void zshuffle(T* p, int count) { for(int i = 0; i < count; i++) iswap(p[i], p[rand() % count]); }
 
 namespace std {
-template<class T> class initializer_list {
+template<class T>
+class initializer_list {
 public:
 	typedef T				value_type;
 	typedef const T&		reference;
@@ -87,7 +88,8 @@ struct cflags {
 	constexpr void			remove(T id) { data &= ~(1 << id); }
 };
 // Abstract storage collection
-template<typename T, unsigned N = 64> struct adat {
+template<typename T, unsigned N = 64>
+struct adat {
 	static constexpr unsigned maximum = N;
 	unsigned				count;
 	T						data[N];
@@ -111,7 +113,8 @@ template<typename T, unsigned N = 64> struct adat {
 	void					remove(int index, int remove_count = 1) { if(index < 0) return; if(index<int(count - 1)) memcpy(data + index, data + index + 1, sizeof(data[0])*(count - index - 1)); count--; }
 };
 // Abstract reference collection
-template<typename T> struct aref {
+template<typename T>
+struct aref {
 	unsigned				count;
 	T*						data;
 	constexpr aref() : count(0), data(0) {}
@@ -129,7 +132,8 @@ template<typename T> struct aref {
 	bool					is(const T t) const { return indexof(t) != -1; }
 };
 // Autogrow typized array
-template<class T> struct arem : aref<T> {
+template<class T>
+struct arem : aref<T> {
 	unsigned				count_maximum;
 	constexpr arem() : aref<T>(), count_maximum(0) {}
 	~arem() { if(aref<T>::data) delete aref<T>::data; }
@@ -140,17 +144,10 @@ template<class T> struct arem : aref<T> {
 	void					reserve(unsigned count) { rmreserve((void**)&(aref<T>::data), count, count_maximum, sizeof(T)); }
 };
 // Abstract pair element
-template<typename K, typename V> struct pair {
+template<typename K, typename V>
+struct pair {
 	K						key;
 	V						value;
-};
-// Abstract map collection
-template<typename K, typename V> struct amap : arem<pair<K, V>> {
-	pair<K, V>*				find(K key) { for(auto& e : *this) if(e.key == key) return &e; return 0; }
-	pair<K, V>*				findv(V value) { for(auto& e : *this) if(e.value == value) return &e; return 0; }
-	V						get(K key) const { auto p = find(key); if(p) return p->value; return V(); }
-	K						getv(V value) const { auto p = findv(value); if(p) return p->key; return K(); }
-	bool					is(const K& key) const { return find(key) != 0; }
 };
 // Common access to data types
 template<typename T> struct bsmeta {

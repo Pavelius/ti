@@ -1,6 +1,7 @@
 #include "main.h"
 
-DECLBASE(solari, 48);
+solari			bsmeta<solari>::elements[48];
+unsigned		bsmeta<solari>::count = sizeof(bsmeta<solari>::elements)/sizeof(bsmeta<solari>::elements[0]);
 static int		solar_indecies[map_scan_line * map_scan_line];
 short unsigned	movement_rate[48];
 
