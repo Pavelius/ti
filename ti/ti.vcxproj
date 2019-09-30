@@ -151,7 +151,6 @@
     <ClCompile Include="draw_table.cpp" />
     <ClCompile Include="draw_text.cpp" />
     <ClCompile Include="draw_textf.cpp" />
-    <ClCompile Include="grid.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="planet.cpp" />
@@ -164,7 +163,6 @@
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="unit.cpp" />
-    <ClCompile Include="variant.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />

@@ -60,9 +60,6 @@
     <ClCompile Include="player.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="grid.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="army.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -146,9 +143,6 @@
     </ClCompile>
     <ClCompile Include="crt.cpp">
       <Filter>Поддержка</Filter>
-    </ClCompile>
-    <ClCompile Include="variant.cpp">
-      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="speech.cpp">
       <Filter>Логика</Filter>
