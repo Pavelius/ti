@@ -541,7 +541,7 @@ static void render_tooltips(const char* format, int x, int y, int w) {
 		rc.move(0, height - 2 - rc.y2);
 	if(rc.x2 >= width)
 		rc.move(width - 2 - rc.x2, 0);
-	window(rc);
+	window(rc, false, false);
 	draw::fore = colors::tips::text;
 	draw::textf(rc.x1, rc.y1, rc.width(), format);
 }

@@ -286,9 +286,9 @@ static void strategic_phase() {
 		} else {
 			p->strategy = politics.data[rand() % politics.getcount()];
 			string sb;
-			sb.adds("Наш выбор - [%-1] стратегия.", getstr(p->strategy));
+			sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
 			sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
-			playeri::report(sb);
+			p->message(sb);
 		}
 		politics.remove(politics.indexof(p->strategy));
 	}
@@ -573,4 +573,10 @@ void playeri::select(army& result, unsigned flags) const {
 		}
 		break;
 	}
+}
+
+void playeri::message(const char* text) {
+	answeri ai;
+	ai.add(0, "Принять");
+	ai.choosev(false, 0, id, text);
 }

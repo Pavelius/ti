@@ -235,6 +235,7 @@ struct playeri : namei, costi {
 	static playeri*				getspeaker();
 	const char*					getyouname() const;
 	static void					make_move();
+	void						message(const char* text);
 	void						open_trade_negatiation() {}
 	void						predict_next_political_card(int value) {}
 	void						refresh_planets(int value) {}

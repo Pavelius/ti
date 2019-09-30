@@ -15,7 +15,7 @@ static int test_variant() {
 }
 
 int main() {
-	return 0;
+	//return 0;
 	srand(1231);
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
