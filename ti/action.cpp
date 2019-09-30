@@ -84,11 +84,6 @@ actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"VoluntaryAnnexation", "", 1, AsAction, ""},
 {"WarFooting", "", 1, AsAction, ""},
 //
-{"StrategyAction", "%1 стратегия", 0, AsAction, ""},
-{"TacticalAction", "Тактическое действие", 0, has_tactic, ""},
-{"TransferAction", "Перемещение", 0, has_tactic, ""},
-{"Pass", "Пропуск хода", 0, allow_pass, ""},
-//
 {"CombatEquipment", "Тяжелое вооружение", 0, 0, ""},
 {"TradeAction", "Торговать карточками", 0, 0, ""},
 {"RerollCombatDices", "Перебросить все провалы", 0, 0, ""},
@@ -99,6 +94,10 @@ actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"ExecutePrimaryAbility", "Выполнить первичную способность", 0, 0, ""},
 {"ChangePoliticCard", "Поменять закон", 0, 0, ""},
 {"LookActionCard", "Посмотреть карточки действий", 0, 0, ""},
+//
+{"StrategyAction", "%1 стратегия", 0, AsAction, ""},
+{"TacticalAction", "Тактическое действие", 0, has_tactic, ""},
+{"Pass", "Пропуск хода", 0, allow_pass, ""},
 //
 {"Strategy", "стратегии", 0, NoPlay, ""},
 {"Fleet", "флота", 0, NoPlay, ""},

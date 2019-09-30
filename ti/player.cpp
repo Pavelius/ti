@@ -272,7 +272,7 @@ static void strategic_phase() {
 		p->strategy = NoStrategy;
 	answeri ai;
 	adat<strategy_s, Imperial + 1> politics;
-	for(auto i = Initiative; i <= Imperial; i = (strategy_s)(i + 1))
+	for(auto i = Leadership; i <= Imperial; i = (strategy_s)(i + 1))
 		politics.add(i);
 	for(auto p : source) {
 		ai.clear();
@@ -286,7 +286,8 @@ static void strategic_phase() {
 		} else {
 			p->strategy = politics.data[rand() % politics.getcount()];
 			string sb;
-			sb.add("Наши враги [%1] определились со своим курсом действий на ближайшее время. По их решению это стала [%2] стратегия. Будьте внимательны и осторожны.", p->getname(), getstr(p->strategy));
+			sb.adds("Наш выбор - [%-1] стратегия.", getstr(p->strategy));
+			sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
 			playeri::report(sb);
 		}
 		politics.remove(politics.indexof(p->strategy));
@@ -390,13 +391,8 @@ uniti* playeri::choose(army& source, const char* format) const {
 static void refresh_players() {
 	memset(diplomacy_players, 0, sizeof(diplomacy_players));
 	for(auto& e : bsmeta<playeri>()) {
-		if(e.strategy == Initiative) {
-			e.set(StrategyAction, 0);
-			speaker = &e;
-		} else
 			e.set(StrategyAction, 1);
 		e.set(TacticalAction, 1);
-		e.set(TransferAction, 1);
 		e.set(Pass, 1);
 	}
 }
@@ -415,17 +411,17 @@ void playeri::add_peace_pact(int value) {
 
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
+	case Leadership:
+		p->add_command_tokens(3);
+		break;
 	case Diplomacy:
 		p->add_peace_pact(1);
 		break;
-	case Political:
+	case Politics:
 		p->add_action_cards(3);
 		p->add_command_tokens(1);
 		p->draw_political_card(1);
 		p->predict_next_political_card(3);
-		break;
-	case Logistics:
-		p->add_command_tokens(4);
 		break;
 	case Trade:
 		if(p->choose_trade()) {
@@ -450,14 +446,14 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 
 static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	switch(id) {
+	case Leadership:
+		p->add_command_tokens(1);
+		break;
 	case Diplomacy:
 		p->refresh_planets(1);
 		break;
-	case Political:
+	case Politics:
 		p->add_action_cards(1);
-		break;
-	case Logistics:
-		p->add_command_tokens(1);
 		break;
 	case Trade:
 		p->add_profit_for_trade_agreements();

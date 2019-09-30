@@ -1,12 +1,12 @@
 #include "main.h"
 
-static int compare(const void* p1, const void* p2) {
+answeri::answeri() : stringbuilder(buffer, zendof(buffer)) {}
+
+int answeri::compare(const void* p1, const void* p2) {
 	auto e1 = (answeri::element*)p1;
 	auto e2 = (answeri::element*)p2;
 	return strcmp(e1->text, e2->text);
 }
-
-answeri::answeri() : stringbuilder(buffer, zendof(buffer)) {}
 
 void answeri::sort() {
 	qsort(elements.data, elements.getcount(), sizeof(elements[0]), compare);

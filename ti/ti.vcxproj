@@ -157,6 +157,7 @@
     <ClCompile Include="planet.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="speech.cpp" />
     <ClCompile Include="strategy.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="stringbuilder.cpp" />
@@ -175,6 +176,7 @@
       <SubType>Designer</SubType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)xmlimg.exe "$(SolutionDir)ti\images.xml"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)art\fonts\font.pma</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

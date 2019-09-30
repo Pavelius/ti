@@ -16,7 +16,7 @@ enum play_s : unsigned char {
 };
 enum strategy_s : unsigned char {
 	NoStrategy,
-	Initiative, Diplomacy, Political, Logistics,
+	Leadership, Diplomacy, Politics, Construction,
 	Trade, Warfare, Technology, Imperial,
 };
 enum action_s : unsigned char {
@@ -41,7 +41,7 @@ enum action_s : unsigned char {
 	BaronyEquipment, HacanTradeActionCards, JolanrRerollCombatDices, MentakAmbush, MentakPiracy,
 	NaaluFleetRetreat, SolOrbitalDrop, ExecutePrimaryAbility, ChangePoliticCard, LookActionCards,
 	//
-	StrategyAction, TacticalAction, TransferAction, Pass,
+	StrategyAction, TacticalAction, Pass,
 	Strategy, Fleet, Command, Goods,
 	LastAction = Goods,
 };
@@ -85,7 +85,7 @@ enum variant_s : unsigned char {
 };
 struct planeti;
 struct playeri;
-struct string;
+class string;
 struct solari;
 class uniti;
 typedef adat<playeri*, 6> playera;
@@ -176,8 +176,8 @@ private:
 struct strategyi {
 	const char*					id;
 	const char*					name;
-	const char*					text;
 	char						initiative;
+	const char*					text;
 	char						bonus;
 };
 struct playeri : namei, costi {
@@ -375,30 +375,31 @@ struct actioni {
 	proc_info					proc;
 	const char*					description;
 };
-struct string : stringbuilder {
+class string : public stringbuilder {
+	char						buffer[8192];
+public:
 	const playeri*				player;
 	string();
 	void						addidentifier(const char* identifier) override;
-private:
-	char						buffer[8192];
 };
-struct answeri : stringbuilder {
+class answeri : public stringbuilder {
 	struct element {
 		int						param;
 		const char*				text;
 		const char*				getname() const { return text; }
 	};
-	typedef void(*tips_proc)(stringbuilder& sb, const element& e);
+	char						buffer[4096];
 	adat<element, 8>			elements;
+	typedef void(*tips_proc)(stringbuilder& sb, int param);
+public:
 	constexpr explicit operator bool() const { return elements.count != 0; }
 	answeri();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
 	int							choose(const char* format, const playeri* player) const;
 	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
+	static int					compare(const void* p1, const void* p2);
 	void						sort();
-private:
-	char						buffer[4096];
 };
 extern deck<action_s>			action_deck;
 DECLENUM(action);
