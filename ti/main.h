@@ -84,6 +84,7 @@ enum variant_s : unsigned char {
 	NoVariant,
 	Group, Player, PlanetVar, Solar, TechnologyVar, Unit,
 };
+class answeri;
 struct planeti;
 struct playeri;
 class string;
@@ -195,6 +196,7 @@ struct playeri : namei, costi {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
+	void						apply(string& sb);
 	void						choose_speaker(int exclude);
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
@@ -203,6 +205,7 @@ struct playeri : namei, costi {
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
+	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
@@ -246,7 +249,6 @@ struct playeri : namei, costi {
 	void						predict_next_political_card(int value) {}
 	void						refresh_planets(int value) {}
 	void						replenish_commodities() {}
-	static action_s				report(const string& sb);
 	void						return_command_from_board(int value) {}
 	static void					slide(int x, int y);
 	static void					slide(const uniti* p);
@@ -404,8 +406,7 @@ public:
 	answeri();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(const char* format, const playeri* player, bool cancel_button = false) const;
-	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
+	int							choose(bool cancel_button, bool random_choose, tips_proc tips, const char* picture, const char* format) const;
 	static int					compare(const void* p1, const void* p2);
 	void						sort();
 };

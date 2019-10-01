@@ -31,8 +31,8 @@ int main() {
 	playeri::setup();
 	//playeri::gethuman()->tactical_action();
 	//playeri::gethuman()->make_move();
-	playeri::gethuman()->strategy = Politics;
-	playeri::gethuman()->make_move(false, true);
+	playeri::gethuman()->strategy = Leadership;
+	playeri::gethuman()->make_move(true, true);
 	return 0;
 }
 

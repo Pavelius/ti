@@ -241,7 +241,7 @@ void playeri::getinfo(string& sb) const {
 	if(strategy)
 		sb.addn("[+%1 стратегия]", bsmeta<strategyi>::elements[strategy].name);
 	sb.addn("%1i ресурсов", planeti::get(this, &planeti::getresource));
-	sb.addn("%1i влияния", planeti::get(this, &planeti::getinfluence));
+	sb.add(", %1i влияния", planeti::get(this, &planeti::getinfluence));
 	sb.addn("%1i стратегических маркеров", get(Strategy));
 	sb.addn("%1i тактических маркеров", get(Command));
 	sb.addn("%1i маркеров флота", get(Fleet));
@@ -275,26 +275,23 @@ static void strategic_phase() {
 	select(source, playeri::getspeaker());
 	for(auto p : source)
 		p->strategy = NoStrategy;
-	answeri ai;
 	adat<strategy_s, Imperial + 1> politics;
 	for(auto i = Leadership; i <= Imperial; i = (strategy_s)(i + 1))
 		politics.add(i);
 	for(auto p : source) {
-		ai.clear();
+		string sb; sb.clear();
+		answeri ai; ai.clear();
 		p->activate();
-		if(!p->iscomputer()) {
-			for(auto e : politics)
-				ai.add(e, getstr(e));
-			ai.sort();
-			p->strategy = (strategy_s)ai.choose(
-				"Эта стратегическая фаза. Вам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. Будьте внимательны. Ваши враги также выбирают одну стратегию из этого же списка.", p);
-		} else {
-			p->strategy = politics.data[rand() % politics.getcount()];
-			string sb;
-			sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
-			sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
-			p->message(sb);
-		}
+		for(auto e : politics)
+			ai.add(e, getstr(e));
+		ai.sort();
+		p->strategy = (strategy_s)p->choose(sb, ai, false,
+			"Эта стратегическая фаза. "
+			"Вам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. "
+			"Ваши оппоненты также выбирают одну стратегию из этого же списка.");
+		sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
+		sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
+		p->message(sb);
 		politics.remove(politics.indexof(p->strategy));
 	}
 }
@@ -310,36 +307,37 @@ void playeri::check_card_limin() {
 
 }
 
-action_s playeri::report(const string& sb) {
-	answeri ai;
-	ai.add(0, "Принять");
-	return (action_s)ai.choosev(false, 0, gethuman()->id, sb);
-}
-
 playeri* playeri::choose_opponent(const char* text) {
+	string sb;
 	answeri ai;
 	for(auto& e : bsmeta<playeri>()) {
 		if(this == &e)
 			continue;
 		ai.add((int)&e, e.getname());
 	}
-	return (playeri*)ai.choose(text, this);
+	return (playeri*)choose(sb, ai, false, text);
 }
 
 void playeri::add_action_cards(int value) {
 	string sb;
 	sb.add("%1 получили [%2i] карт действий.", getyouname(), value);
-	auto show_card = true;
-	for(auto i = 0; i < value; i++) {
-		auto a = action_deck.draw();
-		add(a, 1);
-		if(!iscomputer()) {
-			if(show_card) {
-				sb.adds("Это");
-				show_card = false;
-			} else
-				sb.adds(",");
-			sb.adds(getstr(a));
+	if(true) {
+		auto first_card = true;
+		for(auto i = 0; i < value; i++) {
+			auto a = action_deck.draw();
+			add(a, 1);
+			if(!iscomputer()) {
+				if(first_card) {
+					sb.adds("Это");
+					first_card = false;
+				} else if(i==value-1)
+					sb.adds("и");
+				else
+					sb.add(",");
+				sb.adds("[+");
+				sb.add(getstr(a));
+				sb.add("]");
+			}
 		}
 	}
 	if(!iscomputer())
@@ -349,31 +347,28 @@ void playeri::add_action_cards(int value) {
 
 void playeri::add_command_tokens(int value) {
 	static action_s command_area[] = {Strategy, Command, Fleet};
-	for(auto i = 1; i <= value; i++) {
-		string sb;
-		answeri ai;
-		sb.add("%1 получили %2i командных жетонов.", getyouname(), value);
-		if(value==1)
-			sb.adds("Куда хотите его распределить?");
-		else
-			sb.adds("Куда хотите распределить %1i из %2i жетон?", i, value);
-		ai.clear();
-		for(auto e : command_area)
-			ai.add(e, "Жетон %1", getstr(e));
-		auto a = (action_s)ai.choose(sb, this);
-		add(a, 1);
+	string sb;
+	sb.add("%1 получили [%2i] командных жетона.", getyouname(), value);
+	if(iscomputer()) {
+		message(sb);
+	} else {
+		for(auto i = 1; i <= value; i++) {
+			answeri ai; ai.clear();
+			for(auto e : command_area)
+				ai.add(e, "Жетон %1", getstr(e));
+			auto a = (action_s)choose(sb, ai, false, "Куда хотите распределить %1i из %2i жетон?", i, value);
+			add(a, 1);
+		}
 	}
 }
 
 void playeri::buy_technology(int cost_resources) {
 	string sb; answeri ai;
-	sb.add("Если хотите, можете приобрести технологию за [%1i] очка ресурсов.", cost_resources);
-	ai.clear();
 	auto counter = 1;
 	auto total = getresources();
 	if(total >= counter * cost_resources)
 		ai.add(counter, "Приобрести технологию за [%2i] ресурсов", counter*cost_resources);
-	auto n = ai.choose(sb, this, true);
+	auto n = choose(sb, ai, true, "Если хотите, можете приобрести технологию за [%1i] очка ресурсов.", cost_resources);
 	if(!n)
 		return;
 	add_technology(1);
@@ -381,15 +376,15 @@ void playeri::buy_technology(int cost_resources) {
 
 void playeri::buy_command_tokens(int cost_influence) {
 	string sb; answeri ai;
-	sb.add("Если хотите, можете приобрести жетоны команд за [%1i] очка влияния. Сколько хотите приобрести?", cost_influence);
-	ai.clear();
 	auto total = getinfluences();
 	auto counter = 1;
 	while(total > counter*cost_influence) {
 		ai.add(counter, "%1i жетона за %2i влияния", counter, counter*cost_influence);
 		counter++;
 	}
-	auto n = ai.choose(sb, this, true);
+	auto n = choose(sb, ai, true,
+		"Если хотите, можете приобрести жетоны команд за [%1i] очка влияния. "
+		"Сколько хотите приобрести?", cost_influence);
 	if(!n)
 		return;
 	add_command_tokens(n);
@@ -424,12 +419,11 @@ void playeri::build_units(int value) {
 }
 
 uniti* playeri::choose(army& source, const char* format) const {
+	string sb;
 	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
-	if(!ai)
-		return 0;
-	return (uniti*)ai.choose(format, this);
+	return (uniti*)choose(sb, ai, false, format);
 }
 
 static void refresh_players() {
@@ -504,15 +498,13 @@ void playeri::tactical_action() {
 }
 
 static action_s choose_action(playeri* p) {
-	string sb;
-	answeri ai;
-	sb.add("Что вы предпочитаете делать в свой ход?");
+	string sb; answeri ai;
 	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
 		if(!p->is(a) || !p->isallow(AsAction, a))
 			continue;
 		ai.add(a, getstr(a), getstr(p->strategy));
 	}
-	return (action_s)ai.choose(sb, p);
+	return (action_s)p->choose(sb, ai, false, "Что вы предпочитаете делать в свой ход?");
 }
 
 static void play_action(playeri* p, action_s id) {
@@ -609,8 +601,8 @@ void playeri::select(army& result, unsigned flags) const {
 
 void playeri::message(const char* text) {
 	answeri ai;
-	ai.add(0, "Принять");
-	ai.choosev(false, 0, id, text);
+	ai.add(1, "Принять");
+	ai.choose(false, false, 0, id, text);
 }
 
 void playeri::pay(int cost) {
@@ -619,7 +611,6 @@ void playeri::pay(int cost) {
 
 void playeri::choose_speaker(int exclude) {
 	string sb;
-	sb.add("Вам необходимо назначить нового спикера. Старого спискера выбирать нельзя. Кто это будет?");
 	answeri ai;
 	for(auto& e : bsmeta<playeri>()) {
 		if(!e)
@@ -628,5 +619,23 @@ void playeri::choose_speaker(int exclude) {
 			continue;
 		ai.add((int)&e, e.getname());
 	}
-	speaker = (playeri*)ai.choosev(false, 0, id, sb);
+	speaker = (playeri*)choose(sb, ai, false, "Вам необходимо назначить нового спикера. Старого спикера выбирать нельзя. Кто это будет?");
+	sb.add("Новым спикером в парламенте становятся [%1].", speaker->getname());
+	apply(sb);
+}
+
+int playeri::choose(string& sb, answeri& ai, bool cancel, const char* format, ...) const {
+	auto p = sb.get();
+	//sb.adds("[+");
+	sb.addx(' ', format, xva_start(format));
+	//sb.add("]");
+	auto r = ai.choose(cancel, iscomputer(), 0, id, sb);
+	sb.set(p);
+	return r;
+}
+
+void playeri::apply(string& sb) {
+	answeri ai;
+	ai.add(1, "Принять");
+	ai.choose(false, false, 0, id, sb);
 }

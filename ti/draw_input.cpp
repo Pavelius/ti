@@ -1032,8 +1032,12 @@ static int render_report(int x, int y, const char* picture, const char* format) 
 	return y - y0;
 }
 
-int	answeri::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
+int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, const char* picture, const char* format) const {
 	int x, y;
+	if(!elements)
+		return 0;
+	if(random_choose)
+		return elements[rand() % elements.getcount()].param;
 	if(cancel_button && !elements)
 		return 0;
 	while(ismodal()) {

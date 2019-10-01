@@ -28,14 +28,3 @@ void answeri::addv(int param, const char* format, const char* format_param) {
 void answeri::add(int param, const char* format, ...) {
 	addv(param, format, xva_start(format));
 }
-
-int	answeri::choose(const char* format, const playeri* player, bool cancel_button) const {
-	if(player!=playeri::gethuman()) {
-		if(elements.getcount()==0)
-			return 0;
-		return elements.data[rand() % elements.getcount()].param;
-	}
-	if(!player)
-		return 0;
-	return choosev(cancel_button, 0, player->id, format);
-}

@@ -102,7 +102,8 @@ actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"Strategy", "стратегии", 0, NoPlay, ""},
 {"Fleet", "флота", 0, NoPlay, ""},
 {"Command", "тактики", 0, NoPlay, ""},
-{"Goods", "товары", 0, NoPlay, ""},
+{"Commodities", "Продукция", 0, NoPlay, ""},
+{"Goods", "Товары", 0, NoPlay, ""},
 };
 assert_enum(action, LastAction);
 deck<action_s>	action_deck;
