@@ -117,7 +117,7 @@ int planeti::get(const playeri* player, int(planeti::*getproc)() const) {
 
 void planeti::refresh() {
 	for(auto& e : bsmeta<planeti>())
-		e.activate_flags = 0;
+		e.deactivate();
 }
 
 void planeti::initialize() {
@@ -224,9 +224,9 @@ bool uniti::isplanet() const {
 		&& this < (bsmeta<planeti>::elements + bsmeta<planeti>::count);
 }
 
-planeti* uniti::getplanet() {
+planeti* uniti::getplanet() const {
 	if(isplanet())
-		static_cast<planeti*>(this);
+		return (planeti*)this;
 	return 0;
 }
 
@@ -380,6 +380,18 @@ planeti* planeti::find(const uniti* parent, int index) {
 			if(--index == 0)
 				return &e;
 		}
+	}
+	return 0;
+}
+
+uniti* planeti::find(group_s group) const {
+	for(auto& e : bsmeta<uniti>()) {
+		if(!e)
+			continue;
+		if(e.type != group)
+			continue;
+		if(e.getplayer() == getplayer())
+			return &e;
 	}
 	return 0;
 }

@@ -17,7 +17,7 @@ groupi bsmeta<groupi>::elements[] = {{""},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
 };
 assert_enum(group, WarSun);
-DECLBASE(uniti, 32*6);
+DECLBASE(uniti, 32 * 6);
 
 unsigned select(uniti** result, uniti** result_max, const uniti* location, const playeri* player, bool (uniti::*test)() const) {
 	auto p = result;
@@ -71,23 +71,35 @@ const char* uniti::getname() const {
 	return bsmeta<groupi>::elements[type].name;
 }
 
+bool uniti::is(tech_s v) const {
+	if(!player)
+		return false;
+	return player.getplayer()->is(v);
+}
+
+bool uniti::is(bonus_s v) const {
+	if(!player)
+		return false;
+	return player.getplayer()->is(v);
+}
+
 int uniti::getmovement() const {
 	auto result = getgroup().movements;
 	switch(type) {
 	case Carrier:
-		if(player->is(XRDTransporters))
+		if(is(XRDTransporters))
 			result++;
 		break;
 	case Cruiser:
-		if(player->is(TypeIVDrive))
+		if(is(TypeIVDrive))
 			result++;
 		break;
 	case Dreadnought:
-		if(player->is(TypeIVDrive))
+		if(is(TypeIVDrive))
 			result++;
 		break;
 	case Fighters:
-		if(player->is(AdvancedFighters))
+		if(is(AdvancedFighters))
 			result = 2;
 		break;
 	}
@@ -98,17 +110,10 @@ int	uniti::getresource() const {
 	auto result = getgroup().cost;
 	switch(type) {
 	case Dreadnought:
-		if(player->is(BonusCostDreadnought))
+		if(is(BonusCostDreadnought))
 			result--;
 		break;
 	}
-	return result;
-}
-
-uniti* uniti::get(group_s parent_type) {
-	auto result = this;
-	while(result && result->type != parent_type)
-		result = result->parent;
 	return result;
 }
 
@@ -122,7 +127,7 @@ int	uniti::getproduce() const {
 	auto result = getproduce(type);
 	if(!result)
 		return 0;
-	auto planet = parent->getplanet();
+	auto planet = parent.getplanet();
 	if(planet)
 		result += planet->getresource();
 	return result;
@@ -148,45 +153,43 @@ int uniti::getmaxhits() const {
 
 weaponi uniti::getweapon() const {
 	auto w = getgroup().combat;
-	if(player) {
-		if(player->is(CombatBonusAll))
+	if(is(CombatBonusAll))
+		w.bonus++;
+	if(is(CombatPenalty))
+		w.bonus--;
+	if(type == Dreadnought && is(CombatBonusDreadnought))
+		w.bonus++;
+	if(type == Fighters && is(CombatBonusFighters))
+		w.bonus++;
+	switch(type) {
+	case Fighters:
+		if(is(Cybernetics))
 			w.bonus++;
-		if(player->is(CombatPenalty))
-			w.bonus--;
-		if(type == Dreadnought && player->is(CombatBonusDreadnought))
+		if(is(AdvancedFighters))
 			w.bonus++;
-		if(type == Fighters && player->is(CombatBonusFighters))
+		break;
+	case GroundForces:
+		if(is(GenSynthesis))
 			w.bonus++;
-		switch(type) {
-		case Fighters:
-			if(player->is(Cybernetics))
-				w.bonus++;
-			if(player->is(AdvancedFighters))
-				w.bonus++;
-			break;
-		case GroundForces:
-			if(player->is(GenSynthesis))
-				w.bonus++;
-			break;
-		case Cruiser:
-		case Destroyer:
-			if(player->is(HylarVAssaultLaser))
-				w.bonus++;
-			break;
-		case PDS:
-			if(player->is(MagenDefenseGrid))
-				w.bonus++;
-			if(player->is(GravitonLaserSystem))
-				w.reroll++;
-			break;
-		}
+		break;
+	case Cruiser:
+	case Destroyer:
+		if(is(HylarVAssaultLaser))
+			w.bonus++;
+		break;
+	case PDS:
+		if(is(MagenDefenseGrid))
+			w.bonus++;
+		if(is(GravitonLaserSystem))
+			w.reroll++;
+		break;
 	}
 	return w;
 }
 
 weaponi uniti::getweapon(bool attacker, const playeri* opponent, char round) const {
 	auto w = getweapon();
-	if(type == GroundForces && attacker && player->is(CombatBonusGroundForcesAttack))
+	if(type == GroundForces && attacker && is(CombatBonusGroundForcesAttack))
 		w.bonus++;
 	if(attacker && round == 1 && opponent->is(CombatBonusDefend))
 		w.bonus--;
@@ -211,7 +214,7 @@ bool uniti::isinvaders() const {
 	case GroundForces:
 		return true;
 	case Fighters:
-		return player->is(GravitonNegator);
+		return is(GravitonNegator);
 	default:
 		return false;
 	}
@@ -252,7 +255,7 @@ int	uniti::getcapacity() const {
 		return 6;
 	case Dreadnought:
 	case Cruiser:
-		if(player->is(StasisCapsules))
+		if(is(StasisCapsules))
 			return 1;
 		return 0;
 	default:
@@ -264,7 +267,7 @@ group_s uniti::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
-		if(player->is(StasisCapsules))
+		if(is(StasisCapsules))
 			return GroundForces;
 		return NoUnit;
 	default:
@@ -303,9 +306,9 @@ int	uniti::getfightersupport() {
 			continue;
 		if(!e.parent)
 			continue;
-		if(e.type == SpaceDock && e.parent->parent != this)
+		if(e.parent.type == PlanetVar && e.parent.getplanet()->getsolar() != this)
 			continue;
-		else if(e.parent != this)
+		if(e.parent.type == Solar && e.parent.getsolar() != this)
 			continue;
 		auto capacity_count = e.getcapacity();
 		if(!capacity_count)
@@ -319,19 +322,19 @@ int	uniti::getfightersupport() {
 }
 
 bool uniti::build(group_s object, bool run) {
-	auto solar_system = get(SolarSystem);
+	auto solar_system = getsolar();
 	if(!solar_system)
 		return false;
 	auto produce_count = getproduction(object);
 	auto available_count = getavailable(object);
 	if(available_count) {
-		auto exist_count = getcount(object, player);
+		auto exist_count = getcount(object, player.getplayer());
 		if(exist_count + produce_count > available_count)
 			produce_count = available_count - exist_count;
 	}
 	if(produce_count <= 0)
 		return false;
-	auto build_base = get(Planet);
+	uniti* build_base = getplanet();
 	if(!build_base)
 		return false;
 	switch(object) {
@@ -346,9 +349,9 @@ bool uniti::build(group_s object, bool run) {
 	}
 	if(build_base->player != player)
 		return false;
-	if(object==Fighters && !player->is(AdvancedFighters)) {
+	if(object == Fighters && !is(AdvancedFighters)) {
 		auto available_count = solar_system->getfightersupport();
-		auto exist_count = getcount(object, player, solar_system);
+		auto exist_count = getcount(object, player.getplayer(), solar_system);
 		if(exist_count + produce_count > available_count)
 			produce_count = available_count - exist_count;
 	}
@@ -365,15 +368,17 @@ bool uniti::build(group_s object, bool run) {
 }
 
 bool uniti::in(const uniti* object) const {
-	for(auto p = this; p; p = p->parent) {
-		if(p == object)
-			return true;
-	}
+	auto planet = getplanet();
+	if((uniti*)planet == object)
+		return true;
+	auto solar = getsolar();
+	if((uniti*)solar == object)
+		return true;
 	return false;
 }
 
 int uniti::getweight() const {
-	auto result = getresource()*2;
+	auto result = getresource() * 2;
 	auto build_count = getproduction(type);
 	if(build_count)
 		result = result / build_count;
@@ -394,7 +399,7 @@ int	uniti::getfleet(const playeri* player, const uniti* solar) {
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.parent != solar)
+		if(e.getsolar() != solar)
 			continue;
 		if(!e.isfleet())
 			continue;
@@ -415,30 +420,21 @@ int	uniti::getfleet(const playeri* player) {
 	return result;
 }
 
-unsigned uniti::select(uniti** result, uniti* const* result_max, uniti* parent) {
-	auto p = result;
-	for(auto& e : bsmeta<uniti>()) {
-		if(e.parent != parent)
-			continue;
-		if(p < result_max)
-			*p++ = &e;
-	}
-	return p - result;
-}
+//unsigned uniti::select(uniti** result, uniti* const* result_max, uniti* parent) {
+//	auto p = result;
+//	for(auto& e : bsmeta<uniti>()) {
+//		if(e.parent != parent)
+//			continue;
+//		if(p < result_max)
+//			*p++ = &e;
+//	}
+//	return p - result;
+//}
 
 solari* uniti::getsolar() const {
-	switch(type) {
-	case Planet:
-	case Fighters:
-	case Carrier:
-	case Cruiser:
-	case Destroyer:
-	case Dreadnought:
-	case WarSun:
-		return static_cast<solari*>(parent);
-	default:
-		return 0;
-	}
+	if(parent.type == Solar)
+		return parent.getsolar();
+	return 0;
 }
 
 void uniti::update_control() {
@@ -469,15 +465,11 @@ uniti* uniti::get(target_s v) const {
 	case TargetSystem:
 		if(issolar())
 			return const_cast<uniti*>(this);
-		else if(isplanet())
-			return const_cast<uniti*>(parent);
-		return parent->get(v);
+		return (uniti*)getsolar();
 	case TargetPlanet:
-		if(issolar())
-			return 0;
 		if(isplanet())
 			return const_cast<uniti*>(this);
-		return parent->get(v);
+		return (uniti*)getplanet();
 	default:
 		if(issolar() || isplanet())
 			return 0;
@@ -485,18 +477,18 @@ uniti* uniti::get(target_s v) const {
 	}
 }
 
-uniti* uniti::find(group_s v, const playeri* player) const {
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.parent != this)
-			continue;
-		if(player && e.player != player)
-			continue;
-		return &e;
-	}
-	return 0;
-}
+//uniti* uniti::find(group_s v, const playeri* player) const {
+//	for(auto& e : bsmeta<uniti>()) {
+//		if(!e)
+//			continue;
+//		if(e.parent != this)
+//			continue;
+//		if(player && e.player != player)
+//			continue;
+//		return &e;
+//	}
+//	return 0;
+//}
 
 bool uniti::isactivated(const playeri* player) const {
 	if(!player)
@@ -505,21 +497,28 @@ bool uniti::isactivated(const playeri* player) const {
 }
 
 void uniti::activate() {
-	activate_flags = 0xFFFFFFFF;
+	activate_flags = 0xFF;
+}
+
+void uniti::deactivate() {
+	activate_flags = 0;
 }
 
 void uniti::activate(const playeri* player, bool setvalue) {
 	if(!player)
 		return;
+	variant v = player;
 	if(setvalue)
-		activate_flags |= 1 << (player->getid());
+		activate_flags |= 1 << v.value;
 	else
-		activate_flags &= ~(1 << (player->getid()));
+		activate_flags &= ~(1 << v.value);
 	player->slide(this);
 }
 
 playeri* uniti::getplayer() const {
-	return player;
+	if(player.type == Player)
+		return player.getplayer();
+	return 0;
 }
 
 void uniti::setplayer(const playeri* v) {
@@ -527,9 +526,9 @@ void uniti::setplayer(const playeri* v) {
 }
 
 void uniti::setplanet(const planeti* v) {
-	parent = (uniti*)v;
+	parent = const_cast<planeti*>(v);
 }
 
 void uniti::setsolar(const solari* v) {
-	parent = (uniti*)v;
+	parent = const_cast<solari*>(v);
 }

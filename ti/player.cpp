@@ -327,34 +327,47 @@ playeri* playeri::choose_opponent(const char* text) {
 }
 
 void playeri::add_action_cards(int value) {
+	string sb;
+	sb.add("%1 получили [%2i] карт действий.", getyouname(), value);
+	auto show_card = true;
 	for(auto i = 0; i < value; i++) {
 		auto a = action_deck.draw();
 		add(a, 1);
+		if(!iscomputer()) {
+			if(show_card) {
+				sb.adds("Ёто");
+				show_card = false;
+			} else
+				sb.adds(",");
+			sb.adds(getstr(a));
+		}
 	}
-	string sb;
-	sb.add("%1 получили [%2i] карт действий.", getyouname(), value);
-	report(sb);
+	if(!iscomputer())
+		sb.add(".");
+	message(sb);
 }
 
 void playeri::add_command_tokens(int value) {
 	static action_s command_area[] = {Strategy, Command, Fleet};
-	while(value > 0) {
+	for(auto i = 1; i <= value; i++) {
 		string sb;
 		answeri ai;
-		sb.add("%1 получили %2i командных очков.", getyouname(), value);
-		sb.adds("–аспределите [%1i] очко.", value);
+		sb.add("%1 получили %2i командных жетонов.", getyouname(), value);
+		if(value==1)
+			sb.adds(" уда хотите его распределить?");
+		else
+			sb.adds(" уда хотите распределить %1i из %2i жетон?", i, value);
 		ai.clear();
 		for(auto e : command_area)
 			ai.add(e, "∆етон %1", getstr(e));
 		auto a = (action_s)ai.choose(sb, this);
 		add(a, 1);
-		value--;
 	}
 }
 
 void playeri::buy_technology(int cost_resources) {
 	string sb; answeri ai;
-	sb.add("≈сли хотите, можете приобрести за [%1i] очка ресурсов.", cost_resources);
+	sb.add("≈сли хотите, можете приобрести технологию за [%1i] очка ресурсов.", cost_resources);
 	ai.clear();
 	auto counter = 1;
 	auto total = getresources();
@@ -368,12 +381,14 @@ void playeri::buy_technology(int cost_resources) {
 
 void playeri::buy_command_tokens(int cost_influence) {
 	string sb; answeri ai;
-	sb.add("≈сли хотите, можете приобрести жетоны команд за [%1i] очка вли€ни€.", cost_influence);
+	sb.add("≈сли хотите, можете приобрести жетоны команд за [%1i] очка вли€ни€. —колько хотите приобрести?", cost_influence);
 	ai.clear();
 	auto total = getinfluences();
 	auto counter = 1;
-	while(total > counter*cost_influence)
-		ai.add(counter, "ѕриобрести [%1i] жетона за [%2] вли€ни€", counter++);
+	while(total > counter*cost_influence) {
+		ai.add(counter, "%1i жетона за %2i вли€ни€", counter, counter*cost_influence);
+		counter++;
+	}
 	auto n = ai.choose(sb, this, true);
 	if(!n)
 		return;
@@ -396,7 +411,7 @@ void playeri::build_units(int value) {
 	if(!planet)
 		return;
 	auto solar = static_cast<solari*>(planet->get(TargetSystem));
-	auto dock = planet->find(SpaceDock, this);
+	auto dock = planet->find(SpaceDock);
 	auto dock_produce = 0;
 	if(dock)
 		dock_produce = dock->getproduce();
@@ -434,24 +449,21 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 	case Diplomacy:
 		break;
 	case Politics:
-		p->add_action_cards(3);
-		p->add_command_tokens(1);
-		p->draw_political_card(1);
-		p->predict_next_political_card(3);
+		p->choose_speaker(1);
+		p->add_action_cards(2);
+		p->predict_next_political_card(2);
 		break;
 	case Trade:
-		if(p->choose_trade()) {
-			p->add_trade_goods(3);
-			p->add_profit_for_trade_agreements();
-			p->open_trade_negatiation();
-		} else
-			p->cancel_all_trade_agreements();
+		p->add_trade_goods(3);
+		p->add_profit_for_trade_agreements();
+		p->open_trade_negatiation();
 		break;
 	case Warfare:
 		p->return_command_from_board(1);
 		break;
 	case Technology:
 		p->add_technology(1);
+		p->buy_technology(6);
 		break;
 	case Imperial:
 		p->add_objective(1);
@@ -463,7 +475,7 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
-		p->add_command_tokens(1);
+		p->buy_command_tokens(3);
 		break;
 	case Diplomacy:
 		p->refresh_planets(1);
@@ -477,6 +489,7 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	case Warfare:
 		break;
 	case Technology:
+		p->buy_technology(4);
 		break;
 	case Imperial:
 		p->build_units(1);
@@ -598,4 +611,22 @@ void playeri::message(const char* text) {
 	answeri ai;
 	ai.add(0, "ѕрин€ть");
 	ai.choosev(false, 0, id, text);
+}
+
+void playeri::pay(int cost) {
+
+}
+
+void playeri::choose_speaker(int exclude) {
+	string sb;
+	sb.add("¬ам необходимо назначить нового спикера. —тарого спискера выбирать нельз€.  то это будет?");
+	answeri ai;
+	for(auto& e : bsmeta<playeri>()) {
+		if(!e)
+			continue;
+		if(&e == speaker)
+			continue;
+		ai.add((int)&e, e.getname());
+	}
+	speaker = (playeri*)ai.choosev(false, 0, id, sb);
 }

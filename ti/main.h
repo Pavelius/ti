@@ -94,10 +94,10 @@ struct variant {
 	union {
 		group_s					group;
 		tech_s					tech;
-		short unsigned			value;
+		unsigned char			value;
 	};
 	constexpr variant() : type(NoVariant), value(0) {}
-	constexpr variant(variant_s t, short unsigned v) : type(t), value(v) {}
+	constexpr variant(variant_s t, decltype(value) v) : type(t), value(v) {}
 	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
 	constexpr variant(group_s v) : type(Group), group(v) {}
 	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsmeta<T>::elements : 0) {}
@@ -106,6 +106,7 @@ struct variant {
 	constexpr variant(const solari* v) : variant(Solar, v) {}
 	constexpr variant(const uniti* v) : variant(Unit, v) {}
 	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
+	constexpr operator bool() const { return type!=NoVariant; }
 	void						clear() { type = NoVariant; value = 0; }
 	template<class T> constexpr T* get() const { return &bsmeta<T>::elements[value]; }
 	constexpr planeti*			getplanet() const { return get<planeti>(); }
@@ -193,6 +194,7 @@ struct playeri : namei, costi {
 	void						add_objective(int value) {}
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
+	void						choose_speaker(int exclude);
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						buy_command_tokens(int cost_influences);
@@ -239,6 +241,7 @@ struct playeri : namei, costi {
 	void						message(const char* text);
 	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
+	void						pay(int cost);
 	void						predict_next_political_card(int value) {}
 	void						refresh_planets(int value) {}
 	static action_s				report(const string& sb);
@@ -256,14 +259,14 @@ private:
 	cflags<bonus_s>				bonuses;
 };
 class uniti {
-	playeri*					player;
-	uniti*						parent;
-protected:
-	unsigned					activate_flags;
+	variant						player;
+	variant						parent;
+	unsigned char				activate_flags;
 public:
 	group_s						type;
-	constexpr uniti() : type(NoUnit), player(0), parent(0), activate_flags(0) {}
-	constexpr uniti(group_s type) : type(type), player(0), parent(0), activate_flags(0) {}
+	constexpr uniti() : type(NoUnit), player(), parent(), activate_flags(0) {}
+	constexpr uniti(group_s type) : type(type), player(), parent(), activate_flags(0) {}
+	constexpr uniti(group_s type, variant parent) : type(type), player(), parent(parent), activate_flags(0) {}
 	explicit operator bool() const { return type != NoUnit; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
@@ -272,8 +275,7 @@ public:
 	void						activate(const playeri* player, bool setvalue = true);
 	bool						build(group_s object, bool run);
 	void						destroy();
-	uniti*						find(group_s v, const playeri* player) const;
-	uniti*						get(group_s parent_type);
+	void						deactivate();
 	uniti*						get(target_s v) const;
 	static int					getavailable(group_s type);
 	int							getcapacity() const;
@@ -295,7 +297,7 @@ public:
 	static int					getproduction(group_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
-	planeti*					getplanet();
+	planeti*					getplanet() const;
 	int							getproduce() const;
 	static int					getproduce(group_s type);
 	const char*					getsolarname() const;
@@ -310,6 +312,8 @@ public:
 	static short unsigned		gmi(int x, int y) { return y * map_scan_line + x; }
 	static short unsigned		gmx(short unsigned index) { return index % map_scan_line; }
 	static short unsigned		gmy(short unsigned index) { return index / map_scan_line; }
+	bool						is(bonus_s v) const;
+	bool						is(tech_s v) const;
 	bool						isactivated(const playeri* player) const;
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
@@ -320,7 +324,6 @@ public:
 	static bool					isplanetary(group_s type);
 	bool						isunit() const;
 	bool						in(const uniti* parent) const;
-	static unsigned				select(uniti** result, uniti* const* result_max, uniti* parent);
 	void						setplanet(const planeti* v);
 	void						setplayer(const playeri* v);
 	void						setsolar(const solari* v);
@@ -336,7 +339,7 @@ struct planeti : uniti {
 	wormhole_s					wormhole;
 	char						resource;
 	char						influence;
-	char						index;
+	unsigned char				index;
 	constexpr planeti(const char* name, char planet_parent, char resource, char influence, char index,
 		tech_color_s tech_color, wormhole_s wormhole = NoHole) : uniti(Planet),
 		name(name), home(0), solar(planet_parent),
@@ -350,8 +353,8 @@ struct planeti : uniti {
 		wormhole(NoHole) {}
 	static void					create_stars();
 	static void					initialize();
-	uniti*						find(group_s v, const playeri* player) const { return uniti::find(v, player); }
 	static planeti*				find(const uniti* parent, int index);
+	uniti*						find(group_s group) const;
 	uniti*						get(target_s v) const { return uniti::get(v); }
 	static int					get(const playeri* player, int(planeti::*getproc)() const);
 	const char*					getname() const { return name; }

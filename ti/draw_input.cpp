@@ -853,7 +853,13 @@ static void draw_units(int x, int y, uniti* parent, bool ground) {
 	auto c1 = player_colors[player_index][0];
 	auto c2 = player_colors[player_index][1];
 	adat<uniti*, 32> source;
-	source.count = uniti::select(source.begin(), source.endof(), parent);
+	for(auto& e : bsmeta<uniti>()) {
+		if(!e)
+			continue;
+		if(e.getsolar() != parent)
+			continue;
+		source.add(&e);
+	}
 	if(!source) {
 		if(ground) {
 			circlef(x, y, unit_size, c1, 128);
@@ -1044,7 +1050,7 @@ int	answeri::choosev(bool cancel_button, tips_proc tips, const char* picture, co
 				execute(breakparam, e.param);
 		}
 		if(cancel_button)
-			y += windowb(x, y, gui.right_width, "cancel", buttoncancel, false, 0, KeyEscape);
+			y += windowb(x, y, gui.right_width, "Отмена", buttoncancel, false, 0, KeyEscape);
 		domodal();
 		control_standart();
 	}
