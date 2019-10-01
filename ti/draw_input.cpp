@@ -15,7 +15,7 @@ enum ui_command_s {
 	NoUICommand, ChooseLeft, ChooseRight, ChooseList,
 };
 struct cmdid {
-	callback_proc		proc;
+	callback		proc;
 	int					param;
 	void clear() { memset(this, 0, sizeof(*this)); }
 };
@@ -65,7 +65,7 @@ struct piclib : arem<pair<const char*, surface>> {
 		}
 		return 0;
 	}
-	surface& get(const char* key, const char* folder, int width = 0, int height = 0) {
+	surface& get(const char* key, const char* folder, int width, int height) {
 		auto p = find(key);
 		if(!p) {
 			char temp[260]; zprint(temp, "art/%1/%2.bmp", folder, key);
@@ -424,19 +424,30 @@ static int window(int x, int y, int width_picture, int width_text, const char* p
 	return height + gui.border * 2;
 }
 
-static int windowb(int x, int y, int width, const char* string, const runable& e, int border = 0, unsigned key = 0, const char* tips = 0) {
+static int windowb(int x, int y, int width, const char* string, bool& result, bool disabled, int border = 0, unsigned key = 0, const char* tips = 0) {
 	draw::state push;
 	draw::font = metrics::font;
 	rect rc = {x, y, x + width, y + draw::texth()};
-	auto ra = window(rc, e.isdisabled(), true, border);
+	auto ra = window(rc, disabled, true, border);
 	draw::text(rc, string, AlignCenterCenter);
 	if((ra == AreaHilited || ra == AreaHilitedPressed) && tips)
 		tooltips(x, y, rc.width(), tips);
-	if(!e.isdisabled()
-		&& ((ra == AreaHilitedPressed && hot.key == MouseLeft)
-			|| (key && key == hot.key)))
-		e.execute();
+	result = false;
+	if(!disabled) {
+		if(ra == AreaHilitedPressed && hot.key == MouseLeft)
+			result = true;
+		if(key && key == hot.key)
+			result = true;
+	}
 	return rc.height() + gui.border * 2;
+}
+
+static int windowb(int x, int y, int width, const char* string, callback proc, bool disabled, int border = 0, unsigned key = 0, const char* tips = 0) {
+	auto result = false;
+	auto h = windowb(x, y, width, string, result, disabled, border, key, tips);
+	if(result)
+		execute(proc);
+	return result;
 }
 
 static point getscreen(const rect& rc, point pt) {
@@ -496,7 +507,7 @@ void control_standart() {
 
 static void draw_icon(int& x, int& y, int x0, int x2, int* max_width, int& w, const char* id) {
 	static piclib source;
-	auto& e = source.get(id, "icons");
+	auto& e = source.get(id, "icons", 0, 0);
 	auto dy = draw::texth();
 	w = e.width;
 	if(x + w > x2) {
@@ -1017,6 +1028,8 @@ static int render_report(int x, int y, const char* picture, const char* format) 
 
 int	answeri::choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const {
 	int x, y;
+	if(cancel_button && !elements)
+		return 0;
 	while(ismodal()) {
 		render_board();
 		render_left();
@@ -1024,10 +1037,14 @@ int	answeri::choosev(bool cancel_button, tips_proc tips, const char* picture, co
 		y = gui.border * 2;
 		y += render_report(x, y, picture, format);
 		x = getwidth() - gui.right_width - gui.border * 2;
-		for(auto& e : elements)
-			y += windowb(x, y, gui.right_width, e.getname(), cmd(breakparam, e.param));
+		for(auto& e : elements) {
+			bool run;
+			y += windowb(x, y, gui.right_width, e.getname(), run, false);
+			if(run)
+				execute(breakparam, e.param);
+		}
 		if(cancel_button)
-			y += windowb(x, y, gui.right_width, "cancel", cmd(buttoncancel), 0, KeyEscape);
+			y += windowb(x, y, gui.right_width, "cancel", buttoncancel, false, 0, KeyEscape);
 		domodal();
 		control_standart();
 	}
@@ -1263,9 +1280,9 @@ bool playeri::build(army& units, const planeti* planet, solari* system, int reso
 		u1.view(rc);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
-		y += windowb(x, y, gui.right_width, "Построить", cmd(buttonok), 0, KeyEnter);
+		y += windowb(x, y, gui.right_width, "Построить", buttonok, false, 0, KeyEnter);
 		if(cancel_button)
-			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
+			y += windowb(x, y, gui.right_width, "Отмена", buttoncancel, false, 0, KeyEscape);
 		domodal();
 		control_standart();
 	}
@@ -1302,9 +1319,9 @@ bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button,
 		u2.view(rc2);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
-		y += windowb(x, y, gui.right_width, action, cmd(buttonok), 0, KeyEnter);
+		y += windowb(x, y, gui.right_width, action, buttonok, false, 0, KeyEnter);
 		if(cancel_button)
-			y += windowb(x, y, gui.right_width, "Отмена", cmd(buttoncancel), 0, KeyEscape);
+			y += windowb(x, y, gui.right_width, "Отмена", buttoncancel, false, 0, KeyEscape);
 		domodal();
 		control_standart();
 		if(u1.choosed) {

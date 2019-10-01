@@ -142,7 +142,7 @@ extern int				padding;
 extern int				scroll;
 }
 namespace draw {
-typedef void(*callback_proc)();
+typedef void(*callback)();
 namespace dialog {
 bool					color(struct color& result, struct color* custom = 0);
 bool					folder(const char* title, char* path);

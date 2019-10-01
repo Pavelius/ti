@@ -120,7 +120,6 @@
   <ItemGroup>
     <ClInclude Include="bstream.h" />
     <ClInclude Include="color.h" />
-    <ClInclude Include="converter.h" />
     <ClInclude Include="crt.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="draw_control.h" />
@@ -137,11 +136,9 @@
     <ClCompile Include="answer.cpp" />
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="crt.cpp" />
-    <ClCompile Include="png.cpp" />
     <ClCompile Include="army.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="color.cpp" />
-    <ClCompile Include="converter.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
     <ClCompile Include="draw_control.cpp" />
@@ -167,7 +164,6 @@
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />
     <ClCompile Include="win_io_file.cpp" />
-    <ClCompile Include="zip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="images.xml">

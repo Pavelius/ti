@@ -14,23 +14,6 @@ enum column_type_s {
 	Text = 0x00000, Number = 0x10000,
 	ControlMask = 0xF0000
 };
-struct runable {
-	virtual void			execute() const = 0;
-	virtual int				getid() const = 0;
-	virtual bool			isdisabled() const = 0;
-};
-struct cmd : runable {
-	constexpr cmd() : proc(0), param(0), disabled(false) {}
-	constexpr cmd(callback_proc proc, int param = 0, bool disabled = false) : proc(proc), param(param), disabled(disabled) {}
-	explicit operator bool() const { return proc != 0; }
-	void					execute() const override { draw::execute(proc, param); }
-	int						getid() const override { return (int)proc; }
-	bool					isdisabled() const { return disabled; }
-private:
-	callback_proc			proc;
-	int						param;
-	bool					disabled;
-};
 namespace controls {
 struct control {
 	bool					show_border;

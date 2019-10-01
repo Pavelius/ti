@@ -188,7 +188,6 @@ struct playeri : namei, costi {
 	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
-	void						add_peace_pact(int value);
 	void						add_trade_goods(int value) {}
 	void						add_technology(int value) {}
 	void						add_objective(int value) {}
@@ -196,6 +195,8 @@ struct playeri : namei, costi {
 	void						add_victory_points(int value) {}
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
+	void						buy_command_tokens(int cost_influences);
+	void						buy_technology(int cost_resources);
 	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
@@ -218,7 +219,6 @@ struct playeri : namei, costi {
 	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
-	void						moveships(solari* solar);
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
 	static playeri*				getactive();
@@ -229,13 +229,15 @@ struct playeri : namei, costi {
 	void						getinfo(string& sb) const;
 	int							getinitiative() const;
 	static int					getinitiative(strategy_s value);
+	int							getinfluences() const;
 	uniti*						gethomesystem() const;
 	const char*					getname() const;
-	int							getresource() const;
+	int							getresources() const;
 	static playeri*				getspeaker();
 	const char*					getyouname() const;
-	static void					make_move();
+	static void					make_move(bool strategic, bool action);
 	void						message(const char* text);
+	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
 	void						predict_next_political_card(int value) {}
 	void						refresh_planets(int value) {}
@@ -397,7 +399,7 @@ public:
 	answeri();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
-	int							choose(const char* format, const playeri* player) const;
+	int							choose(const char* format, const playeri* player, bool cancel_button = false) const;
 	int							choosev(bool cancel_button, tips_proc tips, const char* picture, const char* format) const;
 	static int					compare(const void* p1, const void* p2);
 	void						sort();

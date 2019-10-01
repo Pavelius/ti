@@ -19,9 +19,6 @@
     <ClInclude Include="bstream.h">
       <Filter>Коллекция</Filter>
     </ClInclude>
-    <ClInclude Include="converter.h">
-      <Filter>Поддержка</Filter>
-    </ClInclude>
     <ClInclude Include="win.h">
       <Filter>Платформа\win</Filter>
     </ClInclude>
@@ -87,9 +84,6 @@
     <ClCompile Include="bstream.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
-    <ClCompile Include="converter.cpp">
-      <Filter>Поддержка</Filter>
-    </ClCompile>
     <ClCompile Include="win_draw.cpp">
       <Filter>Платформа\win</Filter>
     </ClCompile>
@@ -122,12 +116,6 @@
     </ClCompile>
     <ClCompile Include="answer.cpp">
       <Filter>Логика</Filter>
-    </ClCompile>
-    <ClCompile Include="png.cpp">
-      <Filter>Графика</Filter>
-    </ClCompile>
-    <ClCompile Include="zip.cpp">
-      <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="strategy.cpp">
       <Filter>Логика</Filter>

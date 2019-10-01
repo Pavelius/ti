@@ -73,7 +73,6 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 static playeri*		active_player;
 static playeri*		speaker;
 static playeri*		human_player;
-static playeri*		diplomacy_players[2];
 
 static int compare_planets(const void* p1, const void* p2) {
 	auto e1 = *((planeti**)p1);
@@ -109,9 +108,7 @@ bool playeri::iscomputer() const {
 }
 
 bool playeri::isally(const playeri* enemy) const {
-	return (this == enemy)
-		|| (diplomacy_players[0] == this && diplomacy_players[1] == enemy)
-		|| (diplomacy_players[0] == enemy && diplomacy_players[1] == this);
+	return false;
 }
 
 bool playeri::isallow(group_s id) const {
@@ -231,6 +228,14 @@ int	playeri::get(action_s id) const {
 	return r;
 }
 
+int playeri::getinfluences() const {
+	return planeti::get(this, &planeti::getresource);
+}
+
+int	playeri::getresources() const {
+	return planeti::get(this, &planeti::getresource);
+}
+
 void playeri::getinfo(string& sb) const {
 	sb.add("###%1", getname());
 	if(strategy)
@@ -340,11 +345,39 @@ void playeri::add_command_tokens(int value) {
 		sb.adds("Распределите [%1i] очко.", value);
 		ai.clear();
 		for(auto e : command_area)
-			ai.add(e, "Очки %1", getstr(e));
+			ai.add(e, "Жетон %1", getstr(e));
 		auto a = (action_s)ai.choose(sb, this);
 		add(a, 1);
 		value--;
 	}
+}
+
+void playeri::buy_technology(int cost_resources) {
+	string sb; answeri ai;
+	sb.add("Если хотите, можете приобрести за [%1i] очка ресурсов.", cost_resources);
+	ai.clear();
+	auto counter = 1;
+	auto total = getresources();
+	if(total >= counter * cost_resources)
+		ai.add(counter, "Приобрести технологию за [%2i] ресурсов", counter*cost_resources);
+	auto n = ai.choose(sb, this, true);
+	if(!n)
+		return;
+	add_technology(1);
+}
+
+void playeri::buy_command_tokens(int cost_influence) {
+	string sb; answeri ai;
+	sb.add("Если хотите, можете приобрести жетоны команд за [%1i] очка влияния.", cost_influence);
+	ai.clear();
+	auto total = getinfluences();
+	auto counter = 1;
+	while(total > counter*cost_influence)
+		ai.add(counter, "Приобрести [%1i] жетона за [%2] влияния", counter++);
+	auto n = ai.choose(sb, this, true);
+	if(!n)
+		return;
+	add_command_tokens(n);
 }
 
 int	playeri::getfleet() const {
@@ -370,13 +403,9 @@ void playeri::build_units(int value) {
 	if(iscomputer()) {
 
 	} else {
-		if(build(result, planet, solar, getresource(), getfleet(), 0, dock_produce, true))
+		if(build(result, planet, solar, getresources(), getfleet(), 0, dock_produce, true))
 			uniti::update_control();
 	}
-}
-
-int	playeri::getresource() const {
-	return planeti::get(this, &planeti::getresource);
 }
 
 uniti* playeri::choose(army& source, const char* format) const {
@@ -389,23 +418,10 @@ uniti* playeri::choose(army& source, const char* format) const {
 }
 
 static void refresh_players() {
-	memset(diplomacy_players, 0, sizeof(diplomacy_players));
 	for(auto& e : bsmeta<playeri>()) {
-			e.set(StrategyAction, 1);
+		e.set(StrategyAction, 1);
 		e.set(TacticalAction, 1);
 		e.set(Pass, 1);
-	}
-}
-
-void playeri::add_peace_pact(int value) {
-	string sb;
-	sb.player = this;
-	sb.add("Выбирайте оппонента с которым вы будете в сознических отношениях до конца этого хода. Ни он не вы не сможете нападать друг на друга.");
-	diplomacy_players[0] = this;
-	diplomacy_players[1] = choose_opponent(sb);
-	if(iscomputer()) {
-		sb.add("%1 выбрали %2.", getname(), diplomacy_players[1]->getname());
-		report(sb);
 	}
 }
 
@@ -413,9 +429,9 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
 		p->add_command_tokens(3);
+		p->buy_command_tokens(3);
 		break;
 	case Diplomacy:
-		p->add_peace_pact(1);
 		break;
 	case Politics:
 		p->add_action_cards(3);
@@ -508,6 +524,7 @@ static void action_phase() {
 					continue;
 				if(e.getinitiative() != i)
 					continue;
+				e.activate();
 				auto a = choose_action(&e);
 				play_action(&e, a);
 				e.add(a, -1);
@@ -517,9 +534,11 @@ static void action_phase() {
 	}
 }
 
-void playeri::make_move() {
-	strategic_phase();
-	action_phase();
+void playeri::make_move(bool strategic, bool action) {
+	if(strategic)
+		strategic_phase();
+	if(action)
+		action_phase();
 }
 
 void playeri::slide(const uniti* p) {

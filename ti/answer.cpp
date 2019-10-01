@@ -29,7 +29,7 @@ void answeri::add(int param, const char* format, ...) {
 	addv(param, format, xva_start(format));
 }
 
-int	answeri::choose(const char* format, const playeri* player) const {
+int	answeri::choose(const char* format, const playeri* player, bool cancel_button) const {
 	if(player!=playeri::gethuman()) {
 		if(elements.getcount()==0)
 			return 0;
@@ -37,5 +37,5 @@ int	answeri::choose(const char* format, const playeri* player) const {
 	}
 	if(!player)
 		return 0;
-	return choosev(false, 0, player->id, format);
+	return choosev(cancel_button, 0, player->id, format);
 }
