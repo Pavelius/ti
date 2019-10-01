@@ -42,7 +42,8 @@ enum action_s : unsigned char {
 	NaaluFleetRetreat, SolOrbitalDrop, ExecutePrimaryAbility, ChangePoliticCard, LookActionCards,
 	//
 	StrategyAction, TacticalAction, Pass,
-	Strategy, Fleet, Command, Goods,
+	Strategy, Fleet, Command,
+	Commodities, Goods,
 	LastAction = Goods,
 };
 enum tech_s : unsigned char {
@@ -244,6 +245,7 @@ struct playeri : namei, costi {
 	void						pay(int cost);
 	void						predict_next_political_card(int value) {}
 	void						refresh_planets(int value) {}
+	void						replenish_commodities() {}
 	static action_s				report(const string& sb);
 	void						return_command_from_board(int value) {}
 	static void					slide(int x, int y);
