@@ -153,6 +153,7 @@
     <ClCompile Include="planet.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="solar.cpp" />
     <ClCompile Include="speech.cpp" />
     <ClCompile Include="strategy.cpp" />
     <ClCompile Include="string.cpp" />

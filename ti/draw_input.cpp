@@ -627,13 +627,21 @@ void draw::domodal() {
 		exit(0);
 }
 
-const int size2 = size - 4;
+const int size2 = size - 2;
 static const point hexagon_offset2[6] = {{(short)(size2 * cos_30), -(short)(size2 / 2)},
 {(short)(size2 * cos_30), (short)(size2 / 2)},
 {0, size2},
 {-(short)(size2 * cos_30), (short)(size2 / 2)},
 {-(short)(size2 * cos_30), -(short)(size2 / 2)},
 {0, -size2},
+};
+const int size3 = size - 4;
+static const point hexagon_offset3[6] = {{(short)(size3 * cos_30), -(short)(size3 / 2)},
+{(short)(size3 * cos_30), (short)(size3 / 2)},
+{0, size3},
+{-(short)(size3 * cos_30), (short)(size3 / 2)},
+{-(short)(size3 * cos_30), -(short)(size3 / 2)},
+{0, -size3},
 };
 static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size / 2)},
 {(short)(size * cos_30), (short)(size / 2)},
@@ -730,6 +738,12 @@ static void hexagon(point pt) {
 	for(auto i = 0; i < 5; i++)
 		draw::line(pt + hexagon_offset[i], pt + hexagon_offset[i + 1], colors::border);
 	draw::line(pt + hexagon_offset[5], pt + hexagon_offset[0], colors::border);
+}
+
+static void hexagon3(point pt) {
+	for(auto i = 0; i < 5; i++)
+		draw::line(pt + hexagon_offset3[i], pt + hexagon_offset3[i + 1], colors::special);
+	draw::line(pt + hexagon_offset3[5], pt + hexagon_offset3[0], colors::special);
 }
 
 static void trianglef(int x1, int y1, int dy, int dx, color c1) {
@@ -955,7 +969,7 @@ static int render_left() {
 	return y;
 }
 
-static void render_board(bool use_hilite_solar = false, bool show_movement = false) {
+static void render_board(bool use_hilite_solar = false, bool show_movement = false, const aref<solari*>& hilite = aref<solari*>()) {
 	last_board = {0, 0, getwidth(), getheight()};
 	rectf(last_board, colors::window);
 	area(last_board);
@@ -980,6 +994,10 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			}
 			if(hilited == p)
 				hexagon2(pt);
+			if(hilite) {
+				if(hilite.is(p))
+					hexagon3(pt);
+			}
 			if(p->type == SolarSystem) {
 				adat<planeti*, 3> source;
 				source.count = planeti::select(source.begin(), source.endof(), p);
@@ -1243,9 +1261,9 @@ void playeri::slide(int x, int y) {
 	camera.y = y1;
 }
 
-solari* playeri::choose_solar() const {
+solari* playeri::choose(const aref<solari*>& source) const {
 	while(ismodal()) {
-		render_board(true);
+		render_board(true, false, source);
 		render_left();
 		auto x = getwidth() - gui.window_width - gui.border * 2;
 		auto y = gui.border * 2;

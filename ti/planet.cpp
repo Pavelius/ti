@@ -372,11 +372,11 @@ void playeri::moveships(solari* solar) {
 		solar->setplayer(this);
 }
 
-planeti* planeti::find(const uniti* parent, int index) {
+planeti* planeti::find(const solari* parent, int index) {
 	if(!index)
 		return 0;
 	for(auto& e : bsmeta<planeti>()) {
-		if(e.getplanet() == parent) {
+		if(e.getsolar() == parent) {
 			if(--index == 0)
 				return &e;
 		}

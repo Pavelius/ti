@@ -91,6 +91,7 @@ class string;
 struct solari;
 class uniti;
 typedef adat<playeri*, 6> playera;
+typedef adat<solari*, 64> solara;
 struct variant {
 	variant_s					type;
 	union {
@@ -207,9 +208,10 @@ struct playeri : namei, costi {
 	uniti*						choose(army& source, const char* format) const;
 	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
+	solari*						choose(const aref<solari*>& source) const;
+	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
-	solari*						choose_solar() const;
 	bool						choose_trade() const { return true; }
 	playeri&					create(const char* id);
 	uniti*						create(group_s id, solari* solar);
@@ -334,6 +336,9 @@ public:
 	static void					update_control();
 };
 struct solari : uniti {
+	const char*					getname() const;
+	bool						ismekatol() const;
+	static void					select(solara& result, const playeri* player, bool include_mekatol_rex);
 };
 struct planeti : uniti {
 	const char*					name;
@@ -357,7 +362,7 @@ struct planeti : uniti {
 		wormhole(NoHole) {}
 	static void					create_stars();
 	static void					initialize();
-	static planeti*				find(const uniti* parent, int index);
+	static planeti*				find(const solari* parent, int index);
 	uniti*						find(group_s group) const;
 	uniti*						get(target_s v) const { return uniti::get(v); }
 	static int					get(const playeri* player, int(planeti::*getproc)() const);

@@ -120,6 +120,7 @@ struct aref {
 	constexpr aref() : count(0), data(0) {}
 	constexpr aref(T& data) : data(&data), count(1) {}
 	template<unsigned N> constexpr aref(T(&data)[N]) : data(data), count(N) {}
+	template<unsigned N> constexpr aref(adat<T,N>& e) : data(e.data), count(e.count) {}
 	constexpr T& operator[](unsigned index) { return data[index]; }
 	constexpr const T& operator[](unsigned index) const { return data[index]; }
 	constexpr explicit operator bool() const { return count != 0; }

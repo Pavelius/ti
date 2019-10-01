@@ -320,7 +320,7 @@ playeri* playeri::choose_opponent(const char* text) {
 
 void playeri::add_action_cards(int value) {
 	string sb;
-	sb.add("%1 получили [%2i] карт действий.", getyouname(), value);
+	sb.add("Мы получили [%2i] новых карт действий.", getyouname(), value);
 	if(true) {
 		auto first_card = true;
 		for(auto i = 0; i < value; i++) {
@@ -434,6 +434,40 @@ static void refresh_players() {
 	}
 }
 
+void playeri::choose_diplomacy() {
+	solara source;
+	solari::select(source, 0, false);
+	auto p = choose(source);
+	if(!p)
+		return;
+	string sb;
+	sb.add("Звездная система [%1] теперь имеет особый дипломатический статус. "
+		"Любая активность в этой системе находится под особым надзором дипломатической миссии, которую мы возглавляем. "
+		"Все игроки, кроме нас, ставят в эту систему жетон команд из сброса.",
+		p->getname());
+	for(auto& e : bsmeta<playeri>()) {
+		if(!e)
+			continue;
+		if(&e == this)
+			continue;
+		p->activate(&e, true);
+	}
+	auto count_planets = 0;
+	for(auto& e : bsmeta<planeti>()) {
+		if(!e)
+			continue;
+		if(e.getsolar() != p)
+			continue;
+		if(e.getplayer() != this)
+			continue;
+		count_planets++;
+		e.deactivate();
+	}
+	if(count_planets > 0)
+		sb.adds("Наши планеты в этой зведной системе обновляют все свои ресурсы.");
+	apply(sb);
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -441,6 +475,7 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 		p->buy_command_tokens(3);
 		break;
 	case Diplomacy:
+		p->choose_diplomacy();
 		break;
 	case Politics:
 		p->choose_speaker(1);
@@ -492,7 +527,9 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 }
 
 void playeri::tactical_action() {
-	auto solar = choose_solar();
+	adat<solari*, 64> source;
+	aref<solari*> list;
+	auto solar = choose(list);
 	solar->activate(this);
 	moveships(solar);
 }

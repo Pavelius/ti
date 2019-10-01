@@ -135,6 +135,9 @@
     <ClCompile Include="speech.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="solar.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">
