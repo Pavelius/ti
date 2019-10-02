@@ -63,11 +63,11 @@ planeti bsmeta<planeti>::elements[] = {{"Архон рен", "xxcha", 2, 3, 0},
 unsigned bsmeta<planeti>::count = sizeof(bsmeta<planeti>::elements) / sizeof(bsmeta<planeti>::elements[0]);
 const unsigned bsmeta<planeti>::count_maximum = sizeof(bsmeta<planeti>::elements) / sizeof(bsmeta<planeti>::elements[0]);
 struct solar_range {
-	group_s		type;
+	variant_s	type;
 	char		from;
 	char		to;
 };
-static solar_range solar_range_data[] = {{SolarSystem, 21, 24},
+static solar_range solar_range_data[] = {{Solar, 21, 24},
 {AsteroidField, 25, 28},
 {Nebula, 29, 30},
 {Supernova, 31, 32},
@@ -122,7 +122,7 @@ void planeti::refresh() {
 
 void planeti::initialize() {
 	for(auto& e : bsmeta<solari>())
-		e.type = SolarSystem;
+		e.type = Solar;
 	for(auto& e : solar_range_data) {
 		for(auto i = e.from; i <= e.to; i++)
 			bsmeta<solari>::elements[i].type = e.type;
@@ -330,7 +330,7 @@ static void make_wave(short unsigned start_index, const playeri* player) {
 	for(auto& e : bsmeta<solari>()) {
 		if(!e)
 			continue;
-		if(e.type == SolarSystem)
+		if(e.type == Solar)
 			continue;
 		if(e.type == Nebula)
 			continue;
@@ -384,7 +384,7 @@ planeti* planeti::find(const solari* parent, int index) {
 	return 0;
 }
 
-uniti* planeti::find(group_s group) const {
+uniti* planeti::find(variant_s group) const {
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;

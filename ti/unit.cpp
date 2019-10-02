@@ -1,22 +1,5 @@
 #include "main.h"
 
-groupi bsmeta<groupi>::elements[] = {{""},
-{"Solar", "Звездная система", 0, 0, 0, 0},
-{"AsteroidField", "Поле астероидов", 0, 0, 0, 0},
-{"Nebula", "Небула", 0, 0, 0, 0},
-{"Supernova", "Супернова", 0, 0, 0, 0},
-{"Planet", "Планета", 0, 0, 0, 0},
-{"SpaceDock", "Доки", 3, 4, 1, 0, 0, 2},
-{"GroundForces", "Наземные силы", 0, 1, 2, 0, 2, 8},
-{"Fighters", "Истребители", 0, 1, 2, 0, 2, 9},
-{"PDS", "СПЗ", 6, 2, 1, 0, 1, 6},
-{"Carrier", "Транспорт", 4, 3, 1, 1, 1, 9},
-{"Cruiser", "Крейсер", 8, 2, 1, 2, 1, 7},
-{"Destroyer", "Эсминец", 8, 1, 1, 2, 1, 9},
-{"Dreadnought", "Линкор", 5, 5, 1, 1, 1, 5},
-{"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
-};
-assert_enum(group, WarSun);
 DECLBASE(uniti, 32 * 6);
 
 unsigned select(uniti** result, uniti** result_max, const uniti* location, const playeri* player, bool (uniti::*test)() const) {
@@ -60,7 +43,7 @@ void* uniti::operator new(unsigned size) {
 }
 
 uniti::~uniti() {
-	type = NoUnit;
+	type = NoVariant;
 }
 
 const char* uniti::getname() const {
@@ -68,7 +51,7 @@ const char* uniti::getname() const {
 		return getsolarname();
 	if(isplanet())
 		return getplanetname();
-	return bsmeta<groupi>::elements[type].name;
+	return bsmeta<varianti>::elements[type].name;
 }
 
 bool uniti::is(tech_s v) const {
@@ -117,8 +100,8 @@ int	uniti::getresource() const {
 	return result;
 }
 
-int	uniti::getavailable(group_s type) {
-	return bsmeta<groupi>::elements[type].available;
+int	uniti::getavailable(variant_s type) {
+	return bsmeta<varianti>::elements[type].available;
 }
 
 int	uniti::getproduce() const {
@@ -133,12 +116,12 @@ int	uniti::getproduce() const {
 	return result;
 }
 
-int	uniti::getproduce(group_s type) {
-	return bsmeta<groupi>::elements[type].production_count;
+int	uniti::getproduce(variant_s type) {
+	return bsmeta<varianti>::elements[type].production_count;
 }
 
-int	uniti::getproduction(group_s type) {
-	return bsmeta<groupi>::elements[type].production;
+int	uniti::getproduction(variant_s type) {
+	return bsmeta<varianti>::elements[type].production;
 }
 
 int uniti::getmaxhits() const {
@@ -220,7 +203,7 @@ bool uniti::isinvaders() const {
 	}
 }
 
-bool uniti::isplanetary(group_s type) {
+bool uniti::isplanetary(variant_s type) {
 	switch(type) {
 	case GroundForces:
 	case PDS:
@@ -235,7 +218,7 @@ int	uniti::getcount() const {
 	return getgroup().count;
 }
 
-int	uniti::getcount(group_s type, const playeri* player, uniti* location) {
+int	uniti::getcount(variant_s type, const playeri* player, uniti* location) {
 	auto result = 0;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
@@ -263,15 +246,15 @@ int	uniti::getcapacity() const {
 	}
 }
 
-group_s uniti::getcapacitylimit() const {
+variant_s uniti::getcapacitylimit() const {
 	switch(type) {
 	case Dreadnought:
 	case Cruiser:
 		if(is(StasisCapsules))
 			return GroundForces;
-		return NoUnit;
+		return NoVariant;
 	default:
-		return NoUnit;
+		return NoVariant;
 	}
 }
 
@@ -286,7 +269,7 @@ int	uniti::getcarried() const {
 	return result;
 }
 
-int uniti::getjoincount(group_s object) const {
+int uniti::getjoincount(variant_s object) const {
 	auto maximum = getcapacity();
 	if(!maximum)
 		return 0;
@@ -306,7 +289,7 @@ int	uniti::getfightersupport() {
 			continue;
 		if(!e.parent)
 			continue;
-		if(e.parent.type == PlanetVar && e.parent.getplanet()->getsolar() != this)
+		if(e.parent.type == Planet && e.parent.getplanet()->getsolar() != this)
 			continue;
 		if(e.parent.type == Solar && e.parent.getsolar() != this)
 			continue;
@@ -314,14 +297,14 @@ int	uniti::getfightersupport() {
 		if(!capacity_count)
 			continue;
 		auto capacity_limit = e.getcapacitylimit();
-		if(capacity_limit != NoUnit && capacity_limit != Fighters)
+		if(capacity_limit != NoVariant && capacity_limit != Fighters)
 			continue;
 		result += capacity_count;
 	}
 	return result;
 }
 
-bool uniti::build(group_s object, bool run) {
+bool uniti::build(variant_s object, bool run) {
 	auto solar_system = getsolar();
 	if(!solar_system)
 		return false;
@@ -420,17 +403,6 @@ int	uniti::getfleet(const playeri* player) {
 	return result;
 }
 
-//unsigned uniti::select(uniti** result, uniti* const* result_max, uniti* parent) {
-//	auto p = result;
-//	for(auto& e : bsmeta<uniti>()) {
-//		if(e.parent != parent)
-//			continue;
-//		if(p < result_max)
-//			*p++ = &e;
-//	}
-//	return p - result;
-//}
-
 solari* uniti::getsolar() const {
 	if(parent.type == Solar)
 		return parent.getsolar();
@@ -476,19 +448,6 @@ uniti* uniti::get(target_s v) const {
 		return const_cast<uniti*>(this);
 	}
 }
-
-//uniti* uniti::find(group_s v, const playeri* player) const {
-//	for(auto& e : bsmeta<uniti>()) {
-//		if(!e)
-//			continue;
-//		if(e.parent != this)
-//			continue;
-//		if(player && e.player != player)
-//			continue;
-//		return &e;
-//	}
-//	return 0;
-//}
 
 bool uniti::isactivated(const playeri* player) const {
 	if(!player)

@@ -66,14 +66,6 @@ enum tech_color_s : unsigned char {
 enum wormhole_s : unsigned char {
 	NoHole, WormholeAlpha, WormholeBeta
 };
-enum group_s : unsigned char {
-	NoUnit,
-	SolarSystem, AsteroidField, Nebula, Supernova,
-	Planet,
-	SpaceDock,
-	GroundForces, Fighters, PDS,
-	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
-};
 enum target_s : unsigned {
 	TargetUnit, TargetPlanet, TargetSystem, TargetPlayer,
 	TargetMask = 0xF,
@@ -82,7 +74,13 @@ enum target_s : unsigned {
 };
 enum variant_s : unsigned char {
 	NoVariant,
-	Group, Player, PlanetVar, Solar, TechnologyVar, Unit,
+	Player, Solar, AsteroidField, Nebula, Supernova,
+	Planet, Unit,
+	SpaceDock,
+	GroundForces, Fighters, PDS,
+	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
+	TechnologyVar,
+	Variant
 };
 class answeri;
 struct planeti;
@@ -95,16 +93,16 @@ typedef adat<solari*, 64> solara;
 struct variant {
 	variant_s					type;
 	union {
-		group_s					group;
+		variant_s				var;
 		tech_s					tech;
 		unsigned char			value;
 	};
 	constexpr variant() : type(NoVariant), value(0) {}
 	constexpr variant(variant_s t, decltype(value) v) : type(t), value(v) {}
 	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
-	constexpr variant(group_s v) : type(Group), group(v) {}
+	constexpr variant(variant_s v) : type(Variant), var(v) {}
 	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsmeta<T>::elements : 0) {}
-	constexpr variant(const planeti* v) : variant(PlanetVar, v) {}
+	constexpr variant(const planeti* v) : variant(Planet, v) {}
 	constexpr variant(const playeri* v) : variant(Player, v) {}
 	constexpr variant(const solari* v) : variant(Solar, v) {}
 	constexpr variant(const uniti* v) : variant(Unit, v) {}
@@ -155,7 +153,7 @@ struct weaponi {
 	void						clear();
 	int							roll() const;
 };
-struct groupi {
+struct varianti {
 	const char*					id;
 	const char*					name;
 	char						available;
@@ -203,7 +201,6 @@ struct playeri : namei, costi {
 	void						build_units(int value);
 	void						buy_command_tokens(int cost_influences);
 	void						buy_technology(int cost_resources);
-	void						cancel_all_trade_agreements() {}
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
 	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
@@ -214,8 +211,8 @@ struct playeri : namei, costi {
 	playeri*					choose_opponent(const char* text);
 	bool						choose_trade() const { return true; }
 	playeri&					create(const char* id);
-	uniti*						create(group_s id, solari* solar);
-	uniti*						create(group_s id, planeti* planet);
+	uniti*						create(variant_s id, solari* solar);
+	uniti*						create(variant_s id, planeti* planet);
 	static void					create_action_deck();
 	void						draw_political_card(int value) {}
 	bool						is(action_s value) const { return costi::get(value); }
@@ -223,7 +220,7 @@ struct playeri : namei, costi {
 	bool						is(tech_s value) const { return technologies.is(value); }
 	bool						isactive() const { return getactive() == this; }
 	bool						isallow(play_s type, action_s id) const;
-	bool						isallow(group_s id) const;
+	bool						isallow(variant_s id) const;
 	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
@@ -256,7 +253,7 @@ struct playeri : namei, costi {
 	static void					slide(const uniti* p);
 	static void					slide(int hexagon);
 	void						select(army& source, unsigned flags) const;
-	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, group_s type) const;
+	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
 	static void					setup();
 	void						sethuman();
 	void						tactical_action();
@@ -269,43 +266,43 @@ class uniti {
 	variant						parent;
 	unsigned char				activate_flags;
 public:
-	group_s						type;
-	constexpr uniti() : type(NoUnit), player(), parent(), activate_flags(0) {}
-	constexpr uniti(group_s type) : type(type), player(), parent(), activate_flags(0) {}
-	constexpr uniti(group_s type, variant parent) : type(type), player(), parent(parent), activate_flags(0) {}
-	explicit operator bool() const { return type != NoUnit; }
+	variant_s					type;
+	constexpr uniti() : type(NoVariant), player(), parent(), activate_flags(0) {}
+	constexpr uniti(variant_s type) : type(type), player(), parent(), activate_flags(0) {}
+	constexpr uniti(variant_s type, variant parent) : type(type), player(), parent(parent), activate_flags(0) {}
+	explicit operator bool() const { return type != NoVariant; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
 	~uniti();
 	void						activate();
 	void						activate(const playeri* player, bool setvalue = true);
-	bool						build(group_s object, bool run);
+	bool						build(variant_s object, bool run);
 	void						destroy();
 	void						deactivate();
 	uniti*						get(target_s v) const;
-	static int					getavailable(group_s type);
+	static int					getavailable(variant_s type);
 	int							getcapacity() const;
-	group_s						getcapacitylimit() const;
+	variant_s					getcapacitylimit() const;
 	int							getcarried() const;
 	int							getcount() const;
-	static int					getcount(group_s type, const playeri* player, uniti* location = 0);
+	static int					getcount(variant_s type, const playeri* player, uniti* location = 0);
 	short unsigned				getindex() const;
 	int							getfightersupport();
 	static int					getfleet(const playeri* player);
 	static int					getfleet(const playeri* player, const uniti* solar);
-	const groupi&				getgroup() const { return bsmeta<groupi>::elements[type]; }
-	int							getjoincount(group_s object) const;
+	const varianti&				getgroup() const { return bsmeta<varianti>::elements[type]; }
+	int							getjoincount(variant_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
 	static int					getmovement(short unsigned index);
 	const char*					getname() const;
 	playeri*					getplayer() const;
-	static int					getproduction(group_s type);
+	static int					getproduction(variant_s type);
 	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
 	planeti*					getplanet() const;
 	int							getproduce() const;
-	static int					getproduce(group_s type);
+	static int					getproduce(variant_s type);
 	const char*					getsolarname() const;
 	solari*						getsolar() const;
 	static solari*				getsolar(int index);
@@ -327,7 +324,7 @@ public:
 	bool						issolar() const;
 	bool						isplanet() const;
 	bool						isplanetary() const { return isplanetary(type); }
-	static bool					isplanetary(group_s type);
+	static bool					isplanetary(variant_s type);
 	bool						isunit() const;
 	bool						in(const uniti* parent) const;
 	void						setplanet(const planeti* v);
@@ -363,7 +360,7 @@ struct planeti : uniti {
 	static void					create_stars();
 	static void					initialize();
 	static planeti*				find(const solari* parent, int index);
-	uniti*						find(group_s group) const;
+	uniti*						find(variant_s group) const;
 	uniti*						get(target_s v) const { return uniti::get(v); }
 	static int					get(const playeri* player, int(planeti::*getproc)() const);
 	const char*					getname() const { return name; }
@@ -389,6 +386,11 @@ struct actioni {
 	int							count;
 	proc_info					proc;
 	const char*					description;
+};
+struct agendai {
+	const char					id;
+	const char					name;
+	unsigned					target;
 };
 class string : public stringbuilder {
 	char						buffer[8192];
@@ -417,5 +419,5 @@ public:
 };
 extern deck<action_s>			action_deck;
 DECLENUM(action);
-DECLENUM(group);
+DECLENUM(variant);
 DECLENUM(strategy);

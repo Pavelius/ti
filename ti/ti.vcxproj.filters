@@ -132,10 +132,13 @@
     <ClCompile Include="crt.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
-    <ClCompile Include="speech.cpp">
+    <ClCompile Include="solar.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="solar.cpp">
+    <ClCompile Include="agenda.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="variant.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

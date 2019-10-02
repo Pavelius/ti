@@ -7,7 +7,7 @@ struct player_pregen_info {
 	char				tokens[3];
 	cflags<bonus_s>		bonus;
 	adat<action_s, 8>	actions;
-	group_s			start_units[16];
+	variant_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
 static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3},
@@ -111,7 +111,7 @@ bool playeri::isally(const playeri* enemy) const {
 	return false;
 }
 
-bool playeri::isallow(group_s id) const {
+bool playeri::isallow(variant_s id) const {
 	switch(id) {
 	case WarSun:
 		return is(WarSunTech);
@@ -124,14 +124,14 @@ void playeri::sethuman() {
 	human_player = this;
 }
 
-uniti* playeri::create(group_s id, solari* solar) {
+uniti* playeri::create(variant_s id, solari* solar) {
 	auto p = new uniti(id);
 	p->setplayer(this);
 	p->setsolar(solar);
 	return p;
 }
 
-uniti* playeri::create(group_s id, planeti* planet) {
+uniti* playeri::create(variant_s id, planeti* planet) {
 	auto p = new uniti(id);
 	p->setplayer(this);
 	p->setplanet(planet);
@@ -592,7 +592,7 @@ void playeri::slide(const uniti* p) {
 	slide(index);
 }
 
-unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, group_s type) const {
+unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, variant_s type) const {
 	auto ps = result;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)

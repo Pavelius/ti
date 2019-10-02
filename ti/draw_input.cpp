@@ -773,7 +773,7 @@ static void cannon(int x, int y, color c1, color c2) {
 	line(x, y, x + unit_size / 2, y, c2);
 }
 
-static void draw_unit(int x, int y, group_s type, int count, color c1, color c2) {
+static void draw_unit(int x, int y, variant_s type, int count, color c1, color c2) {
 	int n;
 	char temp[32]; zprint(temp, "%1i", count);
 	const int r = unit_size;
@@ -853,10 +853,10 @@ static int compare_units(const void* v1, const void* v2) {
 
 static void draw_units(int x, int y, uniti* parent, bool ground) {
 	struct unit_draw_info {
-		group_s		type;
-		char			count;
+		variant_s	type;
+		char		count;
 		void clear() {
-			type = NoUnit;
+			type = NoVariant;
 			count = 0;
 		}
 	};
@@ -897,7 +897,7 @@ static void draw_units(int x, int y, uniti* parent, bool ground) {
 		if(pd->type == source.data[i]->type)
 			pd->count++;
 		else {
-			if(pd->type != NoUnit)
+			if(pd->type != NoVariant)
 				pd++;
 			pd->type = source.data[i]->type;
 			pd->count = 1;
@@ -998,7 +998,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 				if(hilite.is(p))
 					hexagon3(pt);
 			}
-			if(p->type == SolarSystem) {
+			if(p->type == Solar) {
 				adat<planeti*, 3> source;
 				source.count = planeti::select(source.begin(), source.endof(), p);
 				switch(source.count) {
@@ -1154,7 +1154,7 @@ struct unit_table : table {
 			return source[line].unit.isfleet() ? source[line].count * 1 : 0;
 		return 0;
 	}
-	group_s getvalue() const {
+	variant_s getvalue() const {
 		return source[current].unit.type;
 	}
 	static const column* getcolumns() {
@@ -1167,8 +1167,8 @@ struct unit_table : table {
 		return columns;
 	}
 	static int compare(const void* p1, const void* p2) {
-		auto i1 = *((group_s*)p1);
-		auto i2 = *((group_s*)p2);
+		auto i1 = *((variant_s*)p1);
+		auto i2 = *((variant_s*)p2);
 		return strcmp(getstr(i1), getstr(i2));
 	}
 	static void add_value() {
@@ -1220,7 +1220,7 @@ struct unit_table : table {
 	unit_table(playeri* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
 		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
-		for(auto i = i1; i <= WarSun; i = (group_s)(i + 1)) {
+		for(auto i = i1; i <= WarSun; i = (variant_s)(i + 1)) {
 			if(!player->isallow(i))
 				continue;
 			auto p = source.add();
