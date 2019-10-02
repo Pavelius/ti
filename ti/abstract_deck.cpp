@@ -28,3 +28,10 @@ void abstract_deck::shuffle() {
 	if(count > 0)
 		zshuffle(data, count);
 }
+
+void abstract_deck::top(unsigned char e) {
+	if(count<256)
+		memmove(data+1, data, count);
+	data[0] = e;
+	count++;
+}

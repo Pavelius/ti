@@ -17,6 +17,8 @@ varianti bsmeta<varianti>::elements[] = {{""},
 {"Destroyer", "Эсминец", 8, 1, 1, 2, 1, 9},
 {"Dreadnought", "Линкор", 5, 5, 1, 1, 1, 5},
 {"WarSun", "Звезда смерти", 2, 12, 1, 2, 1, 0, {3, 3}},
+{"Agenda", "Повестка"},
 {"Technology", "Технология"},
+{"Variant", "Вариант"},
 };
-assert_enum(variant, TechnologyVar);
+assert_enum(variant, Variant);

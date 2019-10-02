@@ -254,6 +254,7 @@ void playeri::getinfo(string& sb) const {
 
 void playeri::setup() {
 	create_action_deck();
+	create_agenda_deck();
 	speaker = &bsmeta<playeri>::elements[rand() % (sizeof(bsmeta<playeri>::elements) / sizeof(bsmeta<playeri>::elements[0]))];
 	planeti::setup();
 	for(auto& e : bsmeta<playeri>())
@@ -401,11 +402,11 @@ uniti* playeri::gethomesystem() const {
 
 void playeri::build_units(int value) {
 	army result;
-	select(result, TargetPlanet | Friendly | DockPresent);
+	select(result, Planet | Friendly | DockPresent);
 	auto planet = static_cast<planeti*>(choose(result, "”кажите планету, на которой будете строить"));
 	if(!planet)
 		return;
-	auto solar = static_cast<solari*>(planet->get(TargetSystem));
+	auto solar = planet->getsolar();
 	auto dock = planet->find(SpaceDock);
 	auto dock_produce = 0;
 	if(dock)
@@ -608,14 +609,8 @@ unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, varia
 }
 
 void playeri::select(army& result, unsigned flags) const {
-	if(flags&DockPresent) {
-		result.count = select(result.begin(), result.endof(), flags, SpaceDock);
-		result.transform((target_s)(flags&TargetMask));
-		result.rollup();
-		return;
-	}
 	switch(flags&TargetMask) {
-	case TargetSystem:
+	case Solar:
 		for(auto& e : bsmeta<solari>()) {
 			if(!e)
 				continue;
@@ -624,7 +619,7 @@ void playeri::select(army& result, unsigned flags) const {
 			result.add(&e);
 		}
 		break;
-	case TargetPlanet:
+	case Planet:
 		for(auto& e : bsmeta<planeti>()) {
 			if(!e)
 				continue;
@@ -664,7 +659,8 @@ void playeri::choose_speaker(int exclude) {
 int playeri::choose(string& sb, answeri& ai, bool cancel, const char* format, ...) const {
 	auto p = sb.get();
 	//sb.adds("[+");
-	sb.addx(' ', format, xva_start(format));
+	if(format)
+		sb.addx(' ', format, xva_start(format));
 	//sb.add("]");
 	auto r = ai.choose(cancel, iscomputer(), 0, id, sb);
 	sb.set(p);

@@ -986,7 +986,14 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			if(!p)
 				continue;
 			hexagon(pt);
-			if(use_hilite_solar) {
+			auto disabled = false;
+			if(hilite) {
+				if(hilite.is(p))
+					hexagon3(pt);
+				else
+					disabled = true;
+			}
+			if(use_hilite_solar && !disabled) {
 				auto dx = size2 / 2;
 				rect rc = {pt.x - dx, pt.y - dx, pt.x + dx, pt.y + dx};
 				if(areb(rc))
@@ -994,10 +1001,6 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			}
 			if(hilited == p)
 				hexagon2(pt);
-			if(hilite) {
-				if(hilite.is(p))
-					hexagon3(pt);
-			}
 			if(p->type == Solar) {
 				adat<planeti*, 3> source;
 				source.count = planeti::select(source.begin(), source.endof(), p);

@@ -430,25 +430,6 @@ bool uniti::isunit() const {
 		&& this < (bsmeta<uniti>::elements + bsmeta<uniti>::count);
 }
 
-uniti* uniti::get(target_s v) const {
-	if(!this)
-		return 0;
-	switch(v) {
-	case TargetSystem:
-		if(issolar())
-			return const_cast<uniti*>(this);
-		return (uniti*)getsolar();
-	case TargetPlanet:
-		if(isplanet())
-			return const_cast<uniti*>(this);
-		return (uniti*)getplanet();
-	default:
-		if(issolar() || isplanet())
-			return 0;
-		return const_cast<uniti*>(this);
-	}
-}
-
 bool uniti::isactivated(const playeri* player) const {
 	if(!player)
 		return true;

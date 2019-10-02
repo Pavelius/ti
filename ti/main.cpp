@@ -15,7 +15,7 @@ static int test_variant() {
 }
 
 int main() {
-	return 0;
+	//return 0;
 	srand(1231);
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
@@ -31,7 +31,7 @@ int main() {
 	playeri::setup();
 	//playeri::gethuman()->tactical_action();
 	//playeri::gethuman()->make_move();
-	playeri::gethuman()->strategy = Diplomacy;
+	playeri::gethuman()->strategy = Politics;
 	playeri::gethuman()->make_move(false, true);
 	return 0;
 }

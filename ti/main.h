@@ -67,10 +67,9 @@ enum wormhole_s : unsigned char {
 	NoHole, WormholeAlpha, WormholeBeta
 };
 enum target_s : unsigned {
-	TargetUnit, TargetPlanet, TargetSystem, TargetPlayer,
-	TargetMask = 0xF,
-	Neutral = 0x10, Friendly = 0x20, Enemy = 0x40,
-	DockPresent = 0x100,
+	TargetMask = 0xFF,
+	Neutral = 0x100, Friendly = 0x200, DockPresent = 0x400, NoMekatol = 0x800,
+	NoHome = 0x1000,
 };
 enum variant_s : unsigned char {
 	NoVariant,
@@ -79,12 +78,13 @@ enum variant_s : unsigned char {
 	SpaceDock,
 	GroundForces, Fighters, PDS,
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
-	TechnologyVar,
+	Agenda, TechnologyVar,
 	Variant
 };
+struct agendai;
 class answeri;
 struct planeti;
-struct playeri;
+class playeri;
 class string;
 struct solari;
 class uniti;
@@ -102,6 +102,7 @@ struct variant {
 	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
 	constexpr variant(variant_s v) : type(Variant), var(v) {}
 	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsmeta<T>::elements : 0) {}
+	constexpr variant(const agendai* v) : variant(Agenda, v) {}
 	constexpr variant(const planeti* v) : variant(Planet, v) {}
 	constexpr variant(const playeri* v) : variant(Player, v) {}
 	constexpr variant(const solari* v) : variant(Solar, v) {}
@@ -110,6 +111,7 @@ struct variant {
 	constexpr operator bool() const { return type!=NoVariant; }
 	void						clear() { type = NoVariant; value = 0; }
 	template<class T> constexpr T* get() const { return &bsmeta<T>::elements[value]; }
+	constexpr agendai*			getagenda() const { return get<agendai>(); }
 	constexpr planeti*			getplanet() const { return get<planeti>(); }
 	constexpr playeri*			getplayer() const { return get<playeri>(); }
 	constexpr solari*			getsolar() const { return get<solari>(); }
@@ -119,7 +121,6 @@ struct army : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
 	void						sort(int (uniti::*proc)() const);
-	void						transform(target_s v);
 };
 struct namei {
 	const char*					id;
@@ -134,6 +135,7 @@ public:
 	unsigned char				draw();
 	void						discard(unsigned char);
 	void						shuffle();
+	void						top(unsigned char);
 };
 template<class T>
 struct deck : abstract_deck {
@@ -164,7 +166,6 @@ struct varianti {
 	char						production_count;
 	weaponi						combat;
 };
-struct tactic_info {};
 struct costi {
 	void						add(action_s id, int v);
 	void						difference(string& sb, const costi& e);
@@ -182,7 +183,10 @@ struct strategyi {
 	const char*					text;
 	char						bonus;
 };
-struct playeri : namei, costi {
+class playeri : public namei, public costi {
+	cflags<tech_s>				technologies;
+	cflags<bonus_s>				bonuses;
+public:
 	strategy_s					strategy;
 	//
 	explicit operator bool() const { return id != 0; }
@@ -196,11 +200,11 @@ struct playeri : namei, costi {
 	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
 	void						apply(string& sb);
-	void						choose_speaker(int exclude);
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						buy_command_tokens(int cost_influences);
 	void						buy_technology(int cost_resources);
+	void						choose_speaker(int exclude);
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
 	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
@@ -214,6 +218,7 @@ struct playeri : namei, costi {
 	uniti*						create(variant_s id, solari* solar);
 	uniti*						create(variant_s id, planeti* planet);
 	static void					create_action_deck();
+	static void					create_agenda_deck();
 	void						draw_political_card(int value) {}
 	bool						is(action_s value) const { return costi::get(value); }
 	bool						is(bonus_s value) const { return bonuses.is(value); }
@@ -245,7 +250,7 @@ struct playeri : namei, costi {
 	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
 	void						pay(int cost);
-	void						predict_next_political_card(int value) {}
+	void						predict_next_political_card(int value);
 	void						refresh_planets(int value) {}
 	void						replenish_commodities() {}
 	void						return_command_from_board(int value) {}
@@ -257,9 +262,6 @@ struct playeri : namei, costi {
 	static void					setup();
 	void						sethuman();
 	void						tactical_action();
-private:
-	cflags<tech_s>				technologies;
-	cflags<bonus_s>				bonuses;
 };
 class uniti {
 	variant						player;
@@ -279,7 +281,6 @@ public:
 	bool						build(variant_s object, bool run);
 	void						destroy();
 	void						deactivate();
-	uniti*						get(target_s v) const;
 	static int					getavailable(variant_s type);
 	int							getcapacity() const;
 	variant_s					getcapacitylimit() const;
@@ -361,7 +362,6 @@ struct planeti : uniti {
 	static void					initialize();
 	static planeti*				find(const solari* parent, int index);
 	uniti*						find(variant_s group) const;
-	uniti*						get(target_s v) const { return uniti::get(v); }
 	static int					get(const playeri* player, int(planeti::*getproc)() const);
 	const char*					getname() const { return name; }
 	int							getinfluence() const;
@@ -388,9 +388,13 @@ struct actioni {
 	const char*					description;
 };
 struct agendai {
-	const char					id;
-	const char					name;
+	typedef bool(*testp)(variant v);
+	typedef void(*effectp)(variant v);
+	const char*					id;
+	const char*					name;
 	unsigned					target;
+	effectp						success, fail;
+	unsigned char				count;
 };
 class string : public stringbuilder {
 	char						buffer[8192];
