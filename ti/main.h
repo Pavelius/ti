@@ -266,12 +266,12 @@ public:
 	void						tactical_action();
 };
 class uniti {
-	variant						player;
+	unsigned char				player;
 	variant						parent;
 	unsigned char				activate_flags;
 public:
 	variant_s					type;
-	constexpr uniti() : type(NoVariant), player(), parent(), activate_flags(0) {}
+	constexpr uniti() : type(NoVariant), player(0xFF), parent(), activate_flags(0) {}
 	constexpr uniti(variant_s type) : type(type), player(), parent(), activate_flags(0) {}
 	constexpr uniti(variant_s type, variant parent) : type(type), player(), parent(parent), activate_flags(0) {}
 	explicit operator bool() const { return type != NoVariant; }
@@ -283,7 +283,6 @@ public:
 	bool						build(variant_s object, bool run);
 	void						destroy();
 	void						deactivate();
-	static int					getavailable(variant_s type);
 	int							getcapacity() const;
 	variant_s					getcapacitylimit() const;
 	int							getcarried() const;
@@ -292,13 +291,13 @@ public:
 	short unsigned				getindex() const;
 	int							getfightersupport();
 	static int					getfleet(const playeri* player);
-	static int					getfleet(const playeri* player, const uniti* solar);
+	static int					getfleet(const playeri* player, const solari* solar);
 	const varianti&				getgroup() const { return bsmeta<varianti>::elements[type]; }
 	int							getjoincount(variant_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
 	static int					getmovement(short unsigned index);
-	const char*					getname() const;
+	const char*					getname() const { return getgroup().name; }
 	playeri*					getplayer() const;
 	static int					getproduction(variant_s type);
 	int							getproduction() const { return getproduction(type); }
@@ -322,7 +321,6 @@ public:
 	bool						isinvaders() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(variant_s type);
-	bool						isunit() const;
 	bool						in(const uniti* parent) const;
 	void						setplanet(const planeti* v);
 	void						setplayer(const playeri* v);

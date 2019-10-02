@@ -2,38 +2,6 @@
 
 DECLBASE(uniti, 32 * 6);
 
-unsigned select(uniti** result, uniti** result_max, const uniti* location, const playeri* player, bool (uniti::*test)() const) {
-	auto p = result;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.getplayer() != player)
-			continue;
-		if(location && !e.in(location))
-			continue;
-		if(test && !(e.*test)())
-			continue;
-		if(p < result_max)
-			*p++ = &e;
-	}
-	return p - result;
-}
-
-uniti* getminimal(uniti** result, unsigned count, int (uniti::*get)() const) {
-	int value = 0;
-	int index = -1;
-	for(unsigned i = 0; i < count; i++) {
-		auto r = (result[0]->*get)();
-		if(index == -1 || r < value) {
-			index = i;
-			value = r;
-		}
-	}
-	if(index == -1)
-		return 0;
-	return result[index];
-}
-
 void* uniti::operator new(unsigned size) {
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
@@ -46,20 +14,18 @@ uniti::~uniti() {
 	type = NoVariant;
 }
 
-const char* uniti::getname() const {
-	return bsmeta<varianti>::elements[type].name;
-}
-
 bool uniti::is(tech_s v) const {
-	if(!player)
+	auto p = getplayer();
+	if(!p)
 		return false;
-	return player.getplayer()->is(v);
+	return p->is(v);
 }
 
 bool uniti::is(bonus_s v) const {
-	if(!player)
+	auto p = getplayer();
+	if(!p)
 		return false;
-	return player.getplayer()->is(v);
+	return p->is(v);
 }
 
 int uniti::getmovement() const {
@@ -94,10 +60,6 @@ int	uniti::getresource() const {
 		break;
 	}
 	return result;
-}
-
-int	uniti::getavailable(variant_s type) {
-	return bsmeta<varianti>::elements[type].available;
 }
 
 int	uniti::getproduce() const {
@@ -216,13 +178,14 @@ int	uniti::getcount() const {
 
 int	uniti::getcount(variant_s type, const playeri* player, uniti* location) {
 	auto result = 0;
+	auto player_index = player - bsmeta<playeri>::elements;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.type == type && e.player == player)
-			result++;
 		if(location && !e.in(location))
 			continue;
+		if(e.type == type && e.player == player_index)
+			result++;
 	}
 	return result;
 }
@@ -305,9 +268,9 @@ bool uniti::build(variant_s object, bool run) {
 	if(!solar_system)
 		return false;
 	auto produce_count = getproduction(object);
-	auto available_count = getavailable(object);
+	auto available_count = bsmeta<varianti>::elements[object].available;
 	if(available_count) {
-		auto exist_count = getcount(object, player.getplayer());
+		auto exist_count = getcount(object, getplayer());
 		if(exist_count + produce_count > available_count)
 			produce_count = available_count - exist_count;
 	}
@@ -330,7 +293,7 @@ bool uniti::build(variant_s object, bool run) {
 		return false;
 	if(object == Fighters && !is(AdvancedFighters)) {
 		auto available_count = solar_system->getfightersupport();
-		auto exist_count = getcount(object, player.getplayer(), solar_system);
+		auto exist_count = getcount(object, getplayer(), solar_system);
 		if(exist_count + produce_count > available_count)
 			produce_count = available_count - exist_count;
 	}
@@ -370,10 +333,9 @@ int uniti::getweight() const {
 	return result;
 }
 
-void uniti::destroy() {
-}
+void uniti::destroy() {}
 
-int	uniti::getfleet(const playeri* player, const uniti* solar) {
+int	uniti::getfleet(const playeri* player, const solari* solar) {
 	auto result = 0;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
@@ -399,12 +361,6 @@ int	uniti::getfleet(const playeri* player) {
 	return result;
 }
 
-solari* uniti::getsolar() const {
-	if(parent.type == Solar)
-		return parent.getsolar();
-	return 0;
-}
-
 void uniti::update_control() {
 	for(auto& e : bsmeta<solari>()) {
 		if(!e)
@@ -419,11 +375,6 @@ void uniti::update_control() {
 			}
 		}
 	}
-}
-
-bool uniti::isunit() const {
-	return this >= bsmeta<uniti>::elements
-		&& this < (bsmeta<uniti>::elements + bsmeta<uniti>::count);
 }
 
 bool uniti::isactivated(const playeri* player) const {
@@ -443,22 +394,25 @@ void uniti::deactivate() {
 void uniti::activate(const playeri* player, bool setvalue) {
 	if(!player)
 		return;
-	variant v = player;
+	auto i = player->getid();
 	if(setvalue)
-		activate_flags |= 1 << v.value;
+		activate_flags |= 1 << i;
 	else
-		activate_flags &= ~(1 << v.value);
+		activate_flags &= ~(1 << i);
 	player->slide(this);
 }
 
 playeri* uniti::getplayer() const {
-	if(player.type == Player)
-		return player.getplayer();
-	return 0;
+	if(player == 0xFF)
+		return 0;
+	return &bsmeta<playeri>::elements[player];
 }
 
 void uniti::setplayer(const playeri* v) {
-	player = const_cast<playeri*>(v);
+	if(!v)
+		player = 0xFF;
+	else
+		player = v - bsmeta<playeri>::elements;
 }
 
 void uniti::setplanet(const planeti* v) {
@@ -467,4 +421,10 @@ void uniti::setplanet(const planeti* v) {
 
 void uniti::setsolar(const solari* v) {
 	parent = const_cast<solari*>(v);
+}
+
+solari* uniti::getsolar() const {
+	if(parent.type == Solar)
+		return parent.getsolar();
+	return 0;
 }
