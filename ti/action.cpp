@@ -109,9 +109,10 @@ assert_enum(action, LastAction);
 deck<action_s>	action_deck;
 
 bool playeri::isallow(play_s type, action_s id) const {
-	if(type != bsmeta<actioni>::elements[id].proc.type)
+	auto& e = bsmeta<actioni>::elements[id];
+	if(type != e.proc.type)
 		return false;
-	if(bsmeta<actioni>::elements[id].proc.test && !bsmeta<actioni>::elements[id].proc.test(*this))
+	if(e.proc.test && !e.proc.test(*this))
 		return false;
 	return true;
 }

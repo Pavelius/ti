@@ -90,6 +90,7 @@ struct solari;
 class uniti;
 typedef adat<playeri*, 6> playera;
 typedef adat<solari*, 64> solara;
+typedef adat<planeti*, 64> planeta;
 struct variant {
 	variant_s					type;
 	union {
@@ -210,6 +211,7 @@ public:
 	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source) const;
+	planeti*					choose(const aref<planeti*>& source, const char* format, ...) const;
 	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
@@ -304,11 +306,7 @@ public:
 	planeti*					getplanet() const;
 	int							getproduce() const;
 	static int					getproduce(variant_s type);
-	const char*					getsolarname() const;
 	solari*						getsolar() const;
-	static solari*				getsolar(int index);
-	short unsigned				getsolarindex() const;
-	const char*					getplanetname() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weaponi						getweapon() const;
 	weaponi						getweapon(bool attacker, const playeri* opponent, char round) const;
@@ -322,8 +320,6 @@ public:
 	bool						iscarrier() const { return getcapacity() != 0; }
 	bool						isfleet() const;
 	bool						isinvaders() const;
-	bool						issolar() const;
-	bool						isplanet() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(variant_s type);
 	bool						isunit() const;
@@ -335,6 +331,8 @@ public:
 };
 struct solari : uniti {
 	const char*					getname() const;
+	planeti*					getplanet(int index) const;
+	static solari*				getsolar(short unsigned index);
 	bool						ismekatol() const;
 	static void					select(solara& result, const playeri* player, bool include_mekatol_rex);
 };
@@ -361,7 +359,7 @@ struct planeti : uniti {
 	static void					create_stars();
 	static void					initialize();
 	static planeti*				find(const solari* parent, int index);
-	uniti*						find(variant_s group) const;
+	uniti*						find(variant_s group, int index = 1) const;
 	static int					get(const playeri* player, int(planeti::*getproc)() const);
 	const char*					getname() const { return name; }
 	int							getinfluence() const;

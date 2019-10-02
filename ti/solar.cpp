@@ -1,7 +1,7 @@
 #include "main.h"
 
 const char*	solari::getname() const {
-	auto p = planeti::find(this, 1);
+	auto p = getplanet(1);
 	if(p)
 		return p->getname();
 	return getstr(type);
@@ -21,4 +21,16 @@ void solari::select(solara& source, const playeri* player, bool include_mekatol_
 
 bool solari::ismekatol() const {
 	return this == bsmeta<solari>::elements;
+}
+
+planeti* solari::getplanet(int index) const {
+	for(auto& e : bsmeta<planeti>()) {
+		if(!e)
+			continue;
+		if(e.getsolar() != this)
+			continue;
+		if(--index <= 0)
+			return &e;
+	}
+	return 0;
 }

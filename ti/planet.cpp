@@ -208,29 +208,13 @@ int uniti::getmovement(short unsigned index) {
 	return movement_rate[index];
 }
 
-bool uniti::issolar() const {
-	return this >= bsmeta<solari>::elements &&
-		this < (bsmeta<solari>::elements + bsmeta<solari>::count);
-}
-
-short unsigned uniti::getsolarindex() const {
-	if(issolar())
-		return static_cast<const solari*>(this) - bsmeta<solari>::elements;
-	return Blocked;
-}
-
-bool uniti::isplanet() const {
-	return this >= bsmeta<planeti>::elements
-		&& this < (bsmeta<planeti>::elements + bsmeta<planeti>::count);
-}
-
 planeti* uniti::getplanet() const {
-	if(isplanet())
-		return (planeti*)this;
+	if(parent.type == Planet)
+		return parent.getplanet();
 	return 0;
 }
 
-solari* uniti::getsolar(int index) {
+solari* solari::getsolar(short unsigned index) {
 	auto n = solar_indecies[index];
 	if(n == Blocked)
 		return 0;
@@ -238,7 +222,14 @@ solari* uniti::getsolar(int index) {
 }
 
 short unsigned uniti::getindex() const {
-	auto index = getsolarindex();
+	solari* s;
+	if(parent.type == Planet)
+		s = getplanet()->getsolar();
+	else if(parent.type == Solar)
+		s = getsolar();
+	else
+		return Blocked;
+	auto index = s - bsmeta<solari>::elements;
 	if(index != Blocked) {
 		for(unsigned i = 0; i < sizeof(solar_indecies) / sizeof(solar_indecies[0]); i++) {
 			if(solar_indecies[i] == index)
@@ -246,20 +237,6 @@ short unsigned uniti::getindex() const {
 		}
 	}
 	return Blocked;
-}
-
-const char* uniti::getsolarname() const {
-	for(auto& e : bsmeta<planeti>()) {
-		if(!e)
-			continue;
-		if(e.parent == this)
-			return e.name;
-	}
-	return getstr(type);
-}
-
-const char* uniti::getplanetname() const {
-	return (static_cast<const planeti*>(this))->name;
 }
 
 enum direction_s : unsigned char {
@@ -301,7 +278,9 @@ static void make_wave(short unsigned start_index, const playeri* player, short u
 		if(pop_counter >= stack_end)
 			pop_counter = stack;
 		auto cost = result[index] + 1;
-		auto p = uniti::getsolar(index);
+		auto p = solari::getsolar(index);
+		if(!p)
+			continue;
 		auto p_player = p->getplayer();
 		auto allow_movement = true;
 		if(p->type == Nebula)
@@ -384,13 +363,19 @@ planeti* planeti::find(const solari* parent, int index) {
 	return 0;
 }
 
-uniti* planeti::find(variant_s group) const {
+uniti* planeti::find(variant_s group, int index) const {
+	if(!index)
+		return 0;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
 		if(e.type != group)
 			continue;
-		if(e.getplayer() == getplayer())
+		if(e.getplayer() != getplayer())
+			continue;
+		if(e.getplanet() != this)
+			continue;
+		if(--index<=0)
 			return &e;
 	}
 	return 0;

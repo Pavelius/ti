@@ -851,7 +851,7 @@ static int compare_units(const void* v1, const void* v2) {
 	return (int)e1->type - (int)e2->type;
 }
 
-static void draw_units(int x, int y, uniti* parent, bool ground) {
+static void draw_units(int x, int y, const planeti* planet, const solari* solar) {
 	struct unit_draw_info {
 		variant_s	type;
 		char		count;
@@ -860,19 +860,34 @@ static void draw_units(int x, int y, uniti* parent, bool ground) {
 			count = 0;
 		}
 	};
-	auto parent_player = parent->getplayer();
+	playeri* parent_player;
+	auto ground = (planet != 0);
+	if(ground)
+		parent_player = planet->getplayer();
+	else
+		parent_player = solar->getplayer();
 	if(!parent_player)
 		return;
 	auto player_index = parent_player->getid();
 	auto c1 = player_colors[player_index][0];
 	auto c2 = player_colors[player_index][1];
 	adat<uniti*, 32> source;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.getsolar() != parent)
-			continue;
-		source.add(&e);
+	if(ground) {
+		for(auto& e : bsmeta<uniti>()) {
+			if(!e)
+				continue;
+			if(e.getplanet() != planet)
+				continue;
+			source.add(&e);
+		}
+	} else {
+		for(auto& e : bsmeta<uniti>()) {
+			if(!e)
+				continue;
+			if(e.getsolar() != solar)
+				continue;
+			source.add(&e);
+		}
 	}
 	if(!source) {
 		if(ground) {
@@ -929,7 +944,7 @@ static void draw_planet(point pt, planeti* p) {
 	text(pt.x - textw(pn) / 2, pt.y + 128 / 2, pn, -1, TextStroke);
 	fore_stroke = push_stro;
 	font = push_font;
-	draw_units(pt.x, pt.y, p, true);
+	draw_units(pt.x, pt.y, p, 0);
 }
 
 static int render_left() {
@@ -982,7 +997,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
 			auto index = planeti::gmi(x, y);
-			auto p = uniti::getsolar(index);
+			auto p = solari::getsolar(index);
 			if(!p)
 				continue;
 			hexagon(pt);
@@ -1026,7 +1041,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 				image(pt.x, pt.y, planets, 17, 0);
 			else if(p->type == Supernova)
 				image(pt.x, pt.y, planets, 18, 0);
-			draw_units(pt.x - size / 3, pt.y - size / 3, p, false);
+			draw_units(pt.x - size / 3, pt.y - size / 3, 0, p);
 			if(show_movement) {
 				auto push_font = font;
 				auto value = uniti::getmovement(index);

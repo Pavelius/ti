@@ -47,10 +47,6 @@ uniti::~uniti() {
 }
 
 const char* uniti::getname() const {
-	if(issolar())
-		return getsolarname();
-	if(isplanet())
-		return getplanetname();
 	return bsmeta<varianti>::elements[type].name;
 }
 

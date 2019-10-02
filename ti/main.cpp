@@ -1,19 +1,6 @@
 #include "main.h"
 #include "draw.h"
 
-static int test_variant() {
-	static variant s1[] = {bsmeta<playeri>::elements + 2, GroundForces};
-	auto result = 0;
-	for(auto& e : s1) {
-		switch(e.type) {
-		case Player:
-			result++;
-			break;
-		}
-	}
-	return result;
-}
-
 int main() {
 	//return 0;
 	srand(1231);
@@ -29,10 +16,9 @@ int main() {
 	bsmeta<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
-	//playeri::gethuman()->tactical_action();
-	playeri::gethuman()->make_move(true, true);
-	//playeri::gethuman()->strategy = Politics;
-	//playeri::gethuman()->make_move(false, true);
+	//playeri::gethuman()->make_move(true, true);
+	playeri::gethuman()->strategy = Construction;
+	playeri::gethuman()->make_move(false, true);
 	return 0;
 }
 

@@ -469,6 +469,30 @@ void playeri::choose_diplomacy() {
 	apply(sb);
 }
 
+static planeti* choose_planet_construct(const playeri* p, variant_s type) {
+	planeta source;
+	for(auto& e : bsmeta<planeti>()) {
+		if(!e)
+			continue;
+		if(e.getplayer() != p)
+			continue;
+		if(type == PDS) {
+			if(e.find(type, 1))
+				continue;
+		} else {
+			if(e.find(type))
+				continue;
+		}
+		source.add(&e);
+	}
+	return p->choose(source, "Выбирайте планету, на которой будете строить.");
+}
+
+static void build_primary(playeri* p) {
+	auto pp = choose_planet_construct(p, PDS);
+	p->create(PDS, pp);
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -482,6 +506,9 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 		p->choose_speaker(1);
 		p->add_action_cards(2);
 		p->predict_next_political_card(2);
+		break;
+	case Construction:
+		build_primary(p);
 		break;
 	case Trade:
 		p->add_trade_goods(3);
@@ -535,10 +562,10 @@ void playeri::tactical_action() {
 	moveships(solar);
 }
 
-static action_s choose_action(playeri* p) {
+static action_s choose_action(playeri* p, play_s play) {
 	string sb; answeri ai;
 	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
-		if(!p->is(a) || !p->isallow(AsAction, a))
+		if(!p->is(a) || !p->isallow(play, a))
 			continue;
 		ai.add(a, getstr(a), getstr(p->strategy));
 	}
@@ -568,7 +595,7 @@ static void action_phase() {
 				if(e.getinitiative() != i)
 					continue;
 				e.activate();
-				auto a = choose_action(&e);
+				auto a = choose_action(&e, AsAction);
 				play_action(&e, a);
 				e.add(a, -1);
 				someone_move = true;
@@ -671,4 +698,11 @@ void playeri::apply(string& sb) {
 	answeri ai;
 	ai.add(1, "Принять");
 	ai.choose(false, false, 0, id, sb);
+}
+
+planeti* playeri::choose(const aref<planeti*>& source, const char* format, ...) const {
+	string sb; answeri ai;
+	for(auto p : source)
+		ai.add((int)p, p->getname());
+	return (planeti*)choose(sb, ai, false, format, xva_start(format));
 }
