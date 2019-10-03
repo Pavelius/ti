@@ -153,6 +153,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="planet.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="player_actions.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="relation.cpp" />
     <ClCompile Include="solar.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="stringbuilder.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
+    <ClCompile Include="tech.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="variant.cpp" />
     <ClCompile Include="weapon.cpp" />

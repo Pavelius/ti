@@ -17,7 +17,7 @@ int main() {
 	planeti::create_stars();
 	playeri::setup();
 	//playeri::gethuman()->make_move(true, true);
-	playeri::gethuman()->strategy = Warfare;
+	playeri::gethuman()->strategy = Technology;
 	playeri::gethuman()->make_move(false, true);
 	return 0;
 }

@@ -56,9 +56,6 @@ int	solari::getfleetsupport(const playeri* player) const {
 		auto capacity_count = e.getcapacity();
 		if(!capacity_count)
 			continue;
-		auto capacity_limit = e.getcapacitylimit();
-		if(capacity_limit != NoVariant && capacity_limit != Fighters)
-			continue;
 		result += capacity_count;
 	}
 	return result;

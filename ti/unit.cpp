@@ -28,29 +28,6 @@ bool uniti::is(bonus_s v) const {
 	return p->is(v);
 }
 
-int uniti::getmovement() const {
-	auto result = getgroup().movements;
-	switch(type) {
-	case Carrier:
-		if(is(XRDTransporters))
-			result++;
-		break;
-	case Cruiser:
-		if(is(TypeIVDrive))
-			result++;
-		break;
-	case Dreadnought:
-		if(is(TypeIVDrive))
-			result++;
-		break;
-	case Fighters:
-		if(is(AdvancedFighters))
-			result = 2;
-		break;
-	}
-	return result;
-}
-
 int	uniti::getresource() const {
 	auto result = getgroup().cost;
 	switch(type) {
@@ -92,40 +69,81 @@ int uniti::getmaxhits() const {
 	}
 }
 
+int	uniti::getcapacity() const {
+	int i;
+	switch(type) {
+	case Carrier:
+		i = 4;
+		if(is(CarrierII))
+			i += 2;
+		return i;
+	case WarSun:
+		return 6;
+	case Dreadnought:
+		return 0;
+	case Cruiser:
+		if(is(CruiserII))
+			return 1;
+		return 0;
+	case SpaceDock:
+		return 3;
+	default:
+		return 0;
+	}
+}
+
 weaponi uniti::getweapon() const {
 	auto w = getgroup().combat;
 	if(is(CombatBonusAll))
 		w.bonus++;
 	if(is(CombatPenalty))
 		w.bonus--;
-	if(type == Dreadnought && is(CombatBonusDreadnought))
-		w.bonus++;
-	if(type == Fighters && is(CombatBonusFighters))
-		w.bonus++;
 	switch(type) {
-	case Fighters:
-		if(is(Cybernetics))
+	case Cruiser:
+		if(is(CruiserII))
 			w.bonus++;
-		if(is(AdvancedFighters))
+		break;
+	case Fighters:
+		if(is(FighterII))
+			w.bonus++;
+		break;
+	case Destroyer:
+		if(is(DestroyerII))
 			w.bonus++;
 		break;
 	case GroundForces:
-		if(is(GenSynthesis))
-			w.bonus++;
-		break;
-	case Cruiser:
-	case Destroyer:
-		if(is(HylarVAssaultLaser))
+		if(is(InfantryII))
 			w.bonus++;
 		break;
 	case PDS:
-		if(is(MagenDefenseGrid))
+		if(is(PDSII))
 			w.bonus++;
-		if(is(GravitonLaserSystem))
-			w.reroll++;
 		break;
 	}
 	return w;
+}
+
+int uniti::getmovement() const {
+	auto i = getgroup().movements;
+	switch(type) {
+	case Carrier:
+		if(is(CarrierII))
+			i++;
+		break;
+	case Cruiser:
+		if(is(CruiserII))
+			i++;
+		break;
+	case Dreadnought:
+		if(is(DreadnoughtII))
+			i++;
+		break;
+	case Fighters:
+		if(is(FighterII))
+			i = 2;
+		break;
+	}
+	return i;
 }
 
 weaponi uniti::getweapon(bool attacker, const playeri* opponent, char round) const {
@@ -154,8 +172,8 @@ bool uniti::isinvaders() const {
 	switch(type) {
 	case GroundForces:
 		return true;
-	case Fighters:
-		return is(GravitonNegator);
+	//case Fighters:
+	//	return is(GravitonNegator);
 	default:
 		return false;
 	}
@@ -176,33 +194,6 @@ int	uniti::getcount() const {
 	return getgroup().count;
 }
 
-int	uniti::getcapacity() const {
-	switch(type) {
-	case Carrier:
-	case WarSun:
-		return 6;
-	case Dreadnought:
-	case Cruiser:
-		if(is(StasisCapsules))
-			return 1;
-		return 0;
-	default:
-		return 0;
-	}
-}
-
-variant_s uniti::getcapacitylimit() const {
-	switch(type) {
-	case Dreadnought:
-	case Cruiser:
-		if(is(StasisCapsules))
-			return GroundForces;
-		return NoVariant;
-	default:
-		return NoVariant;
-	}
-}
-
 int	uniti::getcarried() const {
 	auto result = 0;
 	for(auto& e : bsmeta<uniti>()) {
@@ -217,9 +208,6 @@ int	uniti::getcarried() const {
 int uniti::getjoincount(variant_s object) const {
 	auto maximum = getcapacity();
 	if(!maximum)
-		return 0;
-	auto limit = getcapacitylimit();
-	if(limit && object != limit)
 		return 0;
 	auto current = getcarried();
 	return maximum - current;
@@ -243,12 +231,6 @@ bool uniti::build(variant_s object, bool run) {
 		return false;
 	if(planet->getplayer() != getplayer())
 		return false;
-	if(object == Fighters && !is(AdvancedFighters)) {
-		auto available_count = solar->getfleetsupport(getplayer());
-		//auto exist_count = getcount(object, getplayer(), solar);
-		//if(exist_count + produce_count > available_count)
-		//	produce_count = available_count - exist_count;
-	}
 	if(produce_count <= 0)
 		return false;
 	if(run) {

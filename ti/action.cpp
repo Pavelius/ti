@@ -1,7 +1,7 @@
 #include "main.h"
 
 static bool has_tactic(const playeri& player) {
-	return player.get(Command) > 0;
+	return player.get(Tactical) > 0;
 }
 
 static bool allow_pass(const playeri& player) {

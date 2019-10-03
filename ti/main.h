@@ -42,15 +42,20 @@ enum action_s : unsigned char {
 	NaaluFleetRetreat, SolOrbitalDrop, ExecutePrimaryAbility, ChangePoliticCard, LookActionCards,
 	//
 	StrategyAction, TacticalAction, Pass,
-	Strategy, Fleet, Command,
+	Strategic, Fleet, Tactical,
 	Commodities, Goods,
 	LastAction = Goods,
 };
 enum tech_s : unsigned char {
-	AdvancedFighters, AntimassDeflectors, FleetLogistics, LightWaveDeflector, TypeIVDrive, XRDTransporters,
-	Cybernetics, DacxiveAnimators, GenSynthesis, NeuralMotivator, StasisCapsules, X89BacterialWeapon,
-	AssaultCannon, DeepSpaceCannon, GravitonNegator, HylarVAssaultLaser, MagenDefenseGrid, WarSunTech,
-	EnviroCompensator, GravitonLaserSystem, IntegratedEconomy, MicroTechnology, SarweenTools, TransitDiodes
+	// Common technoogies
+	PlasmaScoring, MagenDefenseGrid, DuraniumArmor, AssaultCannon,
+	NeuralMotivator, DacxiveAnimators, HyperMetabolism, X89BacterialWeapon,
+	AntimassDeflectors, GravityDriver, FleetLogistics, LightWaveDeflector,
+	SarweenTools, GravitonLaserSystem, TransitDiodes, IntegratedEconomy,
+	// War technologies
+	CruiserII, DreadnoughtII, DestroyerII, PDSII, CarrierII, FighterII, InfantryII, SpaceDockII,
+	WarSunTech,
+	FirstTech = PlasmaScoring, LastTech = LightWaveDeflector,
 };
 enum bonus_s : unsigned char {
 	BonusActionCards, BonusCommandCounter, BonusInitiative, BonusFleetTokens, BonusTrade, BonusTechnology,
@@ -61,7 +66,7 @@ enum bonus_s : unsigned char {
 	CombatPenalty,
 };
 enum tech_color_s : unsigned char {
-	NoTech, Green, Blue, Red, Yellow,
+	NoTech, Red, Green, Blue, Yellow,
 };
 enum wormhole_s : unsigned char {
 	NoHole, WormholeAlpha, WormholeBeta
@@ -212,7 +217,7 @@ public:
 	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
-	void						add_technology(int value) {}
+	void						add_technology(int value);
 	void						add_trade_goods(int value);
 	void						add_objective(int value) {}
 	void						add_victory_points(int value) {}
@@ -226,7 +231,7 @@ public:
 	uniti*						choose(army& source, const char* format) const;
 	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
-	solari*						choose(const aref<solari*>& source) const;
+	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format, ...) const;
 	int							choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const;
 	void						choose_diplomacy();
@@ -245,6 +250,7 @@ public:
 	bool						isactive() const { return getactive() == this; }
 	bool						isallow(play_s type, action_s id) const;
 	bool						isallow(variant_s id) const;
+	bool						isallow(tech_s v) const;
 	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
@@ -282,6 +288,7 @@ public:
 	void						select(planeta& result, unsigned flags) const;
 	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
 	void						set(action_s id, char v) { costi::set(id, v); }
+	void						set(tech_s id) { technologies.add(id); }
 	static void					setup();
 	void						sethuman();
 	void						tactical_action();
@@ -302,7 +309,6 @@ public:
 	bool						build(variant_s object, bool run);
 	void						destroy();
 	int							getcapacity() const;
-	variant_s					getcapacitylimit() const;
 	int							getcarried() const;
 	int							getcount() const;
 	const varianti&				getgroup() const { return bsmeta<varianti>::elements[type]; }
@@ -402,6 +408,12 @@ public:
 	void						setplayer(const playeri* v) { if(v) player = v - bsmeta<playeri>::elements; else player = 0xFF; }
 	void						setsolar(const solari* v) { if(v) solar = v - bsmeta<solari>::elements; else solar = 0xFF; }
 };
+struct techi {
+	const char*					id;
+	const char*					name;
+	tech_color_s				color;
+	char						required[4]; // RGBY
+};
 struct actioni {
 	typedef bool(*testp)(const playeri& player);
 	struct proc_info {
@@ -433,7 +445,7 @@ public:
 	string();
 	void						addidentifier(const char* identifier) override;
 };
-class answeri : public stringbuilder {
+class answeri : stringbuilder {
 	struct element {
 		int						param;
 		const char*				text;
@@ -448,6 +460,7 @@ public:
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
 	int							choose(bool cancel_button, bool random_choose, tips_proc tips, const char* picture, const char* format) const;
+	void						clear() { stringbuilder::clear(); elements.clear(); }
 	static int					compare(const void* p1, const void* p2);
 	void						sort();
 };
@@ -458,3 +471,4 @@ inline char						gmy(unsigned char index) { return index / map_scan_line; }
 DECLENUM(action);
 DECLENUM(variant);
 DECLENUM(strategy);
+DECLENUM(tech);

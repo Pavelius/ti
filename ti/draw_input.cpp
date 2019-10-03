@@ -1278,13 +1278,15 @@ void playeri::slide(int x, int y) {
 	camera.y = y1;
 }
 
-solari* playeri::choose(const aref<solari*>& source) const {
+solari* playeri::choose(const aref<solari*>& source, const char* format) const {
+	if(!source)
+		return 0;
 	while(ismodal()) {
 		render_board(true, false, source);
 		render_left();
 		auto x = getwidth() - gui.window_width - gui.border * 2;
 		auto y = gui.border * 2;
-		y += window(x, y, gui.window_width, "Выбирайте звездную систему", gui.window_width);
+		y += window(x, y, gui.window_width, format, gui.window_width);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		domodal();
 		control_standart();

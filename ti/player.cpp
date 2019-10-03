@@ -15,60 +15,60 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 {CombatBonusDefend},
 {ExecutePrimaryAbility, ChangePoliticCard},
 {Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
-{AntimassDeflectors, EnviroCompensator}},
+{GravitonLaserSystem}},
 {"barony", "Баронство Летнева", {2, 3, 3}, 2,
 {BonusFleetTokens},
 {BaronyEquipment},
 {Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces},
-{HylarVAssaultLaser, AntimassDeflectors}
+{AntimassDeflectors, PlasmaScoring}
 },
 {"naalu", "Община Наалу", {2, 3, 3}, 3,
 {BonusInitiative, CombatBonusFighters},
 {NaaluFleetRetreat},
 {GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
-{EnviroCompensator, AntimassDeflectors}
+{SarweenTools, NeuralMotivator}
 },
 {"mindnet", "Сеть раума L1z1x", {3, 3, 3}, 2,
 {BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
-{EnviroCompensator, StasisCapsules, Cybernetics, HylarVAssaultLaser}
+{NeuralMotivator, PlasmaScoring}
 },
 {"yssaril", "Племена Изарилов", {2, 3, 3}, 3,
 {BonusActionCards},
 {LookActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS},
-{Cybernetics, AntimassDeflectors}
+{NeuralMotivator}
 },
 {"sol", "Федерация Солнца", {2, 3, 3}, 4,
 {BonusCommandCounter},
 {SolOrbitalDrop},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
-{AntimassDeflectors, XRDTransporters}
+{NeuralMotivator, AntimassDeflectors}
 },
 {"mentax", "Коалиция Ментаков", {2, 3, 4}, 2,
 {},
 {MentakAmbush, MentakPiracy},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
-{EnviroCompensator, HylarVAssaultLaser}
+{SarweenTools, PlasmaScoring}
 },
 {"hacan", "Эмираты Хакканов", {2, 3, 3}, 6,
 {BonusTrade},
 {HacanTradeActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
-{EnviroCompensator, SarweenTools}
+{AntimassDeflectors, SarweenTools}
 },
 {"jelnar", "Университеты Джолнаров", {2, 3, 3}, 4,
 {CombatPenalty, BonusTechnology},
 {JolanrRerollCombatDices},
 {GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought},
-{AntimassDeflectors, HylarVAssaultLaser, EnviroCompensator, SarweenTools}
+{AntimassDeflectors, NeuralMotivator, SarweenTools, PlasmaScoring}
 },
 {"norr", "Сардак Норры", {2, 3, 3}, 3,
 {CombatBonusAll},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS},
-{DeepSpaceCannon, HylarVAssaultLaser}
+{}
 },
 };
 static playeri*		active_player;
@@ -207,8 +207,8 @@ playeri& playeri::create(const char* id) {
 	technologies = p->start_tech;
 	bonuses = p->bonus;
 	// Game setup: step 11
-	set(Strategy, p->tokens[0]);
-	set(Command, p->tokens[1]);
+	set(Strategic, p->tokens[0]);
+	set(Tactical, p->tokens[1]);
 	set(Fleet, p->tokens[2]);
 	set(Commodities, p->commodities);
 	return *this;
@@ -270,9 +270,9 @@ void playeri::getinfo(string& sb) const {
 		sb.addn("[+%1 стратегия]", bsmeta<strategyi>::elements[strategy].name);
 	sb.addn("%1i ресурсов", planeti::get(this, &planeti::getresource));
 	sb.add(", %1i влияния", planeti::get(this, &planeti::getinfluence));
-	sb.addn("%1i стратегических маркеров", get(Strategy));
-	sb.addn("%1i тактических маркеров", get(Command));
+	sb.addn("%1i стратегических маркеров", get(Strategic));
 	sb.addn("%1i маркеров флота", get(Fleet));
+	sb.addn("%1i тактических маркеров", get(Tactical));
 	sb.addn("%1i товаров, %2i продукции", get(Goods), get(Commodities));
 	if(getspeaker() == this)
 		sb.addn("Являются [спикером] сената.");
@@ -288,41 +288,6 @@ void playeri::setup() {
 	for(auto& e : bsmeta<playeri>())
 		create_start_units(&e);
 	update_control();
-}
-
-static void select(playera& source, const playeri* start) {
-	auto index = start->getid();
-	for(auto& e : bsmeta<playeri>()) {
-		source.add(&bsmeta<playeri>::elements[index++]);
-		if(index >= (int)bsmeta<playeri>::count)
-			index = 0;
-	}
-}
-
-static void strategic_phase() {
-	playera source;
-	select(source, playeri::getspeaker());
-	for(auto p : source)
-		p->strategy = NoStrategy;
-	adat<strategy_s, Imperial + 1> politics;
-	for(auto i = Leadership; i <= Imperial; i = (strategy_s)(i + 1))
-		politics.add(i);
-	for(auto p : source) {
-		string sb; sb.clear();
-		answeri ai; ai.clear();
-		p->activate();
-		for(auto e : politics)
-			ai.add(e, getstr(e));
-		ai.sort();
-		p->strategy = (strategy_s)p->choose(sb, ai, false,
-			"Эта стратегическая фаза. "
-			"Вам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. "
-			"Ваши оппоненты также выбирают одну стратегию из этого же списка.");
-		sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
-		sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
-		p->message(sb);
-		politics.remove(politics.indexof(p->strategy));
-	}
 }
 
 int playeri::getcardscount() const {
@@ -375,7 +340,7 @@ void playeri::add_action_cards(int value) {
 }
 
 void playeri::add_command_tokens(int value) {
-	static action_s command_area[] = {Strategy, Command, Fleet};
+	static action_s command_area[] = {Strategic, Fleet, Tactical};
 	string sb;
 	sb.add("%1 получили [%2i] командных жетона.", getyouname(), value);
 	if(iscomputer()) {
@@ -449,17 +414,9 @@ uniti* playeri::choose(army& source, const char* format) const {
 	return (uniti*)choose(sb, ai, false, format);
 }
 
-static void refresh_players() {
-	for(auto& e : bsmeta<playeri>()) {
-		e.set(StrategyAction, 1);
-		e.set(TacticalAction, 1);
-		e.set(Pass, 1);
-	}
-}
-
 void playeri::choose_diplomacy() {
 	solara source; select(source, Friendly | NoMekatol);
-	auto p = choose(source);
+	auto p = choose(source, "Выбирайте звездную систему, которая будет иметь особый дипломатический статус на весь этот ход.");
 	if(!p)
 		return;
 	string sb;
@@ -490,42 +447,6 @@ void playeri::choose_diplomacy() {
 	apply(sb);
 }
 
-static planeti* choose_planet_construct(const playeri* p, variant_s type, const char* format) {
-	planeta source;
-	for(auto& e : bsmeta<planeti>()) {
-		if(!e)
-			continue;
-		if(e.getplayer() != p)
-			continue;
-		if(type == PDS) {
-			if(e.getcount(type, p) >= 2)
-				continue;
-		} else {
-			if(e.getcount(type, p) >= 1)
-				continue;
-		}
-		source.add(&e);
-	}
-	return p->choose(source, format, getstr(type));
-}
-
-static variant_s choose_dock_or_PDS(const playeri* p) {
-	string sb; answeri ai;
-	ai.add(SpaceDock, getstr(SpaceDock));
-	ai.add(PDS, getstr(PDS));
-	return (variant_s)p->choose(sb, ai, false, "Что вы хотите построить именно вы хотите построить в первую очередь?");
-}
-
-static void build_primary(playeri* p) {
-	auto ut = choose_dock_or_PDS(p);
-	auto pp = choose_planet_construct(p, ut, "Выбирайте планету, на которой будете строить [%1].");
-	if(pp)
-		p->create(ut, pp);
-	pp = choose_planet_construct(p, PDS, "На втором шаге мы усилим свою безопасность. Где мы будем строить [%1]?");
-	if(pp)
-		p->create(PDS, pp);
-}
-
 void playeri::add_trade_goods(int value) {
 	add(Goods, value);
 	string sb;
@@ -540,168 +461,6 @@ void playeri::replenish_commodities() {
 	string sb;
 	sb.add("Мы обновили свою продукцию и готовы распродать ее по самым лучшим ценам в галактике. На сейчас у нас имеется [%1i] единицы продукции.", get(Commodities));
 	message(sb);
-}
-
-static void trade_agreements(playeri* p) {
-	adat<playeri*, 8> checked;
-	while(true) {
-		string sb; answeri ai;
-		sb.add("Мы можем заключить несколько торговых соглашений. Нам это ничего не даст, но оппонент оценит этот акт доброй воли.");
-		if(checked) {
-			auto first = false;
-			for(auto pp : checked) {
-				if(first)
-					sb.adds("Вот список тех, с кем мы заключим соглашение:");
-				else
-					sb.adds(".");
-				sb.adds(pp->getname());
-			}
-		} else
-			sb.adds("На данный момент список кандидатов пустой.");
-		for(auto& e : bsmeta<playeri>()) {
-			if(!e || p == &e)
-				continue;
-			if(e.get(Commodities) == e.getcommodities())
-				continue;
-			if(checked.is(&e))
-				ai.add((int)&e, "Исключить %1", e.getname());
-			else
-				ai.add((int)&e, e.getname());
-		}
-		if(!ai)
-			break;
-		ai.add(0, "Все верно");
-		auto pp = (playeri*)p->choose(sb, ai, false, "Кого хотите включить или исключить в список?");
-		if(!pp)
-			break;
-		if(checked.is(pp))
-			checked.remove(checked.indexof(pp));
-		else
-			checked.add(pp);
-	}
-	for(auto pp : checked)
-		pp->replenish_commodities();
-}
-
-void return_command_from_board(playeri* player) {
-
-}
-
-static void strategy_primary_action(playeri* p, strategy_s id) {
-	switch(id) {
-	case Leadership:
-		p->add_command_tokens(3);
-		p->buy_command_tokens(3);
-		break;
-	case Diplomacy:
-		p->choose_diplomacy();
-		break;
-	case Politics:
-		p->choose_speaker(1);
-		p->add_action_cards(2);
-		p->predict_next_political_card(2);
-		break;
-	case Construction:
-		build_primary(p);
-		break;
-	case Trade:
-		p->add_trade_goods(3);
-		p->replenish_commodities();
-		trade_agreements(p);
-		break;
-	case Warfare:
-		p->return_command_from_board(1);
-		break;
-	case Technology:
-		p->add_technology(1);
-		p->buy_technology(6);
-		break;
-	case Imperial:
-		p->add_objective(1);
-		p->add_victory_points(2);
-		break;
-	}
-}
-
-static void strategy_secondanary_action(playeri* p, strategy_s id) {
-	switch(id) {
-	case Leadership:
-		p->buy_command_tokens(3);
-		break;
-	case Diplomacy:
-		p->refresh_planets(1);
-		break;
-	case Politics:
-		p->add_action_cards(1);
-		break;
-	case Trade:
-		break;
-	case Warfare:
-		break;
-	case Technology:
-		p->buy_technology(4);
-		break;
-	case Imperial:
-		p->build_units(1);
-		break;
-	}
-}
-
-void playeri::tactical_action() {
-	adat<solari*, 64> source;
-	aref<solari*> list;
-	auto solar = choose(list);
-	solar->activate(this);
-	moveships(solar);
-}
-
-static action_s choose_action(playeri* p, play_s play) {
-	string sb; answeri ai;
-	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
-		if(!p->is(a) || !p->isallow(play, a))
-			continue;
-		ai.add(a, getstr(a), getstr(p->strategy));
-	}
-	return (action_s)p->choose(sb, ai, false, "Что вы предпочитаете делать в свой ход?");
-}
-
-static void play_action(playeri* p, action_s id) {
-	switch(id) {
-	case StrategyAction:
-		strategy_primary_action(p, p->strategy);
-		break;
-	case TacticalAction:
-		break;
-	}
-}
-
-static void action_phase() {
-	const int last_initiative = 8;
-	refresh_players();
-	auto someone_move = true;
-	while(someone_move) {
-		someone_move = false;
-		for(auto i = 0; i <= last_initiative; i++) {
-			for(auto& e : bsmeta<playeri>()) {
-				if(e.get(Pass) == 0)
-					continue;
-				if(e.getinitiative() != i)
-					continue;
-				e.activate();
-				auto a = choose_action(&e, AsAction);
-				play_action(&e, a);
-				e.add(a, -1);
-				someone_move = true;
-			}
-		}
-	}
-}
-
-void playeri::make_move(bool strategic, bool action) {
-	if(strategic)
-		strategic_phase();
-	if(action)
-		action_phase();
 }
 
 unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, variant_s type) const {
@@ -727,7 +486,7 @@ void playeri::select(solara& result, unsigned flags) const {
 			continue;
 		if((flags&NoMekatol) != 0 && &e == bsmeta<solari>::elements)
 			continue;
-		if((flags&Activated) != 0 && &e == bsmeta<solari>::elements)
+		if((flags&Activated) != 0 && !e.isactivated(this))
 			continue;
 		result.add(&e);
 	}
@@ -788,10 +547,50 @@ planeti* playeri::choose(const aref<planeti*>& source, const char* format, ...) 
 int	playeri::choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const {
 	auto p = sb.get();
 	//sb.adds("[+");
-	if(format)
-		sb.addx(' ', format, format_param);
+	if(format) {
+		sb.adds(" ");
+		sb.addv(format, format_param);
+	}
 	//sb.add("]");
 	auto r = ai.choose(cancel_button, iscomputer(), 0, id, sb);
 	sb.set(p);
 	return r;
+}
+
+int get_tech_color_count(const playeri* p, tech_color_s c) {
+	auto result = 0;
+	for(auto i = FirstTech; i <= LastTech; i = tech_s(i + 1)) {
+		if(bsmeta<techi>::elements[i].color != c)
+			continue;
+		if(!p->is(i))
+			continue;
+		result++;
+	}
+	return result;
+}
+
+bool playeri::isallow(tech_s v) const {
+	auto& e = bsmeta<techi>::elements[v];
+	for(auto i = Red; i <= Yellow; i = tech_color_s(i + 1)) {
+		auto r = e.required[i - Red];
+		if(r == 0)
+			continue;
+		auto n = get_tech_color_count(this, i);
+		if(n < r)
+			return false;
+	}
+	return true;
+}
+
+void playeri::add_technology(int value) {
+	answeri ai; string sb;
+	for(auto i = FirstTech; i <= LastTech; i = tech_s(i + 1)) {
+		if(is(i))
+			continue;
+		if(!isallow(i))
+			continue;
+		ai.add(i, getstr(i));
+	}
+	auto t = (tech_s)choose(sb, ai, false, "Какую технологию мы выберем?");
+	set(t);
 }

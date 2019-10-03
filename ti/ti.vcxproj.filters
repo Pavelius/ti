@@ -144,6 +144,12 @@
     <ClCompile Include="relation.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="player_actions.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="tech.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">
