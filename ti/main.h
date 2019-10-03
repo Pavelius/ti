@@ -83,6 +83,9 @@ enum variant_s : unsigned char {
 enum planet_s : unsigned char {
 	PlanetUsed, Exhaused,
 };
+enum relation_s : unsigned char {
+	WasHostile,
+};
 struct agendai;
 class answeri;
 class planeti;
@@ -141,6 +144,16 @@ public:
 	void						shuffle();
 	void						top(unsigned char);
 };
+class relation {
+	char						reaction;
+	cflags<relation_s, unsigned char> flags;
+public:
+	void						add(int v) { reaction += v; }
+	int							get() const;
+	bool						is(relation_s v) const { return flags.is(v); }
+	void						set(relation_s v) { return flags.add(v); }
+	void						remove(relation_s v) { return flags.remove(v); }
+};
 template<class T>
 struct deck : abstract_deck {
 	void						add(T e) { auto p = abstract_deck::add(); *p = e; }
@@ -187,6 +200,7 @@ struct strategyi {
 	char						bonus;
 };
 class playeri : public namei, public costi {
+	relation					relations[8];
 	char						commodities;
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
@@ -236,8 +250,10 @@ public:
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
+	int							getreaction(const playeri* p) const { return relations[p->getid()].get(); }
 	static playeri*				getactive();
 	int							getcardscount() const;
+	int							getcommodities() const { return commodities; }
 	int							getfleet() const;
 	static playeri*				gethuman();
 	unsigned char				getid() const;

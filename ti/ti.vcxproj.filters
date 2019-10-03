@@ -141,6 +141,9 @@
     <ClCompile Include="variant.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="relation.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">

@@ -542,6 +542,47 @@ void playeri::replenish_commodities() {
 	message(sb);
 }
 
+static void trade_agreements(playeri* p) {
+	adat<playeri*, 8> checked;
+	while(true) {
+		string sb; answeri ai;
+		sb.add("Мы можем заключить несколько торговых соглашений. Нам это ничего не даст, но оппонент оценит этот акт доброй воли.");
+		if(checked) {
+			auto first = false;
+			for(auto pp : checked) {
+				if(first)
+					sb.adds("Вот список тех, с кем мы заключим соглашение:");
+				else
+					sb.adds(".");
+				sb.adds(pp->getname());
+			}
+		} else
+			sb.adds("На данный момент список кандидатов пустой.");
+		for(auto& e : bsmeta<playeri>()) {
+			if(!e || p == &e)
+				continue;
+			if(e.get(Commodities) == e.getcommodities())
+				continue;
+			if(checked.is(&e))
+				ai.add((int)&e, "Исключить %1", e.getname());
+			else
+				ai.add((int)&e, e.getname());
+		}
+		if(!ai)
+			break;
+		ai.add(0, "Все верно");
+		auto pp = (playeri*)p->choose(sb, ai, false, "Кого хотите включить или исключить в список?");
+		if(!pp)
+			break;
+		if(checked.is(pp))
+			checked.remove(checked.indexof(pp));
+		else
+			checked.add(pp);
+	}
+	for(auto pp : checked)
+		pp->replenish_commodities();
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -562,6 +603,7 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 	case Trade:
 		p->add_trade_goods(3);
 		p->replenish_commodities();
+		trade_agreements(p);
 		break;
 	case Warfare:
 		p->return_command_from_board(1);
