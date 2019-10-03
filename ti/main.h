@@ -120,6 +120,7 @@ struct variant {
 	constexpr solari*			getsolar() const { return get<solari>(); }
 	constexpr uniti*			getunit() const { return get<uniti>(); }
 };
+typedef adat<variant, 64>		varianta;
 struct army : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
@@ -213,6 +214,7 @@ public:
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format, ...) const;
+	int							choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const;
 	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);

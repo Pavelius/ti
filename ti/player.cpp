@@ -487,7 +487,7 @@ void playeri::choose_diplomacy() {
 	apply(sb);
 }
 
-static planeti* choose_planet_construct(const playeri* p, variant_s type) {
+static planeti* choose_planet_construct(const playeri* p, variant_s type, const char* format) {
 	planeta source;
 	for(auto& e : bsmeta<planeti>()) {
 		if(!e)
@@ -503,12 +503,24 @@ static planeti* choose_planet_construct(const playeri* p, variant_s type) {
 		}
 		source.add(&e);
 	}
-	return p->choose(source, "¬ыбирайте планету, на которой будете строить.");
+	return p->choose(source, format, getstr(type));
+}
+
+static variant_s choose_dock_or_PDS(const playeri* p) {
+	string sb; answeri ai;
+	ai.add(SpaceDock, getstr(SpaceDock));
+	ai.add(PDS, getstr(PDS));
+	return (variant_s)p->choose(sb, ai, false, "„то вы хотите построить именно вы хотите построить в первую очередь?");
 }
 
 static void build_primary(playeri* p) {
-	auto pp = choose_planet_construct(p, PDS);
-	p->create(PDS, pp);
+	auto ut = choose_dock_or_PDS(p);
+	auto pp = choose_planet_construct(p, ut, "¬ыбирайте планету, на которой будете строить [%1].");
+	if(pp)
+		p->create(ut, pp);
+	pp = choose_planet_construct(p, PDS, "Ќа втором шаге мы усилим свою безопасность. √де мы будем строить [%1]?");
+	if(pp)
+		p->create(PDS, pp);
 }
 
 static void strategy_primary_action(playeri* p, strategy_s id) {
@@ -692,14 +704,7 @@ void playeri::choose_speaker(int exclude) {
 }
 
 int playeri::choose(string& sb, answeri& ai, bool cancel, const char* format, ...) const {
-	auto p = sb.get();
-	//sb.adds("[+");
-	if(format)
-		sb.addx(' ', format, xva_start(format));
-	//sb.add("]");
-	auto r = ai.choose(cancel, iscomputer(), 0, id, sb);
-	sb.set(p);
-	return r;
+	return choosev(sb, ai, cancel, format, xva_start(format));
 }
 
 void playeri::apply(string& sb) {
@@ -712,5 +717,16 @@ planeti* playeri::choose(const aref<planeti*>& source, const char* format, ...) 
 	string sb; answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
-	return (planeti*)choose(sb, ai, false, format, xva_start(format));
+	return (planeti*)choosev(sb, ai, false, format, xva_start(format));
+}
+
+int	playeri::choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const {
+	auto p = sb.get();
+	//sb.adds("[+");
+	if(format)
+		sb.addx(' ', format, format_param);
+	//sb.add("]");
+	auto r = ai.choose(cancel_button, iscomputer(), 0, id, sb);
+	sb.set(p);
+	return r;
 }
