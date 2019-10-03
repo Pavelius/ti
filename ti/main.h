@@ -170,14 +170,14 @@ struct varianti {
 	char						production_count;
 	weaponi						combat;
 };
-struct costi {
+class costi {
+	char						actions[LastAction + 1];
+public:
 	void						add(action_s id, int v);
 	void						difference(string& sb, const costi& e);
 	int							get(action_s id) const { return actions[id]; }
 	bool						is(action_s value) const { return actions[value] > 0; }
 	void						set(action_s id, int v) { actions[id] = v; }
-private:
-	char						actions[LastAction + 1];
 };
 struct strategyi {
 	const char*					id;
@@ -187,6 +187,7 @@ struct strategyi {
 	char						bonus;
 };
 class playeri : public namei, public costi {
+	char						commodities;
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
 public:
@@ -197,10 +198,9 @@ public:
 	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
-	void						add_trade_goods(int value) {}
 	void						add_technology(int value) {}
+	void						add_trade_goods(int value);
 	void						add_objective(int value) {}
-	void						add_profit_for_trade_agreements() {}
 	void						add_victory_points(int value) {}
 	void						apply(string& sb);
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
@@ -257,7 +257,7 @@ public:
 	void						pay(int cost);
 	void						predict_next_political_card(int value);
 	void						refresh_planets(int value) {}
-	void						replenish_commodities() {}
+	void						replenish_commodities();
 	void						return_command_from_board(int value) {}
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
@@ -265,6 +265,7 @@ public:
 	void						select(solara& result, unsigned flags) const;
 	void						select(planeta& result, unsigned flags) const;
 	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
+	void						set(action_s id, char v) { costi::set(id, v); }
 	static void					setup();
 	void						sethuman();
 	void						tactical_action();

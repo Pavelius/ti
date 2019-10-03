@@ -5,65 +5,66 @@ struct player_pregen_info {
 	const char*			id;
 	const char*			name;
 	char				tokens[3];
+	char				commodities;
 	cflags<bonus_s>		bonus;
 	adat<action_s, 8>	actions;
 	variant_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
-static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3},
+static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3}, 4,
 {CombatBonusDefend},
 {ExecutePrimaryAbility, ChangePoliticCard},
 {Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
 {AntimassDeflectors, EnviroCompensator}},
-{"barony", "Баронство Летнева", {2, 3, 3},
+{"barony", "Баронство Летнева", {2, 3, 3}, 2,
 {BonusFleetTokens},
 {BaronyEquipment},
 {Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces},
 {HylarVAssaultLaser, AntimassDeflectors}
 },
-{"naalu", "Община Наалу", {2, 3, 3},
+{"naalu", "Община Наалу", {2, 3, 3}, 3,
 {BonusInitiative, CombatBonusFighters},
 {NaaluFleetRetreat},
 {GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
 {EnviroCompensator, AntimassDeflectors}
 },
-{"mindnet", "Сеть раума L1z1x", {3, 3, 3},
+{"mindnet", "Сеть раума L1z1x", {3, 3, 3}, 2,
 {BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
 {EnviroCompensator, StasisCapsules, Cybernetics, HylarVAssaultLaser}
 },
-{"yssaril", "Племена Изарилов", {2, 3, 3},
+{"yssaril", "Племена Изарилов", {2, 3, 3}, 3,
 {BonusActionCards},
 {LookActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS},
 {Cybernetics, AntimassDeflectors}
 },
-{"sol", "Федерация Солнца", {2, 3, 3},
+{"sol", "Федерация Солнца", {2, 3, 3}, 4,
 {BonusCommandCounter},
 {SolOrbitalDrop},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
 {AntimassDeflectors, XRDTransporters}
 },
-{"mentax", "Коалиция Ментаков", {2, 3, 4},
+{"mentax", "Коалиция Ментаков", {2, 3, 4}, 2,
 {},
 {MentakAmbush, MentakPiracy},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
 {EnviroCompensator, HylarVAssaultLaser}
 },
-{"hacan", "Эмираты Хакканов", {2, 3, 3},
+{"hacan", "Эмираты Хакканов", {2, 3, 3}, 6,
 {BonusTrade},
 {HacanTradeActionCards},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
 {EnviroCompensator, SarweenTools}
 },
-{"jelnar", "Университеты Джолнаров", {2, 3, 3},
+{"jelnar", "Университеты Джолнаров", {2, 3, 3}, 4,
 {CombatPenalty, BonusTechnology},
 {JolanrRerollCombatDices},
 {GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought},
 {AntimassDeflectors, HylarVAssaultLaser, EnviroCompensator, SarweenTools}
 },
-{"norr", "Сардак Норры", {2, 3, 3},
+{"norr", "Сардак Норры", {2, 3, 3}, 3,
 {CombatBonusAll},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS},
@@ -202,12 +203,14 @@ playeri& playeri::create(const char* id) {
 	assert(p);
 	this->id = p->id;
 	this->name = p->name;
+	this->commodities = p->commodities;
 	technologies = p->start_tech;
 	bonuses = p->bonus;
 	// Game setup: step 11
 	set(Strategy, p->tokens[0]);
 	set(Command, p->tokens[1]);
 	set(Fleet, p->tokens[2]);
+	set(Commodities, p->commodities);
 	return *this;
 }
 
@@ -270,7 +273,7 @@ void playeri::getinfo(string& sb) const {
 	sb.addn("%1i стратегических маркеров", get(Strategy));
 	sb.addn("%1i тактических маркеров", get(Command));
 	sb.addn("%1i маркеров флота", get(Fleet));
-	sb.addn("%1i товаров", get(Goods));
+	sb.addn("%1i товаров, %2i продукции", get(Goods), get(Commodities));
 	if(getspeaker() == this)
 		sb.addn("Являются [спикером] сената.");
 	if(gethuman() == this)
@@ -523,6 +526,22 @@ static void build_primary(playeri* p) {
 		p->create(PDS, pp);
 }
 
+void playeri::add_trade_goods(int value) {
+	add(Goods, value);
+	string sb;
+	sb.add("Мы получили [%1i] товара. Товар можно использовать в любой момент для оплаты вместо влияния или ресурсов.", value);
+	message(sb);
+}
+
+void playeri::replenish_commodities() {
+	if(commodities == get(Commodities))
+		return;
+	set(Commodities, commodities);
+	string sb;
+	sb.add("Мы обновили свою продукцию и готовы распродать ее по самым лучшим ценам в галактике. На сейчас у нас имеется [%1i] единицы продукции.", get(Commodities));
+	message(sb);
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -542,8 +561,7 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 		break;
 	case Trade:
 		p->add_trade_goods(3);
-		p->add_profit_for_trade_agreements();
-		p->open_trade_negatiation();
+		p->replenish_commodities();
 		break;
 	case Warfare:
 		p->return_command_from_board(1);
@@ -571,7 +589,6 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 		p->add_action_cards(1);
 		break;
 	case Trade:
-		p->add_profit_for_trade_agreements();
 		break;
 	case Warfare:
 		break;
