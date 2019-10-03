@@ -1,9 +1,9 @@
 #include "main.h"
 
 solari					bsmeta<solari>::elements[48];
-unsigned				bsmeta<solari>::count = sizeof(bsmeta<solari>::elements)/sizeof(bsmeta<solari>::elements[0]);
-static short unsigned	solar_indecies[map_scan_line * map_scan_line];
-static short unsigned	movement_rate[map_scan_line * map_scan_line];
+unsigned				bsmeta<solari>::count = sizeof(bsmeta<solari>::elements) / sizeof(bsmeta<solari>::elements[0]);
+static unsigned char	solar_indecies[map_scan_line * map_scan_line];
+static unsigned char	movement_rate[map_scan_line * map_scan_line];
 
 planeti bsmeta<planeti>::elements[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
@@ -81,30 +81,6 @@ int	planeti::getresource() const {
 	return resource;
 }
 
-unsigned planeti::select(planeti** result, planeti* const*result_max, const char* home) {
-	auto p = result;
-	for(auto& e : bsmeta<planeti>()) {
-		if(!e.home)
-			continue;
-		if(strcmp(e.home, home) != 0)
-			continue;
-		if(p < result_max)
-			*p++ = &e;
-	}
-	return p - result;
-}
-
-unsigned planeti::select(planeti** result, planeti* const* result_max, const solari* parent) {
-	auto p = result;
-	for(auto& e : bsmeta<planeti>()) {
-		if(e.getsolar() != parent)
-			continue;
-		if(p < result_max)
-			*p++ = &e;
-	}
-	return p - result;
-}
-
 int planeti::get(const playeri* player, int(planeti::*getproc)() const) {
 	auto result = 0;
 	for(auto& e : bsmeta<planeti>()) {
@@ -117,23 +93,19 @@ int planeti::get(const playeri* player, int(planeti::*getproc)() const) {
 
 void planeti::refresh() {
 	for(auto& e : bsmeta<planeti>())
-		e.deactivate();
+		e.flags = 0;
 }
 
 void planeti::initialize() {
 	for(auto& e : bsmeta<solari>())
-		e.type = Solar;
+		e.set(Solar);
 	for(auto& e : solar_range_data) {
 		for(auto i = e.from; i <= e.to; i++)
-			bsmeta<solari>::elements[i].type = e.type;
+			bsmeta<solari>::elements[i].set(e.type);
 	}
 	for(auto& e : bsmeta<planeti>()) {
-		e.type = Planet;
-		e.setplayer(0);
-		if(e.solar == -1)
-			e.setsolar(0);
-		else
-			e.setsolar(bsmeta<solari>::elements + e.solar);
+		e.player = 0xFF;
+		e.flags = 0;
 	}
 }
 
@@ -142,6 +114,7 @@ void planeti::setup() {
 		if(!e.home)
 			continue;
 		e.setplayer(playeri::find(e.home));
+		e.set(PlanetUsed);
 	}
 }
 
@@ -158,6 +131,10 @@ int get_system_count() {
 void planeti::create_stars() {
 	char player_pos[][2] = {{3, 0}, {6, 0}, {0, 3}, {6, 3}, {0, 6}, {3, 6}};
 	memset(solar_indecies, 0, sizeof(solar_indecies));
+	for(auto& e : bsmeta<solari>()) {
+		e.setplayer(0);
+		e.setindex(0xFF);
+	}
 	for(auto y = 0; y < 7; y++) {
 		if(y < 3) {
 			for(auto x = 0; x < (3 - y); x++)
@@ -183,10 +160,17 @@ void planeti::create_stars() {
 		if(e == Blocked)
 			continue;
 		if(index < solar_deck.getcount())
-			e = solar_deck[index++];
+			e = solar_deck.data[index++];
 	}
-	solar_indecies[gmi(3, 3)] = 0; // Расположили Менкатол Рекс
+	// Расположили Менкатол Рекс
+	solar_indecies[gmi(3, 3)] = 0;
 	// Расопложим игроков
+	for(auto& pn : bsmeta<planeti>()) {
+		if(!pn.home)
+			continue;
+		pn.setsolar(0);
+		pn.remove(PlanetUsed);
+	}
 	index = 33;
 	int player_index = 0;
 	for(auto& e : bsmeta<playeri>()) {
@@ -199,6 +183,18 @@ void planeti::create_stars() {
 		solar_indecies[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
 		player_index++;
 		index++;
+	}
+	// Обновим индексы звездных планет 
+	for(unsigned i = 0; i < sizeof(solar_indecies) / sizeof(solar_indecies[0]); i++) {
+		auto s = solar_indecies[i];
+		if(s == Blocked)
+			continue;
+		auto& e = bsmeta<solari>::elements[s];
+		e.setindex(i);
+		for(auto& u : bsmeta<planeti>()) {
+			if(u.getsolar() == &e)
+				u.set(PlanetUsed);
+		}
 	}
 }
 
@@ -221,33 +217,15 @@ solari* solari::getsolar(short unsigned index) {
 	return bsmeta<solari>::elements + n;
 }
 
-short unsigned uniti::getindex() const {
-	solari* s;
-	if(parent.type == Planet)
-		s = getplanet()->getsolar();
-	else if(parent.type == Solar)
-		s = getsolar();
-	else
-		return Blocked;
-	auto index = s - bsmeta<solari>::elements;
-	if(index != Blocked) {
-		for(unsigned i = 0; i < sizeof(solar_indecies) / sizeof(solar_indecies[0]); i++) {
-			if(solar_indecies[i] == index)
-				return i;
-		}
-	}
-	return Blocked;
-}
-
 enum direction_s : unsigned char {
 	LeftUp, RightUp, Left, Right, LeftDown, RightDown
 };
 
-static short unsigned getmovement(short unsigned index, direction_s d) {
+static unsigned char getmovement(unsigned char index, direction_s d) {
 	if(index == Blocked)
 		return Blocked;
-	auto x = uniti::gmx(index);
-	auto y = uniti::gmy(index);
+	auto x = gmx(index);
+	auto y = gmy(index);
 	switch(d) {
 	case Left: x--; break;
 	case Right: x++; break;
@@ -257,17 +235,17 @@ static short unsigned getmovement(short unsigned index, direction_s d) {
 	case RightDown: y++; break;
 	default: return Blocked;
 	}
-	if(x < 0 || x >= map_scan_line || y<0 || y>= map_scan_line)
+	if(x < 0 || x >= map_scan_line || y < 0 || y >= map_scan_line)
 		return Blocked;
-	auto i = uniti::gmi(x, y);
+	auto i = gmi(x, y);
 	if(solar_indecies[i] == Blocked)
 		return Blocked;
 	return i;
 }
 
-static void make_wave(short unsigned start_index, const playeri* player, short unsigned* result, bool block) {
+static void make_wave(unsigned char start_index, const playeri* player, unsigned char* result, bool block) {
 	static direction_s directions[] = {LeftUp, RightUp, Left, Right, LeftDown, RightDown};
-	short unsigned stack[256 * 8];
+	unsigned char stack[256 * 8];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
 	auto push_counter = stack;
 	auto pop_counter = stack;
@@ -283,7 +261,8 @@ static void make_wave(short unsigned start_index, const playeri* player, short u
 			continue;
 		auto p_player = p->getplayer();
 		auto allow_movement = true;
-		if(p->type == Nebula)
+		auto type = p->getgroup();
+		if(type == Nebula)
 			allow_movement = false;
 		else if(p_player && p_player->isenemy(player) && !p_player->is(LightWaveDeflector))
 			allow_movement = false;
@@ -303,20 +282,18 @@ static void make_wave(short unsigned start_index, const playeri* player, short u
 	}
 }
 
-static void make_wave(short unsigned start_index, const playeri* player) {
+static void make_wave(unsigned char start_index, const playeri* player) {
 	for(auto& e : movement_rate)
 		e = DefaultCost;
 	for(auto& e : bsmeta<solari>()) {
 		if(!e)
 			continue;
-		if(e.type == Solar)
+		auto type = e.getgroup();
+		if(type == Solar || type == Nebula)
 			continue;
-		if(e.type == Nebula)
+		if(type == AsteroidField && player->is(AntimassDeflectors))
 			continue;
-		if(e.type == AsteroidField && player->is(AntimassDeflectors))
-			continue;
-		auto index = e.getindex();
-		movement_rate[index] = Blocked;
+		movement_rate[e.getindex()] = Blocked;
 	}
 	make_wave(start_index, player, movement_rate, false);
 }
@@ -363,20 +340,13 @@ planeti* planeti::find(const solari* parent, int index) {
 	return 0;
 }
 
-uniti* planeti::find(variant_s group, int index) const {
-	if(!index)
-		return 0;
+int	planeti::getcount(variant_s type, const playeri* player) const {
+	auto result = 0;
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.type != group)
-			continue;
-		if(e.getplayer() != getplayer())
-			continue;
-		if(e.getplanet() != this)
-			continue;
-		if(--index<=0)
-			return &e;
+		if(e.type == type && e.getplayer() == player && e.getplanet()==this)
+			result++;
 	}
-	return 0;
+	return result;
 }

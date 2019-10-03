@@ -176,20 +176,6 @@ int	uniti::getcount() const {
 	return getgroup().count;
 }
 
-int	uniti::getcount(variant_s type, const playeri* player, uniti* location) {
-	auto result = 0;
-	auto player_index = player - bsmeta<playeri>::elements;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(location && !e.in(location))
-			continue;
-		if(e.type == type && e.player == player_index)
-			result++;
-	}
-	return result;
-}
-
 int	uniti::getcapacity() const {
 	switch(type) {
 	case Carrier:
@@ -239,84 +225,40 @@ int uniti::getjoincount(variant_s object) const {
 	return maximum - current;
 }
 
-int	uniti::getfightersupport() {
-	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.player != player)
-			continue;
-		if(!e.parent)
-			continue;
-		if(e.parent.type == Planet && e.parent.getplanet()->getsolar() != this)
-			continue;
-		if(e.parent.type == Solar && e.parent.getsolar() != this)
-			continue;
-		auto capacity_count = e.getcapacity();
-		if(!capacity_count)
-			continue;
-		auto capacity_limit = e.getcapacitylimit();
-		if(capacity_limit != NoVariant && capacity_limit != Fighters)
-			continue;
-		result += capacity_count;
-	}
-	return result;
-}
-
 bool uniti::build(variant_s object, bool run) {
-	auto solar_system = getsolar();
-	if(!solar_system)
+	auto solar = getsolar();
+	if(!solar)
 		return false;
 	auto produce_count = getproduction(object);
 	auto available_count = bsmeta<varianti>::elements[object].available;
 	if(available_count) {
-		auto exist_count = getcount(object, getplayer());
+		auto exist_count = solar->getcount(object, getplayer());
 		if(exist_count + produce_count > available_count)
 			produce_count = available_count - exist_count;
 	}
 	if(produce_count <= 0)
 		return false;
-	uniti* build_base = getplanet();
-	if(!build_base)
+	auto planet = getplanet();
+	if(!planet)
 		return false;
-	switch(object) {
-	case Fighters:
-	case Carrier:
-	case Cruiser:
-	case Destroyer:
-	case Dreadnought:
-	case WarSun:
-		build_base = solar_system;
-		break;
-	}
-	if(build_base->player != player)
+	if(planet->getplayer() != getplayer())
 		return false;
 	if(object == Fighters && !is(AdvancedFighters)) {
-		auto available_count = solar_system->getfightersupport();
-		auto exist_count = getcount(object, getplayer(), solar_system);
-		if(exist_count + produce_count > available_count)
-			produce_count = available_count - exist_count;
+		auto available_count = solar->getfleetsupport(getplayer());
+		//auto exist_count = getcount(object, getplayer(), solar);
+		//if(exist_count + produce_count > available_count)
+		//	produce_count = available_count - exist_count;
 	}
 	if(produce_count <= 0)
 		return false;
 	if(run) {
 		for(auto i = 0; i < produce_count; i++) {
 			auto p = new uniti(object);
-			p->parent = build_base;
-			p->player = player;
+			p->setplanet(planet);
+			p->setplayer(getplayer());
 		}
 	}
 	return true;
-}
-
-bool uniti::in(const uniti* object) const {
-	auto planet = getplanet();
-	if((uniti*)planet == object)
-		return true;
-	auto solar = getsolar();
-	if((uniti*)solar == object)
-		return true;
-	return false;
 }
 
 int uniti::getweight() const {
@@ -334,73 +276,6 @@ int uniti::getweight() const {
 }
 
 void uniti::destroy() {}
-
-int	uniti::getfleet(const playeri* player, const solari* solar) {
-	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.getsolar() != solar)
-			continue;
-		if(!e.isfleet())
-			continue;
-		result++;
-	}
-	return result;
-}
-
-int	uniti::getfleet(const playeri* player) {
-	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(!e.isfleet())
-			continue;
-		result++;
-	}
-	return result;
-}
-
-void uniti::update_control() {
-	for(auto& e : bsmeta<solari>()) {
-		if(!e)
-			continue;
-		e.setplayer(0);
-		for(auto& u : bsmeta<uniti>()) {
-			if(!u)
-				continue;
-			if(u.getsolar() == &e) {
-				u.setplayer(e.getplayer());
-				break;
-			}
-		}
-	}
-}
-
-bool uniti::isactivated(const playeri* player) const {
-	if(!player)
-		return true;
-	return (activate_flags & (1 << (player->getid()))) != 0;
-}
-
-void uniti::activate() {
-	activate_flags = 0xFF;
-}
-
-void uniti::deactivate() {
-	activate_flags = 0;
-}
-
-void uniti::activate(const playeri* player, bool setvalue) {
-	if(!player)
-		return;
-	auto i = player->getid();
-	if(setvalue)
-		activate_flags |= 1 << i;
-	else
-		activate_flags &= ~(1 << i);
-	player->slide(this);
-}
 
 playeri* uniti::getplayer() const {
 	if(player == 0xFF)

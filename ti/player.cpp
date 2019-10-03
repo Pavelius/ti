@@ -77,7 +77,7 @@ static playeri*		human_player;
 static int compare_planets(const void* p1, const void* p2) {
 	auto e1 = *((planeti**)p1);
 	auto e2 = *((planeti**)p2);
-	return e2->resource - e1->resource;
+	return e2->getresource() - e1->getresource();
 }
 
 void playeri::activate() {
@@ -146,15 +146,40 @@ const player_pregen_info* find_by_id(const char* id) {
 	return 0;
 }
 
+static void update_control() {
+	for(auto& e : bsmeta<solari>()) {
+		if(!e)
+			continue;
+		auto player = e.getplayer();
+		for(auto& u : bsmeta<uniti>()) {
+			if(!u)
+				continue;
+			if(u.getsolar() != &e)
+				continue;
+			auto unit_player = u.getplayer();
+			if(player == unit_player)
+				continue;
+			e.setplayer(unit_player);
+			break;
+		}
+	}
+}
+
 static void create_start_units(playeri* player) {
 	auto p = find_by_id(player->id);
 	assert(p);
-	adat<planeti*, 8> planets;
-	planets.count = planeti::select(planets.data, planets.endof(), p->id);
+	planeta planets;
+	for(auto& e : bsmeta<planeti>()) {
+		auto ph = e.gethome();
+		if(!ph)
+			continue;
+		if(strcmp(ph, p->id) == 0)
+			planets.add(&e);
+	}
 	assert(planets.count);
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
-	auto base_planet = planets.data[0];
-	auto solar_system = planets.data[0]->getsolar();
+	auto base_planet = planets[0];
+	auto solar_system = base_planet->getsolar();
 	player->create(SpaceDock, base_planet);
 	for(auto e : p->start_units) {
 		if(!e)
@@ -186,7 +211,7 @@ playeri& playeri::create(const char* id) {
 	return *this;
 }
 
-int	playeri::getid() const {
+unsigned char playeri::getid() const {
 	if(!this)
 		return 0;
 	return this - bsmeta<playeri>::elements;
@@ -259,7 +284,7 @@ void playeri::setup() {
 	planeti::setup();
 	for(auto& e : bsmeta<playeri>())
 		create_start_units(&e);
-	uniti::update_control();
+	update_control();
 }
 
 static void select(playera& source, const playeri* start) {
@@ -331,7 +356,7 @@ void playeri::add_action_cards(int value) {
 				if(first_card) {
 					sb.adds("Это");
 					first_card = false;
-				} else if(i==value-1)
+				} else if(i == value - 1)
 					sb.adds("и");
 				else
 					sb.add(",");
@@ -395,27 +420,21 @@ int	playeri::getfleet() const {
 	return get(Fleet);
 }
 
-uniti* playeri::gethomesystem() const {
+solari* playeri::gethomesystem() const {
 	auto index = getid();
 	return bsmeta<solari>::elements + 33 + index;
 }
 
 void playeri::build_units(int value) {
-	army result;
-	select(result, Planet | Friendly | DockPresent);
+	planeta result;
+	select(result, Friendly | DockPresent);
 	auto planet = static_cast<planeti*>(choose(result, "Укажите планету, на которой будете строить"));
 	if(!planet)
 		return;
 	auto solar = planet->getsolar();
-	auto dock = planet->find(SpaceDock);
-	auto dock_produce = 0;
-	if(dock)
-		dock_produce = dock->getproduce();
 	if(iscomputer()) {
 
 	} else {
-		if(build(result, planet, solar, getresources(), getfleet(), 0, dock_produce, true))
-			uniti::update_control();
 	}
 }
 
@@ -436,8 +455,7 @@ static void refresh_players() {
 }
 
 void playeri::choose_diplomacy() {
-	solara source;
-	solari::select(source, 0, false);
+	solara source; select(source, Friendly | NoMekatol);
 	auto p = choose(source);
 	if(!p)
 		return;
@@ -451,7 +469,7 @@ void playeri::choose_diplomacy() {
 			continue;
 		if(&e == this)
 			continue;
-		p->activate(&e, true);
+		p->activate(&e);
 	}
 	auto count_planets = 0;
 	for(auto& e : bsmeta<planeti>()) {
@@ -462,7 +480,7 @@ void playeri::choose_diplomacy() {
 		if(e.getplayer() != this)
 			continue;
 		count_planets++;
-		e.deactivate();
+		e.remove(Exhaused);
 	}
 	if(count_planets > 0)
 		sb.adds("Наши планеты в этой зведной системе обновляют все свои ресурсы.");
@@ -477,10 +495,10 @@ static planeti* choose_planet_construct(const playeri* p, variant_s type) {
 		if(e.getplayer() != p)
 			continue;
 		if(type == PDS) {
-			if(e.find(type, 1))
+			if(e.getcount(type, p) >= 2)
 				continue;
 		} else {
-			if(e.find(type))
+			if(e.getcount(type, p) >= 1)
 				continue;
 		}
 		source.add(&e);
@@ -611,15 +629,6 @@ void playeri::make_move(bool strategic, bool action) {
 		action_phase();
 }
 
-void playeri::slide(const uniti* p) {
-	if(!p)
-		return;
-	auto index = p->getindex();
-	if(index == Blocked)
-		return;
-	slide(index);
-}
-
 unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, variant_s type) const {
 	auto ps = result;
 	for(auto& e : bsmeta<uniti>()) {
@@ -635,26 +644,25 @@ unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, varia
 	return ps - result;
 }
 
-void playeri::select(army& result, unsigned flags) const {
-	switch(flags&TargetMask) {
-	case Solar:
-		for(auto& e : bsmeta<solari>()) {
-			if(!e)
-				continue;
-			if(flags&Friendly && e.getplayer() != this)
-				continue;
-			result.add(&e);
-		}
-		break;
-	case Planet:
-		for(auto& e : bsmeta<planeti>()) {
-			if(!e)
-				continue;
-			if(flags&Friendly && e.getplayer() != this)
-				continue;
-			result.add(&e);
-		}
-		break;
+void playeri::select(solara& result, unsigned flags) const {
+	for(auto& e : bsmeta<solari>()) {
+		if(!e)
+			continue;
+		if((flags&Friendly) != 0 && e.getplayer() != this)
+			continue;
+		if((flags&NoMekatol) != 0 && &e == bsmeta<solari>::elements)
+			continue;
+		result.add(&e);
+	}
+}
+
+void playeri::select(planeta& result, unsigned flags) const {
+	for(auto& e : bsmeta<planeti>()) {
+		if(!e)
+			continue;
+		if(flags&Friendly && e.getplayer() != this)
+			continue;
+		result.add(&e);
 	}
 }
 

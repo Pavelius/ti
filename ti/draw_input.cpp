@@ -861,8 +861,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 		}
 	};
 	playeri* parent_player;
-	auto ground = (planet != 0);
-	if(ground)
+	if(planet)
 		parent_player = planet->getplayer();
 	else
 		parent_player = solar->getplayer();
@@ -872,7 +871,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	auto c1 = player_colors[player_index][0];
 	auto c2 = player_colors[player_index][1];
 	adat<uniti*, 32> source;
-	if(ground) {
+	if(planet) {
 		for(auto& e : bsmeta<uniti>()) {
 			if(!e)
 				continue;
@@ -890,7 +889,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 		}
 	}
 	if(!source) {
-		if(ground) {
+		if(planet) {
 			circlef(x, y, unit_size, c1, 128);
 			circle(x, y, unit_size, c2);
 		}
@@ -920,7 +919,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	}
 	drawing.count = (pd - drawing.data) + 1;
 	// Draw
-	if(ground) {
+	if(planet) {
 		auto x0 = x - ((unit_size * 2 + 2) * drawing.count) / 2 + (unit_size * 2 + 2) / 2;
 		for(unsigned i = 0; i < drawing.count; i++) {
 			draw_unit(x0, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
@@ -939,8 +938,8 @@ static void draw_planet(point pt, planeti* p) {
 	auto push_stro = fore_stroke;
 	fore_stroke = colors::black;
 	font = metrics::h1;
-	image(pt.x, pt.y, planets, p->index, 0);
-	auto pn = p->name;
+	image(pt.x, pt.y, planets, p->getavatar(), 0);
+	auto pn = p->getname();
 	text(pt.x - textw(pn) / 2, pt.y + 128 / 2, pn, -1, TextStroke);
 	fore_stroke = push_stro;
 	font = push_font;
@@ -996,7 +995,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
-			auto index = planeti::gmi(x, y);
+			auto index = gmi(x, y);
 			auto p = solari::getsolar(index);
 			if(!p)
 				continue;
@@ -1016,9 +1015,9 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			}
 			if(hilited == p)
 				hexagon2(pt);
-			if(p->type == Solar) {
-				adat<planeti*, 3> source;
-				source.count = planeti::select(source.begin(), source.endof(), p);
+			auto type = p->getgroup();
+			if(type == Solar) {
+				planeta source; p->select(source, 0);
 				switch(source.count) {
 				case 0:
 					break;
@@ -1035,11 +1034,11 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 					draw_planet(pt + planets_n3[2], source[2]);
 					break;
 				}
-			} else if(p->type == AsteroidField)
+			} else if(type == AsteroidField)
 				image(pt.x, pt.y, planets, 19, 0);
-			else if(p->type == Nebula)
+			else if(type == Nebula)
 				image(pt.x, pt.y, planets, 17, 0);
-			else if(p->type == Supernova)
+			else if(type == Supernova)
 				image(pt.x, pt.y, planets, 18, 0);
 			draw_units(pt.x - size / 3, pt.y - size / 3, 0, p);
 			if(show_movement) {
@@ -1298,12 +1297,12 @@ solari* playeri::choose(const aref<solari*>& source) const {
 	return p;
 }
 
-void playeri::slide(int hexagon) {
-	if(hexagon == -1)
+void playeri::slide(unsigned char index) {
+	if(index == 0xFF)
 		return;
-	auto x = uniti::gmx(hexagon);
-	auto y = uniti::gmy(hexagon);
-	point pt = h2p({(short)x, (short)y});
+	auto x = gmx(index);
+	auto y = gmy(index);
+	point pt = h2p({x, y});
 	slide(pt.x, pt.y);
 }
 
@@ -1311,11 +1310,11 @@ bool playeri::build(army& units, const planeti* planet, solari* system, int reso
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;
-	u1.fleet_used = system->getfleet(this, system);
+	u1.fleet_used = system->getfleet(this);
 	u1.resource = resources;
 	u1.maximal = maximal;
 	auto text_width = gui.window_width;
-	slide(system);
+	slide(system->getindex());
 	while(ismodal()) {
 		render_board();
 		render_left();
