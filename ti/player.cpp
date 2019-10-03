@@ -583,6 +583,10 @@ static void trade_agreements(playeri* p) {
 		pp->replenish_commodities();
 }
 
+void return_command_from_board(playeri* player) {
+
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -722,6 +726,8 @@ void playeri::select(solara& result, unsigned flags) const {
 		if((flags&Friendly) != 0 && e.getplayer() != this)
 			continue;
 		if((flags&NoMekatol) != 0 && &e == bsmeta<solari>::elements)
+			continue;
+		if((flags&Activated) != 0 && &e == bsmeta<solari>::elements)
 			continue;
 		result.add(&e);
 	}

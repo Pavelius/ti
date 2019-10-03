@@ -68,7 +68,7 @@ enum wormhole_s : unsigned char {
 };
 enum target_s : unsigned {
 	TargetMask = 0xFF,
-	Neutral = 0x100, Friendly = 0x200, DockPresent = 0x400, NoMekatol = 0x800,
+	Neutral = 0x100, Friendly = 0x200, DockPresent = 0x400, NoMekatol = 0x800, Activated = 0x4000,
 	NoHome = 0x1000, FirstEntry = 0x2000,
 };
 enum variant_s : unsigned char {
@@ -274,7 +274,7 @@ public:
 	void						predict_next_political_card(int value);
 	void						refresh_planets(int value) {}
 	void						replenish_commodities();
-	void						return_command_from_board(int value) {}
+	void						return_command_from_board(int value);
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
 	void						select(army& source, unsigned flags) const;
