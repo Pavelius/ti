@@ -139,6 +139,16 @@ uniti* playeri::create(variant_s id, planeti* planet) {
 	return p;
 }
 
+playeri* playeri::get(const char* id) {
+	for(auto& e : bsmeta<playeri>()) {
+		if(!e)
+			continue;
+		if(strcmp(e.id, id) == 0)
+			return &e;
+	}
+	return 0;
+}
+
 const player_pregen_info* find_by_id(const char* id) {
 	for(auto& e : player_pregen_data) {
 		if(strcmp(e.id, id) == 0)
@@ -358,38 +368,65 @@ void playeri::add_command_tokens(int value) {
 	}
 }
 
-int playeri::pay(int maximum, int cost, const char* subject, const char* subjects, bool resource) {
-	static const char* res_name[] = {"ресурсов", "вли€ни€"};
+static const char* getcurrencynameof(action_s currency) {
+	switch(currency) {
+	case Strategic: return "стратегических жетонов";
+	case Resource: return "ресурсов";
+	case Influence: return "вли€ни€";
+	default: return "непон€тно чего";
+	}
+}
+
+static const char* getcurrencyname(action_s currency) {
+	switch(currency) {
+	case Strategic: return "стратегический жетон";
+	case Resource: return "ресурс";
+	case Influence: return "вли€ние";
+	default: return "непон€тно что";
+	}
+}
+
+static int getsummary(const playeri* p, action_s currency) {
+	switch(currency) {
+	case Resource: return p->getresources(); break;
+	case Influence: return p->getinfluences(); break;
+	default: return p->get(currency); break;
+	}
+}
+
+int playeri::pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency) {
 	string sb; answeri ai;
 	auto counter = 1;
-	int total;
-	if(resource)
-		total = getresources();
-	else
-		total = getinfluences();
-	auto res = res_name[resource ? 0 : 1];
+	auto total = getsummary(this, currency);
 	while(counter <= maximum) {
-		if(total >= counter * cost) {
-			if(counter == 1)
-				ai.add(counter, "ѕриобрести %1 за %2i %3", subject, counter*cost, res);
-			else
-				ai.add(counter, "ѕриобрести %3i %1 за %2i %3", subjects, counter*cost, counter, res);
+		auto total_cost = counter * cost;
+		if(total >= total_cost) {
+			if(counter == 1) {
+				if(total_cost==1)
+					ai.add(counter, "ѕриобрести %1 за %2", subject, getcurrencyname(currency));
+				else
+					ai.add(counter, "ѕриобрести %1 за %2i %3", subject, total_cost, getcurrencynameof(currency));
+			} else
+				ai.add(counter, "ѕриобрести %3i %1 за %2i %3", subjects, total_cost, counter, getcurrencynameof(currency));
 		}
-		sb.add("≈сли хотите, можете приобрести %2 за [%1i] очка %3.", cost, subject, res);
 		counter++;
 	}
+	if(cost==1)
+		sb.add("≈сли хотите, можете приобрести %2 за %3.", cost, subject, getcurrencyname(currency));
+	else
+		sb.add("≈сли хотите, можете приобрести %2 за [%1i] очка %-3.", cost, subject, getcurrencynameof(currency));
 	return choose(ai, true, sb);
 }
 
 void playeri::buy_technology(int cost_resources) {
-	auto n = pay(1, cost_resources, "технологию", "технологии");
+	auto n = pay(1, cost_resources, "технологию", "технологии", Resource);
 	if(!n)
 		return;
 	add_technology(1);
 }
 
 void playeri::buy_command_tokens(int cost_influence) {
-	auto n = pay(1, cost_influence, "коммандный жетон", "коммандных жетона");
+	auto n = pay(1, cost_influence, "коммандный жетон", "коммандных жетона", Influence);
 	if(!n)
 		return;
 	add_command_tokens(n);
@@ -507,6 +544,8 @@ void playeri::select(planeta& result, unsigned flags) const {
 		if(!e)
 			continue;
 		if(flags&Friendly && e.getplayer() != this)
+			continue;
+		if(flags&Activated && !e.is(Exhaused))
 			continue;
 		result.add(&e);
 	}

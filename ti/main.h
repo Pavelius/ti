@@ -46,6 +46,7 @@ enum action_s : unsigned char {
 	VictoryPoints,
 	Commodities, Goods,
 	LastAction = Goods,
+	Resource, Influence,
 };
 enum tech_s : unsigned char {
 	// Common technoogies
@@ -269,6 +270,7 @@ public:
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
+	static playeri*				get(const char* id);
 	int							getreaction(const playeri* p) const { return relations[p->getid()].get(); }
 	static playeri*				getactive();
 	int							getcardscount() const;
@@ -289,9 +291,8 @@ public:
 	void						message(const char* text);
 	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
-	int							pay(int maximum, int cost, const char* subject, const char* subjects, bool resource = true);
+	int							pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency);
 	void						predict_next_political_card(int value);
-	void						refresh_planets(int value) {}
 	void						replenish_commodities();
 	void						remove(secret_s v) { secrets.remove(v); }
 	static void					slide(int x, int y);

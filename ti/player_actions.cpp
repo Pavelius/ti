@@ -1,5 +1,9 @@
 #include "main.h"
 
+static const char* number_which[] = {"нулевую", "первую", "вторую", "третью", "четвертую", "пятую", "шестую"};
+
+static const int last_initiative = 8;
+
 static void refresh_players() {
 	for(auto& e : bsmeta<playeri>()) {
 		e.set(StrategyAction, 1);
@@ -138,18 +142,59 @@ static void tactical_action(playeri* p) {
 	p->moveships(solar);
 }
 
+static void score_public_objective(int value) {
+}
+
+static bool allow_refresh_planets(const playeri* p) {
+	planeta source; p->select(source, Friendly | Activated);
+	return source.getcount()!=0;
+}
+
+static bool allow_gain_action_cards(const playeri* p) {
+	return true;
+}
+
+static bool allow_gain_commodities(const playeri* p) {
+	return p->getcommodities()!=p->get(Commodities);
+}
+
+static void refresh_planets(playeri* p, int value) {
+	for(auto i = 1; i <= value; i++) {
+		planeta source; p->select(source, Friendly | Activated);
+		if(!source)
+			break;
+		string sb;
+		sb.add("Выбирайте [%1] планету, ресурсы которой будут обновлены", maptbl(number_which,i));
+		auto pp = p->choose(source, sb);
+		pp->remove(Exhaused);
+	}
+}
+
 static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
 		p->buy_command_tokens(3);
 		break;
 	case Diplomacy:
-		p->refresh_planets(1);
+		if(allow_refresh_planets(p)) {
+			auto n = p->pay(1, 1, "обновление двух планет", "обновления двух планет", Strategic);
+			if(n)
+				refresh_planets(p, 2);
+		}
 		break;
 	case Politics:
-		p->add_action_cards(1);
+		if(allow_gain_action_cards(p)) {
+			auto n = p->pay(1, 1, "2 карты действия", "2 карты действия", Strategic);
+			if(n)
+				p->add_action_cards(2);
+		}
 		break;
 	case Trade:
+		if(allow_gain_commodities(p)) {
+			auto n = p->pay(1, 1, "обновление продукции", 0, Strategic);
+			if(n)
+				p->replenish_commodities();
+		}
 		break;
 	case Warfare:
 		break;
@@ -157,15 +202,12 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 		p->buy_technology(4);
 		break;
 	case Imperial:
-		p->build_units(1);
+		//p->build_units(1);
 		break;
 	}
 }
 
-static void score_public_objective(int value) {
-}
-
-static void strategy_primary_action(playeri* p, strategy_s id) {
+static void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) {
 	switch(id) {
 	case Leadership:
 		p->add_command_tokens(3);
@@ -203,6 +245,15 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 			p->add_secret_objective(1);
 		break;
 	}
+	if(allow_secondanary) {
+		auto pp = p + 1;
+		while(p != pp) {
+			if(pp >= bsmeta<playeri>::elements + bsmeta<playeri>::count)
+				pp = bsmeta<playeri>::elements;
+			strategy_secondanary_action(pp, id);
+			pp++;
+		}
+	}
 }
 
 static action_s choose_action(playeri* p, play_s play) {
@@ -218,7 +269,7 @@ static action_s choose_action(playeri* p, play_s play) {
 static void play_action(playeri* p, action_s id) {
 	switch(id) {
 	case StrategyAction:
-		strategy_primary_action(p, p->strategy);
+		strategy_primary_action(p, p->strategy, true);
 		break;
 	case TacticalAction:
 		tactical_action(p);
@@ -263,7 +314,6 @@ static void strategic_phase() {
 }
 
 static void action_phase() {
-	const int last_initiative = 8;
 	refresh_players();
 	auto someone_move = true;
 	while(someone_move) {

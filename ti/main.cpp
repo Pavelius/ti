@@ -16,9 +16,9 @@ int main() {
 	bsmeta<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
-	playeri::gethuman()->make_move(true, true);
-	//playeri::gethuman()->strategy = Leadership;
-	playeri::gethuman()->make_move(false, true);
+	//playeri::gethuman()->make_move(true, true);
+	playeri::get("sol")->strategy = Politics;
+	playeri::get("sol")->make_move(false, true);
 	return 0;
 }
 
