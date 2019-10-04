@@ -138,12 +138,19 @@ static solari* activate_system(playeri* p) {
 	return p->choose(source, "Выбирайте систему, которую вы хотите активировать");
 }
 
+static void after_activation(playeri* p, solari* solar) {
+	string sb;
+	sb.add("Следующий свое действие мы предпримим в системе [%1].", solar->getname());
+	p->apply(sb);
+}
+
 void tactical_action(playeri* p) {
 	auto solar = activate_system(p);
 	if(!solar)
 		return;
 	solar->activate(p);
 	p->add(Tactical, -1);
+	after_activation(p, solar);
 	p->moveships(solar);
 }
 

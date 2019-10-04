@@ -28,7 +28,7 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 {GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
 {SarweenTools, NeuralMotivator}
 },
-{"mindnet", "Сеть раума L1z1x", {3, 3, 3}, 2,
+{"mindnet", "Сеть раума L1z1x", {2, 3, 3}, 2,
 {BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
@@ -46,7 +46,7 @@ static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча",
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
 {NeuralMotivator, AntimassDeflectors}
 },
-{"mentax", "Коалиция Ментаков", {2, 3, 4}, 2,
+{"mentax", "Коалиция Ментаков", {2, 3, 3}, 2,
 {},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
@@ -267,19 +267,19 @@ int	playeri::get(action_s id) const {
 }
 
 int playeri::getinfluences() const {
-	return planeti::get(this, &planeti::getresource);
+	return planeti::get(this, &planeti::getresource, Ready);
 }
 
 int	playeri::getresources() const {
-	return planeti::get(this, &planeti::getresource);
+	return planeti::get(this, &planeti::getresource, Ready);
 }
 
 void playeri::getinfo(string& sb) const {
 	sb.add("###%1", getname());
 	if(strategy)
 		sb.addn("[+%1 стратегия]", bsmeta<strategyi>::elements[strategy].name);
-	sb.addn("%1i ресурсов", planeti::get(this, &planeti::getresource));
-	sb.add(", %1i влияния", planeti::get(this, &planeti::getinfluence));
+	sb.addn("%1i ресурсов", getresources());
+	sb.add(", %1i влияния", getinfluences());
 	sb.addn("%1i стратегических маркеров", get(Strategic));
 	sb.addn("%1i маркеров флота", get(Fleet));
 	sb.addn("%1i тактических маркеров", get(Tactical));
@@ -377,13 +377,29 @@ static const char* getcurrencynameof(action_s currency) {
 	}
 }
 
-static const char* getcurrencyname(action_s currency) {
+static int getcn(action_s currency) {
 	switch(currency) {
-	case Strategic: return "стратегический жетон";
-	case Resource: return "ресурс";
-	case Influence: return "влияние";
-	default: return "непонятно что";
+	case Strategic: return 0;
+	case Resource: return 1;
+	case Influence: return 2;
+	default: return 3;
 	}
+}
+
+static const char* getcn(action_s currency, int count) {
+	static const char* names[][3] = {{"стратегический жетон", "стратегических жетона", "стратегических жетонов"},
+	{"ресурс", "ресурса", "ресурсов"},
+	{"влияние", "влияния", "влияния"},
+	{"непонятно что", "непонятно чего", "непонятно чего"},
+	};
+	auto i = getcn(currency);
+	if(count == 0 || count >= 5)
+		count = 2;
+	else if(count == 1)
+		count = 0;
+	else
+		count = 1;
+	return names[i][count];
 }
 
 static int getsummary(const playeri* p, action_s currency) {
@@ -394,30 +410,74 @@ static int getsummary(const playeri* p, action_s currency) {
 	}
 }
 
-int playeri::pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency) {
+void playeri::pay_apply(int cost, action_s id) {
+	if(id != Resource && id != Influence) {
+		add(id, -cost);
+		return;
+	}
+	auto payed = 0;
+	while(payed < cost) {
+		planeta planets; select(planets, Friendly | Ready);
+		string sb; answeri ai;
+		sb.adds("Вам надо заплатить %1i %2.", cost, getcn(id, cost));
+		sb.adds("Вы заплатили [%1i].", payed);
+		sb.adds("Чем хотите заплатить?");
+		for(auto p : planets) {
+			auto c = p->get(id);
+			ai.add((int)p, "%1: %2i", p->getname(), c);
+		}
+		auto goods = get(Goods);
+		auto goods_koeff = 1;
+		auto need_goods = (cost - payed + goods_koeff - 1) / goods_koeff;
+		if(need_goods && need_goods <= goods) {
+			if(goods_koeff>1)
+				ai.add(0, "Товары: %1ix%2i", need_goods, goods_koeff);
+			else
+				ai.add(0, "Товары: %1i", need_goods);
+		}
+		auto r = (planeti*)choose(ai, false, sb);
+		if(!r) {
+			payed += need_goods*goods_koeff;
+			add(Goods, -need_goods);
+		} else {
+			payed += r->get(id);
+			//slide(r->getsolar()->getindex());
+			r->set(Exhaused);
+		}
+	}
+}
+
+int playeri::pay_choose(int maximum, int cost, const char* subject, const char* subjects, action_s currency) const {
 	string sb; answeri ai;
 	auto counter = 1;
-	auto total = getsummary(this, currency);
+	auto total = getsummary(this, currency) + get(Goods);
 	if(!subjects)
 		subjects = subject;
 	while(counter <= maximum) {
 		auto total_cost = counter * cost;
 		if(total >= total_cost) {
 			if(counter == 1) {
-				if(total_cost==1)
-					ai.add(counter, "Приобрести %1 за %2", subject, getcurrencyname(currency));
+				if(total_cost == 1)
+					ai.add(counter, "Купить %1 за %2", subject, getcn(currency, total_cost));
 				else
-					ai.add(counter, "Приобрести %1 за %2i %3", subject, total_cost, getcurrencynameof(currency));
+					ai.add(counter, "Купить %1 за %2i %3", subject, total_cost, getcn(currency, total_cost));
 			} else
-				ai.add(counter, "Приобрести %3i %1 за %2i %3", subjects, total_cost, counter, getcurrencynameof(currency));
+				ai.add(counter, "Купить %3i %1 за %2i %3", subjects, total_cost, counter, getcn(currency, total_cost));
 		}
 		counter++;
 	}
-	if(cost==1)
-		sb.add("Если хотите, можете приобрести %2 за %3.", cost, subject, getcurrencyname(currency));
+	if(cost == 1)
+		sb.add("Если хотите, можете купить %2 за %3.", cost, subject, getcn(currency, cost));
 	else
-		sb.add("Если хотите, можете приобрести %2 за [%1i] очка %-3.", cost, subject, getcurrencynameof(currency));
+		sb.add("Если хотите, можете купить %2 за [%1i] %3.", cost, subject, getcn(currency, cost));
 	return choose(ai, true, sb);
+}
+
+int playeri::pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency) {
+	auto n = pay_choose(maximum, cost, subject, subjects, currency);
+	if(n)
+		pay_apply(n*cost, currency);
+	return n;
 }
 
 void playeri::buy_technology(int cost_resources) {
@@ -563,9 +623,11 @@ void playeri::select(planeta& result, unsigned flags) const {
 	for(auto& e : bsmeta<planeti>()) {
 		if(!e)
 			continue;
-		if(flags&Friendly && e.getplayer() != this)
+		if((flags&Friendly) != 0 && e.getplayer() != this)
 			continue;
-		if(flags&Activated && !e.is(Exhaused))
+		if((flags&Activated) != 0 && !e.is(Exhaused))
+			continue;
+		if((flags&Ready) != 0 && e.is(Exhaused))
 			continue;
 		result.add(&e);
 	}

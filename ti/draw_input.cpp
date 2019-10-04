@@ -447,7 +447,7 @@ static int windowb(int x, int y, int width, const char* string, callback proc, b
 	auto h = windowb(x, y, width, string, result, disabled, border, key, tips);
 	if(result)
 		execute(proc);
-	return result;
+	return h;
 }
 
 static point getscreen(const rect& rc, point pt) {
@@ -938,7 +938,10 @@ static void draw_planet(point pt, planeti* p) {
 	auto push_stro = fore_stroke;
 	fore_stroke = colors::black;
 	font = metrics::h1;
-	image(pt.x, pt.y, planets, p->getavatar(), 0);
+	if(p->is(Exhaused))
+		image(pt.x, pt.y, planets, p->getavatar(), 0, 64);
+	else
+		image(pt.x, pt.y, planets, p->getavatar(), 0);
 	auto pn = p->getname();
 	text(pt.x - textw(pn) / 2, pt.y + 128 / 2, pn, -1, TextStroke);
 	fore_stroke = push_stro;
@@ -1373,7 +1376,8 @@ bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button,
 		u2.view(rc2);
 		x = getwidth() - gui.right_width - gui.border * 2;
 		y += rc.height() + gui.padding + gui.border * 2;
-		y += windowb(x, y, gui.right_width, action, buttonok, false, 0, KeyEnter);
+		if(a2)
+			y += windowb(x, y, gui.right_width, action, buttonok, false, 0, KeyEnter);
 		if(cancel_button)
 			y += windowb(x, y, gui.right_width, "Отмена", buttoncancel, false, 0, KeyEscape);
 		domodal();

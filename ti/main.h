@@ -58,8 +58,8 @@ enum wormhole_s : unsigned char {
 };
 enum target_s : unsigned {
 	TargetMask = 0xFF,
-	Neutral = 0x100, Friendly = 0x200, DockPresent = 0x400, NoMekatol = 0x800, Activated = 0x4000,
-	NoHome = 0x1000, FirstEntry = 0x2000,
+	Neutral = 0x100, Friendly = 0x200, DockPresent = 0x400, NoMekatol = 0x800,
+	NoHome = 0x1000, FirstEntry = 0x2000, Activated = 0x4000, Ready = 0x8000,
 };
 enum variant_s : unsigned char {
 	NoVariant,
@@ -276,6 +276,8 @@ public:
 	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
 	int							pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency);
+	void						pay_apply(int cost, action_s currency);
+	int							pay_choose(int maximum, int cost, const char* subject, const char* subjects, action_s currency) const;
 	void						predict_next_political_card(int value);
 	void						replenish_commodities();
 	void						remove(secret_s v) { secrets.remove(v); }
@@ -389,7 +391,8 @@ public:
 	static void					create_stars();
 	static void					initialize();
 	static planeti*				find(const solari* parent, int index);
-	static int					get(const playeri* player, int(planeti::*getproc)() const);
+	static int					get(const playeri* player, int(planeti::*getproc)() const, unsigned flags = 0);
+	int							get(action_s id) const;
 	unsigned char				getavatar() const { return avatar; }
 	int							getcount(variant_s type, const playeri* player) const;
 	const char*					gethome() const { return home; }

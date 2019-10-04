@@ -1,6 +1,12 @@
 #include "main.h"
 #include "draw.h"
 
+static void test_proc(const playeri* p) {
+	planeta source; p->select(source, Ready|Friendly);
+	if(source)
+		source[0]->set(Exhaused);
+}
+
 int main() {
 	//return 0;
 	srand(1231);
@@ -16,8 +22,10 @@ int main() {
 	bsmeta<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
+	//test_proc(playeri::get("barony"));
 	playeri::make_move(true, true);
-	//playeri::get("sol")->strategy = Politics;
+	//playeri::get("norr")->strategy = Technology;
+	//playeri::get("norr")->add(Goods, 5);
 	//playeri::make_move(false, true);
 	return 0;
 }

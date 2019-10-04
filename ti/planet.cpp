@@ -81,10 +81,12 @@ int	planeti::getresource() const {
 	return resource;
 }
 
-int planeti::get(const playeri* player, int(planeti::*getproc)() const) {
+int planeti::get(const playeri* player, int(planeti::*getproc)() const, unsigned flags) {
 	auto result = 0;
 	for(auto& e : bsmeta<planeti>()) {
 		if(e.getplayer() != player)
+			continue;
+		if((flags & Ready) != 0 && e.is(Exhaused))
 			continue;
 		result += (e.*getproc)();
 	}
@@ -353,4 +355,12 @@ int	planeti::getcount(variant_s type, const playeri* player) const {
 			result++;
 	}
 	return result;
+}
+
+int	planeti::get(action_s id) const {
+	switch(id) {
+	case Resource: return resource;
+	case Influence: return influence;
+	default: return 0;
+	}
 }

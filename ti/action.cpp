@@ -16,8 +16,12 @@ static bool action_pass(playeri* p, bool run) {
 		return false;
 	if(p->get(StrategyAction) > 0)
 		return false;
-	if(run)
+	if(run) {
+		string sb;
+		sb.add("На этом наш ход закончен. Будем ждать следующего хода.");
 		p->set(Pass, 0);
+		p->apply(sb);
+	}
 	return true;
 }
 
