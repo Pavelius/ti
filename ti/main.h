@@ -301,6 +301,7 @@ public:
 	void						select(solara& result, unsigned flags) const;
 	void						select(planeta& result, unsigned flags) const;
 	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
+	void						selectp(solara& result, unsigned flags) const;
 	void						set(action_s id, char v) { costi::set(id, v); }
 	void						set(tech_s v) { technologies.add(v); }
 	void						set(secret_s v) { secrets.add(v); }

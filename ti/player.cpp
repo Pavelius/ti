@@ -398,6 +398,8 @@ int playeri::pay(int maximum, int cost, const char* subject, const char* subject
 	string sb; answeri ai;
 	auto counter = 1;
 	auto total = getsummary(this, currency);
+	if(!subjects)
+		subjects = subject;
 	while(counter <= maximum) {
 		auto total_cost = counter * cost;
 		if(total >= total_cost) {
@@ -462,7 +464,7 @@ uniti* playeri::choose(army& source, const char* format) const {
 }
 
 void playeri::choose_diplomacy() {
-	solara source; select(source, Friendly | NoMekatol);
+	solara source; selectp(source, Friendly | NoMekatol);
 	auto p = choose(source, "Выбирайте звездную систему, которая будет иметь особый дипломатический статус на весь этот ход.");
 	if(!p)
 		return;
@@ -536,6 +538,24 @@ void playeri::select(solara& result, unsigned flags) const {
 		if((flags&Activated) != 0 && !e.isactivated(this))
 			continue;
 		result.add(&e);
+	}
+}
+
+void playeri::selectp(solara& result, unsigned flags) const {
+	for(auto& e : bsmeta<planeti>()) {
+		if(!e)
+			continue;
+		auto s = e.getsolar();
+		if(!s)
+			continue;
+		if((flags&NoMekatol) != 0 && s == bsmeta<solari>::elements)
+			continue;
+		if((flags&Friendly) != 0 && e.getplayer() != this)
+			continue;
+		if((flags&Activated) != 0 && !e.is(Exhaused))
+			continue;
+		if(!result.is(s))
+			result.add(s);
 	}
 }
 
