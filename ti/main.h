@@ -9,10 +9,9 @@ const unsigned char DefaultCost = Blocked - 1;
 
 enum play_s : unsigned char {
 	NoPlay,
-	AsAction, StrategicPhase,
-	AfterAgendaRevealed, AfterSpeakerVote, AfterByingTechnology, AfterSustainDamage,
-	BeforeAgendaPhase, BeforeBombardment, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
-	BeforeStrategy, AfterHit,
+	AsAction,
+	BeforeStrategy, BeforeAgendaPhase, BeforeBombardment, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
+	AfterAgendaRevealed, AfterSpeakerVote, AfterByingTechnology, AfterDamage, AfterSustainDamage,
 };
 enum strategy_s : unsigned char {
 	NoStrategy,
@@ -24,9 +23,6 @@ enum action_s : unsigned char {
 	AncientBurialSites, AssassinateRepresentative, Bunker, CrippleDefenses, DirectHit, Sabotage, Spy,
 	Uprising, WarfareRider,
 	FirstActionCard = AncientBurialSites, LastActionCard = WarfareRider,
-	//
-	BaronyEquipment, HacanTradeActionCards, JolanrRerollCombatDices, MentakAmbush, MentakPiracy,
-	NaaluFleetRetreat, SolOrbitalDrop, ExecutePrimaryAbility, ChangePoliticCard, LookActionCards,
 	//
 	StrategyAction, TacticalAction, Pass,
 	Strategic, Fleet, Tactical,
