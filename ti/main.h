@@ -93,8 +93,8 @@ enum relation_s : unsigned char {
 	WasHostile,
 };
 enum secret_s : unsigned char {
-	UnveilFlagship, TurnTheirFleetsToDust, DestroyTheirGreatestShip, SparkARebellion,
-	FirstSecret = UnveilFlagship, LastSecret = SparkARebellion,
+	UnveilFlagship, TurnTheirFleetsToDust, DestroyTheirGreatestShip, SparkARebellion, CutSupplyLines, MonopolizeProduction,
+	FirstSecret = UnveilFlagship, LastSecret = MonopolizeProduction,
 };
 struct agendai;
 class answeri;

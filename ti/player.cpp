@@ -470,7 +470,7 @@ void playeri::replenish_commodities() {
 	set(Commodities, commodities);
 	string sb;
 	sb.add("Мы обновили свою продукцию и готовы распродать ее по самым лучшим ценам в галактике. На сейчас у нас имеется [%1i] единицы продукции.", get(Commodities));
-	message(sb);
+	apply(sb);
 }
 
 unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, variant_s type) const {

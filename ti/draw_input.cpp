@@ -1281,6 +1281,8 @@ void playeri::slide(int x, int y) {
 solari* playeri::choose(const aref<solari*>& source, const char* format) const {
 	if(!source)
 		return 0;
+	if(iscomputer())
+		return source[rand() % source.count];
 	while(ismodal()) {
 		render_board(true, false, source);
 		render_left();
@@ -1348,6 +1350,11 @@ bool playeri::build(army& units, const planeti* planet, solari* system, int reso
 }
 
 bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement) const {
+	if(iscomputer()) {
+		for(auto& e : a1)
+			a2.add(e);
+		return true;
+	}
 	int x, y;
 	unit_ref_table u1(a1); u1.show_header = false;
 	unit_ref_table u2(a2); u2.show_header = false;
