@@ -44,7 +44,7 @@ actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"TacticalAction", "Тактическое действие", 0, AsAction, action_tactic},
 {"Pass", "Пропуск хода", 0, AsAction, action_pass},
 //
-{"Strategy", "стратегии", 0, AsAction, action_strategy},
+{"Strategy", "стратегии"},
 {"Fleet", "флота"},
 {"Command", "тактики"},
 //

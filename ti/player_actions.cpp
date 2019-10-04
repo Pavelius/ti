@@ -262,10 +262,10 @@ void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) 
 	if(allow_secondanary) {
 		auto pp = p + 1;
 		while(p != pp) {
-			if(pp >= bsmeta<playeri>::elements + bsmeta<playeri>::count)
-				pp = bsmeta<playeri>::elements;
 			strategy_secondanary_action(pp, id);
 			pp++;
+			if(pp >= bsmeta<playeri>::elements + bsmeta<playeri>::count)
+				pp = bsmeta<playeri>::elements;
 		}
 	}
 }
