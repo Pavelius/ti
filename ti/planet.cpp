@@ -114,7 +114,7 @@ void planeti::setup() {
 		if(!e.home)
 			continue;
 		e.setplayer(playeri::find(e.home));
-		e.set(PlanetUsed);
+		e.set(ObjectUsed);
 	}
 }
 
@@ -169,7 +169,7 @@ void planeti::create_stars() {
 		if(!pn.home)
 			continue;
 		pn.setsolar(0);
-		pn.remove(PlanetUsed);
+		pn.remove(ObjectUsed);
 	}
 	index = 33;
 	int player_index = 0;
@@ -193,7 +193,7 @@ void planeti::create_stars() {
 		e.setindex(i);
 		for(auto& u : bsmeta<planeti>()) {
 			if(u.getsolar() == &e)
-				u.set(PlanetUsed);
+				u.set(ObjectUsed);
 		}
 	}
 }

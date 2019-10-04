@@ -10,8 +10,8 @@ const unsigned char DefaultCost = Blocked - 1;
 enum play_s : unsigned char {
 	NoPlay,
 	AsAction, StrategicPhase,
-	AfterByingTechnology,
-	BeforeDrawPoliticCard, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
+	AfterAgendaRevealed, AfterSpeakerVote, AfterByingTechnology, AfterSustainDamage,
+	BeforeAgendaPhase, BeforeBombardment, BeforeInvasion, BeforeSpaceCombat, BeforeCombatRound,
 	BeforeStrategy, AfterHit,
 };
 enum strategy_s : unsigned char {
@@ -21,22 +21,9 @@ enum strategy_s : unsigned char {
 };
 enum action_s : unsigned char {
 	NoAction,
-	Armistice, ChemicalWarfare, CivilDefense, CommandSummit, CorporateSponsorship,
-	CouncilDissolved, CulturalCrisis, DeterminePolicy, DiplomaticImmunity, DirectHit,
-	Disclosure, Discredit, DugIn, EmergencyRepairs, ExperimentalBattlestation,
-	FantasticRhetoric, FighterPrototype, FlankSpeed, FocusedResearch, GhostShip,
-	GoodYear, GrandArmada, InTheSilenceOfSpace, InfluenceInTheMerchantsGuild, Insubordination,
-	IntoTheBreach, LocalUnrest, LuckyShot, MassiveTransport, MasterOfTrade,
-	Minelayers, MoraleBoost, Multiculturalism, OpeningTheBlackBox, Patrol,
-	Plague, PolicyParalysis, PoliticalStability, Privateers, ProductivitySpike,
-	PublicDisgrace, RallyOfThePeople, RareMineral, Recheck, Reparations,
-	RiseOfAMessiah, RuinousTariffs, Sabotage, ScientistAssassination, SecretIndustrialAgent,
-	ShieldsHolding, SignalJamming, SkilledRetreat, SpacedockAccident, StarOfDeath,
-	StellarCriminals, StrategicBombardment, StrategicFlexibility, StrategicShift, SuccessfulSpy,
-	Synchronicity, TechBubble, TouchOfGenius, TradeStop, Transport,
-	Thugs, UnexpectedAction, Uprising, Usurper, Veto,
-	VoluntaryAnnexation, WarFooting,
-	FirstActionCard = Armistice, LastActionCard = WarFooting,
+	AncientBurialSites, AssassinateRepresentative, Bunker, CrippleDefenses, DirectHit, Sabotage, Spy,
+	Uprising, WarfareRider,
+	FirstActionCard = AncientBurialSites, LastActionCard = WarfareRider,
 	//
 	BaronyEquipment, HacanTradeActionCards, JolanrRerollCombatDices, MentakAmbush, MentakPiracy,
 	NaaluFleetRetreat, SolOrbitalDrop, ExecutePrimaryAbility, ChangePoliticCard, LookActionCards,
@@ -87,8 +74,8 @@ enum variant_s : unsigned char {
 	Agenda, TechnologyVar,
 	Variant
 };
-enum planet_s : unsigned char {
-	PlanetUsed, Exhaused,
+enum object_s : unsigned char {
+	ObjectUsed, Exhaused,
 };
 enum relation_s : unsigned char {
 	WasHostile,
@@ -268,6 +255,7 @@ public:
 	bool						isally(const playeri* enemy) const;
 	bool						iscomputer() const;
 	bool						isenemy(const playeri* enemy) const { return !isally(enemy); }
+	bool						ispassed() const { return get(Pass) == 0; }
 	static playeri*				find(const char* id);
 	int							get(action_s id) const;
 	static playeri*				get(const char* id);
@@ -415,11 +403,11 @@ public:
 	int							getresource() const;
 	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsmeta<playeri>::elements[player]; }
 	solari*						getsolar() const { return &bsmeta<solari>::elements[solar]; }
-	bool						is(planet_s v) const { return (flags & (1 << v)) != 0; }
+	bool						is(object_s v) const { return (flags & (1 << v)) != 0; }
 	static void					refresh();
-	void						remove(planet_s v) { flags &= ~(1 << v); }
+	void						remove(object_s v) { flags &= ~(1 << v); }
 	static void					setup();
-	void						set(planet_s v) { flags |= 1 << v; }
+	void						set(object_s v) { flags |= 1 << v; }
 	void						setplayer(const playeri* v) { if(v) player = v - bsmeta<playeri>::elements; else player = 0xFF; }
 	void						setsolar(const solari* v) { if(v) solar = v - bsmeta<solari>::elements; else solar = 0xFF; }
 };
@@ -430,19 +418,11 @@ struct techi {
 	char						required[4]; // RGBY
 };
 struct actioni {
-	typedef bool(*testp)(const playeri& player);
-	struct proc_info {
-		play_s		type;
-		testp		test;
-		constexpr proc_info() : type(NoPlay), test(0) {}
-		constexpr proc_info(play_s type) : type(type), test(0) {}
-		constexpr proc_info(testp proc) : type(AsAction), test(proc) {}
-	};
 	const char*					id;
 	const char*					name;
 	int							count;
-	proc_info					proc;
-	const char*					description;
+	play_s						type;
+	bool(*proc)(playeri* p, bool run);
 };
 struct agendai {
 	typedef bool(*testp)(variant v);

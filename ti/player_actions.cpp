@@ -133,12 +133,17 @@ static void redistribute_tokens(playeri* p) {
 	}
 }
 
-static void tactical_action(playeri* p) {
+static solari* activate_system(playeri* p) {
 	solara source; p->select(source, 0);
-	auto solar = p->choose(source, "¬ыбирайте систему, которую вы хотите активировать");
+	return p->choose(source, "¬ыбирайте систему, которую вы хотите активировать");
+}
+
+void tactical_action(playeri* p) {
+	auto solar = activate_system(p);
 	if(!solar)
 		return;
 	solar->activate(p);
+	p->add(Tactical, -1);
 	p->moveships(solar);
 }
 
@@ -178,22 +183,30 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	case Diplomacy:
 		if(allow_refresh_planets(p)) {
 			auto n = p->pay(1, 1, "обновление двух планет", "обновлени€ двух планет", Strategic);
-			if(n)
+			if(n) {
+				p->add(Strategic, -1);
 				refresh_planets(p, 2);
+			}
 		}
 		break;
 	case Politics:
 		if(allow_gain_action_cards(p)) {
 			auto n = p->pay(1, 1, "2 карты действи€", "2 карты действи€", Strategic);
-			if(n)
+			if(n) {
+				p->add(Strategic, -1);
 				p->add_action_cards(2);
+			}
 		}
+		break;
+	case Construction:
 		break;
 	case Trade:
 		if(allow_gain_commodities(p)) {
 			auto n = p->pay(1, 1, "обновление продукции", 0, Strategic);
-			if(n)
+			if(n) {
+				p->add(Strategic, -1);
 				p->replenish_commodities();
+			}
 		}
 		break;
 	case Warfare:
@@ -207,7 +220,7 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	}
 }
 
-static void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) {
+void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) {
 	switch(id) {
 	case Leadership:
 		p->add_command_tokens(3);
@@ -245,6 +258,7 @@ static void strategy_primary_action(playeri* p, strategy_s id, bool allow_second
 			p->add_secret_objective(1);
 		break;
 	}
+	p->set(StrategyAction, 0);
 	if(allow_secondanary) {
 		auto pp = p + 1;
 		while(p != pp) {
@@ -258,23 +272,25 @@ static void strategy_primary_action(playeri* p, strategy_s id, bool allow_second
 
 static action_s choose_action(playeri* p, play_s play) {
 	answeri ai;
-	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
+	for(auto a = FirstActionCard; a <= LastAction; a = (action_s)(a + 1)) {
 		if(!p->is(a) || !p->isallow(play, a))
 			continue;
-		ai.add(a, getstr(a), getstr(p->strategy));
+		switch(a) {
+		case StrategyAction:
+			ai.add(a, getstr(a), getstr(p->strategy));
+			break;
+		default:
+			ai.add(a, getstr(a));
+			break;
+		}
 	}
 	return (action_s)p->choose(ai, false, "„то вы предпочитаете делать в свой ход?");
 }
 
 static void play_action(playeri* p, action_s id) {
-	switch(id) {
-	case StrategyAction:
-		strategy_primary_action(p, p->strategy, true);
-		break;
-	case TacticalAction:
-		tactical_action(p);
-		break;
-	}
+	auto& e = bsmeta<actioni>::elements[id];
+	if(e.proc)
+		e.proc(p, true);
 }
 
 static void select(playera& source, const playeri* start) {
