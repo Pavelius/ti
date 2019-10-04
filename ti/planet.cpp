@@ -217,6 +217,10 @@ solari* solari::getsolar(short unsigned index) {
 	return bsmeta<solari>::elements + n;
 }
 
+solari* solari::getmekatol() {
+	return bsmeta<solari>::elements;
+}
+
 enum direction_s : unsigned char {
 	LeftUp, RightUp, Left, Right, LeftDown, RightDown
 };

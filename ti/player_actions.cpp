@@ -24,14 +24,16 @@ static planeti* choose_planet_construct(const playeri* p, variant_s type, const 
 		}
 		source.add(&e);
 	}
-	return p->choose(source, format, getstr(type));
+	string sb;
+	sb.adds(format, getstr(type));
+	return p->choose(source, sb);
 }
 
 static variant_s choose_dock_or_PDS(const playeri* p) {
-	string sb; answeri ai;
+	answeri ai;
 	ai.add(SpaceDock, getstr(SpaceDock));
 	ai.add(PDS, getstr(PDS));
-	return (variant_s)p->choose(sb, ai, false, "Что вы хотите построить именно вы хотите построить в первую очередь?");
+	return (variant_s)p->choose(ai, false, "Что вы хотите построить именно вы хотите построить в первую очередь?");
 }
 
 static void build_primary(playeri* p) {
@@ -73,7 +75,8 @@ static void trade_activity(playeri* p) {
 		if(!ai)
 			break;
 		ai.add(0, "Все верно");
-		auto pp = (playeri*)p->choose(sb, ai, false, "Кого хотите включить или исключить в список?");
+		sb.adds("Кого хотите включить или исключить в список?");
+		auto pp = (playeri*)p->choose(ai, false, sb);
 		if(!pp)
 			break;
 		if(checked.is(pp))
@@ -98,12 +101,16 @@ static void	return_command_from_board(playeri* p) {
 
 static void redistribute_tokens(playeri* p) {
 	while(true) {
-		string sb; answeri ai;
-		sb.add("Сложившая ситуация позволяет нам перерупировать свои силы.");
+		answeri ai;
 		for(auto i = Strategic; i <= Tactical; i = (action_s)(i + 1))
 			ai.add(i, "Увеличить жетоны %1", getstr(i));
 		ai.add(0, "Все корректно и так");
-		auto n1 = (action_s)p->choose(sb, ai, false, "Вы можете перераспределить свои командный жетоны. Что вы хотите сделать?");
+		string sb;
+		sb.add("Сложившая ситуация позволяет нам перерупировать свои силы.");
+		auto ps = sb.get();
+		sb.add("Вы можете перераспределить свои командный жетоны. Что вы хотите сделать?");
+		auto n1 = (action_s)p->choose(ai, false, sb);
+		sb.set(ps);
 		sb.adds("Вы увеличите жетоны %1 до [%2i].", getstr(n1), p->get(n1) + 1);
 		ai.clear();
 		for(auto i = Strategic; i <= Tactical; i = (action_s)(i + 1)) {
@@ -114,7 +121,7 @@ static void redistribute_tokens(playeri* p) {
 		}
 		if(!ai)
 			break;
-		auto n2 = (action_s)p->choose(sb, ai, true, "За счет чего?");
+		auto n2 = (action_s)p->choose(ai, true, "За счет чего?");
 		if(n2) {
 			p->add(n1, 1);
 			p->add(n2, -1);
@@ -193,13 +200,13 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 }
 
 static action_s choose_action(playeri* p, play_s play) {
-	string sb; answeri ai;
+	answeri ai;
 	for(auto a = Armistice; a <= LastAction; a = (action_s)(a + 1)) {
 		if(!p->is(a) || !p->isallow(play, a))
 			continue;
 		ai.add(a, getstr(a), getstr(p->strategy));
 	}
-	return (action_s)p->choose(sb, ai, false, "Что вы предпочитаете делать в свой ход?");
+	return (action_s)p->choose(ai, false, "Что вы предпочитаете делать в свой ход?");
 }
 
 static void play_action(playeri* p, action_s id) {
@@ -231,16 +238,17 @@ static void strategic_phase() {
 	for(auto i = Leadership; i <= Imperial; i = (strategy_s)(i + 1))
 		politics.add(i);
 	for(auto p : source) {
-		string sb; sb.clear();
+		// sb.clear();
 		answeri ai; ai.clear();
 		p->activate();
 		for(auto e : politics)
 			ai.add(e, getstr(e));
 		ai.sort();
-		p->strategy = (strategy_s)p->choose(sb, ai, false,
+		p->strategy = (strategy_s)p->choose(ai, false,
 			"Эта стратегическая фаза. "
 			"Вам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. "
 			"Ваши оппоненты также выбирают одну стратегию из этого же списка.");
+		string sb;
 		sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
 		sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
 		p->message(sb);

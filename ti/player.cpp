@@ -302,14 +302,13 @@ void playeri::check_card_limin() {
 }
 
 playeri* playeri::choose_opponent(const char* text) {
-	string sb;
 	answeri ai;
 	for(auto& e : bsmeta<playeri>()) {
 		if(this == &e)
 			continue;
 		ai.add((int)&e, e.getname());
 	}
-	return (playeri*)choose(sb, ai, false, text);
+	return (playeri*)choose(ai, false, text);
 }
 
 void playeri::add_action_cards(int value) {
@@ -350,7 +349,10 @@ void playeri::add_command_tokens(int value) {
 			answeri ai; ai.clear();
 			for(auto e : command_area)
 				ai.add(e, "Жетон %1", getstr(e));
-			auto a = (action_s)choose(sb, ai, false, "Куда хотите распределить %1i из %2i жетон?", i, value);
+			auto ps = sb.get();
+			sb.adds("Куда хотите распределить %1i из %2i жетон?", i, value);
+			auto a = (action_s)choose(ai, false, sb);
+			sb.set(ps);
 			add(a, 1);
 		}
 	}
@@ -362,7 +364,8 @@ void playeri::buy_technology(int cost_resources) {
 	auto total = getresources();
 	if(total >= counter * cost_resources)
 		ai.add(counter, "Приобрести технологию за [%2i] ресурсов", counter*cost_resources);
-	auto n = choose(sb, ai, true, "Если хотите, можете приобрести технологию за [%1i] очка ресурсов.", cost_resources);
+	sb.add("Если хотите, можете приобрести одну технологию за [%1i] очка ресурсов.", cost_resources);
+	auto n = choose(ai, true, sb);
 	if(!n)
 		return;
 	add_technology(1);
@@ -376,9 +379,9 @@ void playeri::buy_command_tokens(int cost_influence) {
 		ai.add(counter, "%1i жетона за %2i влияния", counter, counter*cost_influence);
 		counter++;
 	}
-	auto n = choose(sb, ai, true,
-		"Если хотите, можете приобрести жетоны команд за [%1i] очка влияния. "
-		"Сколько хотите приобрести?", cost_influence);
+	sb.adds("Если хотите, можете приобрести жетоны команд за [%1i] очка влияния.", cost_influence);
+	sb.adds("Сколько хотите приобрести?");
+	auto n = choose(ai, true, sb);
 	if(!n)
 		return;
 	add_command_tokens(n);
@@ -407,11 +410,10 @@ void playeri::build_units(int value) {
 }
 
 uniti* playeri::choose(army& source, const char* format) const {
-	string sb;
 	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
-	return (uniti*)choose(sb, ai, false, format);
+	return (uniti*)choose(ai, false, format);
 }
 
 void playeri::choose_diplomacy() {
@@ -522,13 +524,12 @@ void playeri::choose_speaker(int exclude) {
 			continue;
 		ai.add((int)&e, e.getname());
 	}
-	speaker = (playeri*)choose(sb, ai, false, "Вам необходимо назначить нового спикера. Старого спикера выбирать нельзя. Кто это будет?");
+	auto ps = sb.get();
+	sb.adds("Вам необходимо назначить нового спикера. Старого спикера выбирать нельзя. Кто это будет?");
+	speaker = (playeri*)choose(ai, false, sb);
+	sb.set(ps);
 	sb.add("Новым спикером в парламенте становятся [%1].", speaker->getname());
 	apply(sb);
-}
-
-int playeri::choose(string& sb, answeri& ai, bool cancel, const char* format, ...) const {
-	return choosev(sb, ai, cancel, format, xva_start(format));
 }
 
 void playeri::apply(string& sb) {
@@ -537,24 +538,15 @@ void playeri::apply(string& sb) {
 	ai.choose(false, false, 0, id, sb);
 }
 
-planeti* playeri::choose(const aref<planeti*>& source, const char* format, ...) const {
-	string sb; answeri ai;
+planeti* playeri::choose(const aref<planeti*>& source, const char* format) const {
+	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
-	return (planeti*)choosev(sb, ai, false, format, xva_start(format));
+	return (planeti*)choose(ai, false, format);
 }
 
-int	playeri::choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const {
-	auto p = sb.get();
-	//sb.adds("[+");
-	if(format) {
-		sb.adds(" ");
-		sb.addv(format, format_param);
-	}
-	//sb.add("]");
-	auto r = ai.choose(cancel_button, iscomputer(), 0, id, sb);
-	sb.set(p);
-	return r;
+int	playeri::choose(answeri& ai, bool cancel_button, const char* format) const {
+	return ai.choose(cancel_button, iscomputer(), 0, id, format);
 }
 
 int get_tech_color_count(const playeri* p, tech_color_s c) {
@@ -571,19 +563,26 @@ int get_tech_color_count(const playeri* p, tech_color_s c) {
 
 bool playeri::isallow(tech_s v) const {
 	auto& e = bsmeta<techi>::elements[v];
+	auto free_requisit = 0;
 	for(auto i = Red; i <= Yellow; i = tech_color_s(i + 1)) {
 		auto r = e.required[i - Red];
 		if(r == 0)
 			continue;
 		auto n = get_tech_color_count(this, i);
-		if(n < r)
-			return false;
+		if(n < r) {
+			if(free_requisit > 0) {
+				if(n < r - 1)
+					return false;
+				free_requisit--;
+			} else
+				return false;
+		}
 	}
 	return true;
 }
 
 void playeri::add_technology(int value) {
-	answeri ai; string sb;
+	answeri ai;
 	for(auto i = FirstTech; i <= LastTech; i = tech_s(i + 1)) {
 		if(is(i))
 			continue;
@@ -591,6 +590,9 @@ void playeri::add_technology(int value) {
 			continue;
 		ai.add(i, getstr(i));
 	}
-	auto t = (tech_s)choose(sb, ai, false, "Какую технологию мы выберем?");
+	auto t = (tech_s)choose(ai, false, "Мы можем изучить новую тезнологию. Какую технологию из доступных выбрать?");
 	set(t);
+	string sb;
+	sb.add("Наши ученные изучили новую технологию [%1].", getstr(t));
+	apply(sb);
 }

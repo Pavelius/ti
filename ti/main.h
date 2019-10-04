@@ -229,11 +229,10 @@ public:
 	void						choose_speaker(int exclude);
 	void						check_card_limin();
 	uniti*						choose(army& source, const char* format) const;
-	int							choose(string& sb, answeri& ai, bool cancel_button, const char* format, ...) const;
 	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
-	planeti*					choose(const aref<planeti*>& source, const char* format, ...) const;
-	int							choosev(string& sb, answeri& ai, bool cancel_button, const char* format, const char* format_param) const;
+	planeti*					choose(const aref<planeti*>& source, const char* format) const;
+	int							choose(answeri& ai, bool cancel_button, const char* format) const;
 	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
@@ -354,6 +353,7 @@ public:
 	int							getfleetsupport(const playeri* player) const;
 	variant_s					getgroup() const { return type; }
 	unsigned char				getindex() const { return index; }
+	static solari*				getmekatol();
 	const char*					getname() const;
 	planeti*					getplanet(int index) const;
 	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsmeta<playeri>::elements[player]; }

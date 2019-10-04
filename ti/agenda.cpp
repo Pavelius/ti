@@ -51,7 +51,7 @@ void playeri::predict_next_political_card(int value) {
 			for(unsigned i = 0; i < data.count; i++)
 				ai.add(4 + i, "Отменить голосование %1", bsmeta<agendai>::elements[data[i]].name);
 			ai.add(10, "Все корректно");
-			auto i = choose(sb, ai, false, 0);
+			auto i = choose(ai, false, sb);
 			switch(i) {
 			case 1:
 				iswap(data[0], data[1]);
