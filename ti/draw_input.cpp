@@ -1100,7 +1100,7 @@ int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, cons
 }
 
 struct unit_ref_table : table {
-	army&		source;
+	unita&		source;
 	bool		choosed;
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
@@ -1140,7 +1140,7 @@ struct unit_ref_table : table {
 		choosed = false;
 		table::view(rc);
 	}
-	constexpr unit_ref_table(army& source) : table(getcolumns()), source(source), choosed(false) {}
+	constexpr unit_ref_table(unita& source) : table(getcolumns()), source(source), choosed(false) {}
 };
 
 struct unit_table : table {
@@ -1241,6 +1241,8 @@ struct unit_table : table {
 		memset(source.data, 0, sizeof(source.data));
 		const auto i1 = GroundForces;
 		for(auto i = i1; i <= WarSun; i = (variant_s)(i + 1)) {
+			if(!bsmeta<varianti>::elements[i].cost)
+				continue;
 			if(!player->isallow(i))
 				continue;
 			auto p = source.add();
@@ -1313,7 +1315,7 @@ void playeri::slide(unsigned char index) {
 	slide(pt.x, pt.y);
 }
 
-bool playeri::build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
+bool playeri::build(unita& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
 	unit_table u1(this);
 	u1.fleet = fleet;
@@ -1352,7 +1354,7 @@ bool playeri::build(army& units, const planeti* planet, solari* system, int reso
 	return result;
 }
 
-bool playeri::choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement) const {
+bool playeri::choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement) const {
 	if(iscomputer()) {
 		for(auto& e : a1)
 			a2.add(e);

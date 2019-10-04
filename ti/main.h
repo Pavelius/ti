@@ -118,7 +118,7 @@ struct variant {
 	constexpr uniti*			getunit() const { return get<uniti>(); }
 };
 typedef adat<variant, 64>		varianta;
-struct army : adat<uniti*, 32> {
+struct unita : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
 	void						sort(int (uniti::*proc)() const);
@@ -218,14 +218,14 @@ public:
 	void						add_secret_objective(int value, bool interactive = true);
 	void						add_victory_points(int value);
 	void						apply(const char* format);
-	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
+	bool						build(unita& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						buy_command_tokens(int cost_influences);
 	void						buy_technology(int cost_resources);
 	void						choose_speaker(int exclude);
 	void						check_card_limin();
-	uniti*						choose(army& source, const char* format) const;
-	bool						choose(army& a1, army& a2, const char* action, bool cancel_button, bool show_movement = false) const;
+	uniti*						choose(unita& source, const char* format) const;
+	bool						choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format) const;
 	int							choose(answeri& ai, bool cancel_button, const char* format) const;
@@ -283,7 +283,7 @@ public:
 	void						remove(secret_s v) { secrets.remove(v); }
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
-	void						select(army& source, unsigned flags) const;
+	void						select(unita& source, unsigned flags) const;
 	void						select(solara& result, unsigned flags) const;
 	void						select(planeta& result, unsigned flags) const;
 	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
@@ -350,6 +350,7 @@ public:
 	constexpr explicit operator bool() const { return index != 0xFF; }
 	void						activate(const playeri* v);
 	void						deactivate(const playeri* v) { flags &= ~(1 << (v->getid())); }
+	uniti*						find(variant_s group) const;
 	int							getcount(variant_s type, const playeri* player) const;
 	int							getfleet(const playeri* player) const;
 	int							getfleetsupport(const playeri* player) const;
@@ -399,6 +400,7 @@ public:
 	const char*					getname() const { return name; }
 	int							getinfluence() const;
 	int							getone() const { return 1; }
+	int							getproduction() const;
 	int							getresource() const;
 	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsmeta<playeri>::elements[player]; }
 	solari*						getsolar() const { return &bsmeta<solari>::elements[solar]; }

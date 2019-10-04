@@ -90,3 +90,7 @@ void solari::select(planeta& result, unsigned flags) const {
 			break;
 	}
 }
+
+solari* solari::getmekatol() {
+	return bsmeta<solari>::elements;
+}

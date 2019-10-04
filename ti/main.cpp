@@ -22,11 +22,10 @@ int main() {
 	bsmeta<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
-	//test_proc(playeri::get("barony"));
-	playeri::make_move(true, true);
-	//playeri::get("norr")->strategy = Technology;
+	//playeri::make_move(true, true);
 	//playeri::get("norr")->add(Goods, 5);
-	//playeri::make_move(false, true);
+	playeri::get("norr")->strategy = Construction;
+	playeri::make_move(false, true);
 	return 0;
 }
 

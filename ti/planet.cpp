@@ -81,6 +81,12 @@ int	planeti::getresource() const {
 	return resource;
 }
 
+int	planeti::getproduction() const {
+	auto bonus = 2;
+	auto player = getplayer();
+	return getresource() + bonus;
+}
+
 int planeti::get(const playeri* player, int(planeti::*getproc)() const, unsigned flags) {
 	auto result = 0;
 	for(auto& e : bsmeta<planeti>()) {
@@ -219,10 +225,6 @@ solari* solari::getsolar(short unsigned index) {
 	return bsmeta<solari>::elements + n;
 }
 
-solari* solari::getmekatol() {
-	return bsmeta<solari>::elements;
-}
-
 enum direction_s : unsigned char {
 	LeftUp, RightUp, Left, Right, LeftDown, RightDown
 };
@@ -304,34 +306,35 @@ static void make_wave(unsigned char start_index, const playeri* player) {
 	make_wave(start_index, player, movement_rate, false);
 }
 
-static void select_units(army& a1, const playeri* player) {
+
+void playeri::moveships(solari* solar) {
+	unita a1, a2;
+	// Расчет ходов
+	make_wave(solar->getindex(), this);
+	// Выбор кораблей
 	for(auto& e : bsmeta<uniti>()) {
 		if(!e)
 			continue;
-		if(e.getplayer() != player)
+		if(e.getplayer() != this)
 			continue;
-		auto solar = e.getsolar();
-		if(!solar)
+		auto s = e.getsolar();
+		if(!s || s == solar)
 			continue;
-		auto move_cost = e.getmovement(solar->getindex());
+		auto move_cost = e.getmovement(s->getindex());
 		if(e.getmovement() < move_cost)
 			continue;
 		a1.add(&e);
 	}
-}
-
-void playeri::moveships(solari* solar) {
-	army a1, a2;
-	make_wave(solar->getindex(), this);
-	select_units(a1, this);
+	if(!a1)
+		return;
 	// Перемещение кораблей в систему
 	if(choose(a1, a2, "Переместить", true)) {
 		for(auto p : a2)
 			p->setsolar(solar);
+		// Берем под контроль нейтральную систему
+		if(!solar->getplayer())
+			solar->setplayer(this);
 	}
-	// Берем под контроль нейтральную систему
-	if(!solar->getplayer())
-		solar->setplayer(this);
 }
 
 planeti* planeti::find(const solari* parent, int index) {

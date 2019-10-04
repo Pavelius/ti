@@ -504,19 +504,22 @@ solari* playeri::gethomesystem() const {
 }
 
 void playeri::build_units(int value) {
-	planeta result;
-	select(result, Friendly | DockPresent);
-	auto planet = static_cast<planeti*>(choose(result, "”кажите планету, на которой будете строить"));
+	planeta result; select(result, Friendly | DockPresent);
+	auto planet = choose(result, "”кажите планету, на которой будете строить");
 	if(!planet)
 		return;
 	auto solar = planet->getsolar();
+	unita a1;
 	if(iscomputer()) {
 
 	} else {
+		if(build(a1, planet, solar, getresources(), getfleet(), 0, planet->getproduction(), true)) {
+
+		}
 	}
 }
 
-uniti* playeri::choose(army& source, const char* format) const {
+uniti* playeri::choose(unita& source, const char* format) const {
 	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());
@@ -629,6 +632,8 @@ void playeri::select(planeta& result, unsigned flags) const {
 			continue;
 		if((flags&Ready) != 0 && e.is(Exhaused))
 			continue;
+		if((flags&DockPresent) != 0 && e.getcount(SpaceDock, this)==0)
+			continue;
 		result.add(&e);
 	}
 }
@@ -664,6 +669,8 @@ void playeri::apply(const char* format) {
 }
 
 planeti* playeri::choose(const aref<planeti*>& source, const char* format) const {
+	if(source.getcount() == 1)
+		return source[0];
 	answeri ai;
 	for(auto p : source)
 		ai.add((int)p, p->getname());

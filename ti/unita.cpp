@@ -1,6 +1,6 @@
 #include "main.h"
 
-void army::sort(int (uniti::*proc)() const) {
+void unita::sort(int (uniti::*proc)() const) {
 	const auto i2 = maximum - 1;
 	const auto i1 = 0;
 	for(int i = i2; i > i1; i--) {
@@ -13,8 +13,8 @@ void army::sort(int (uniti::*proc)() const) {
 	}
 }
 
-void army::removecasualty(const playeri* player) {
-	army temp;
+void unita::removecasualty(const playeri* player) {
+	unita temp;
 	for(auto p : *this) {
 		if(!*p)
 			continue;
@@ -25,7 +25,7 @@ void army::removecasualty(const playeri* player) {
 		temp.data[0]->destroy();
 }
 
-void army::rollup() {
+void unita::rollup() {
 	auto ps = data;
 	auto pe = data + count;
 	for(auto pd = data; pd < pe; pd++) {

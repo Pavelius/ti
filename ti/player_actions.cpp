@@ -152,6 +152,7 @@ void tactical_action(playeri* p) {
 	p->add(Tactical, -1);
 	after_activation(p, solar);
 	p->moveships(solar);
+	p->build_units(1);
 }
 
 static void score_public_objective(int value) {
