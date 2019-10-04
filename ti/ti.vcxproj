@@ -156,6 +156,7 @@
     <ClCompile Include="player_actions.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="relation.cpp" />
+    <ClCompile Include="objective.cpp" />
     <ClCompile Include="solar.cpp" />
     <ClCompile Include="strategy.cpp" />
     <ClCompile Include="string.cpp" />

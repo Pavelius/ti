@@ -162,6 +162,9 @@ static void strategy_secondanary_action(playeri* p, strategy_s id) {
 	}
 }
 
+static void score_public_objective(int value) {
+}
+
 static void strategy_primary_action(playeri* p, strategy_s id) {
 	switch(id) {
 	case Leadership:
@@ -193,8 +196,11 @@ static void strategy_primary_action(playeri* p, strategy_s id) {
 		p->buy_technology(6);
 		break;
 	case Imperial:
-		p->add_objective(1);
-		p->add_victory_points(2);
+		score_public_objective(1);
+		if(solari::getmekatol()->getplayer() == p)
+			p->add_victory_points(1);
+		else
+			p->add_secret_objective(1);
 		break;
 	}
 }

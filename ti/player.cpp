@@ -358,30 +358,38 @@ void playeri::add_command_tokens(int value) {
 	}
 }
 
-void playeri::buy_technology(int cost_resources) {
+int playeri::pay(int maximum, int cost, const char* subject, const char* subjects, bool resource) {
+	static const char* res_name[] = {"ресурсов", "влияния"};
 	string sb; answeri ai;
 	auto counter = 1;
-	auto total = getresources();
-	if(total >= counter * cost_resources)
-		ai.add(counter, "Приобрести технологию за [%2i] ресурсов", counter*cost_resources);
-	sb.add("Если хотите, можете приобрести одну технологию за [%1i] очка ресурсов.", cost_resources);
-	auto n = choose(ai, true, sb);
+	int total;
+	if(resource)
+		total = getresources();
+	else
+		total = getinfluences();
+	auto res = res_name[resource ? 0 : 1];
+	while(counter <= maximum) {
+		if(total >= counter * cost) {
+			if(counter == 1)
+				ai.add(counter, "Приобрести %1 за %2i %3", subject, counter*cost, res);
+			else
+				ai.add(counter, "Приобрести %3i %1 за %2i %3", subjects, counter*cost, counter, res);
+		}
+		sb.add("Если хотите, можете приобрести %2 за [%1i] очка %3.", cost, subject, res);
+		counter++;
+	}
+	return choose(ai, true, sb);
+}
+
+void playeri::buy_technology(int cost_resources) {
+	auto n = pay(1, cost_resources, "технологию", "технологии");
 	if(!n)
 		return;
 	add_technology(1);
 }
 
 void playeri::buy_command_tokens(int cost_influence) {
-	string sb; answeri ai;
-	auto total = getinfluences();
-	auto counter = 1;
-	while(total > counter*cost_influence) {
-		ai.add(counter, "%1i жетона за %2i влияния", counter, counter*cost_influence);
-		counter++;
-	}
-	sb.adds("Если хотите, можете приобрести жетоны команд за [%1i] очка влияния.", cost_influence);
-	sb.adds("Сколько хотите приобрести?");
-	auto n = choose(ai, true, sb);
+	auto n = pay(1, cost_influence, "коммандный жетон", "коммандных жетона");
 	if(!n)
 		return;
 	add_command_tokens(n);
@@ -510,10 +518,6 @@ void playeri::message(const char* text) {
 	ai.choose(false, false, 0, id, text);
 }
 
-void playeri::pay(int cost) {
-
-}
-
 void playeri::choose_speaker(int exclude) {
 	string sb;
 	answeri ai;
@@ -532,10 +536,10 @@ void playeri::choose_speaker(int exclude) {
 	apply(sb);
 }
 
-void playeri::apply(string& sb) {
+void playeri::apply(const char* format) {
 	answeri ai;
 	ai.add(1, "Принять");
-	ai.choose(false, false, 0, id, sb);
+	ai.choose(false, false, 0, id, format);
 }
 
 planeti* playeri::choose(const aref<planeti*>& source, const char* format) const {
@@ -595,4 +599,12 @@ void playeri::add_technology(int value) {
 	string sb;
 	sb.add("Наши ученные изучили новую технологию [%1].", getstr(t));
 	apply(sb);
+}
+
+void playeri::add_victory_points(int value) {
+	string sb;
+	sb.adds("Мы получаем [%1] победное очко.");
+	sb.adds("Победа близка, галактика скоро будет нашей.");
+	apply(sb);
+	add(VictoryPoints, value);
 }

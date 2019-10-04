@@ -102,6 +102,9 @@ actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
 {"Strategy", "стратегии", 0, NoPlay, ""},
 {"Fleet", "флота", 0, NoPlay, ""},
 {"Command", "тактики", 0, NoPlay, ""},
+//
+{"VictoryPoints", "победных очков", 0, NoPlay, ""},
+//
 {"Commodities", "Продукция", 0, NoPlay, ""},
 {"Goods", "Товары", 0, NoPlay, ""},
 };

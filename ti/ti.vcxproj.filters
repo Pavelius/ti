@@ -150,6 +150,9 @@
     <ClCompile Include="tech.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="objective.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">

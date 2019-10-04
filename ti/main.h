@@ -43,6 +43,7 @@ enum action_s : unsigned char {
 	//
 	StrategyAction, TacticalAction, Pass,
 	Strategic, Fleet, Tactical,
+	VictoryPoints,
 	Commodities, Goods,
 	LastAction = Goods,
 };
@@ -90,6 +91,10 @@ enum planet_s : unsigned char {
 };
 enum relation_s : unsigned char {
 	WasHostile,
+};
+enum secret_s : unsigned char {
+	UnveilFlagship, TurnTheirFleetsToDust, DestroyTheirGreatestShip, SparkARebellion,
+	FirstSecret = UnveilFlagship, LastSecret = SparkARebellion,
 };
 struct agendai;
 class answeri;
@@ -204,11 +209,17 @@ struct strategyi {
 	const char*					text;
 	char						bonus;
 };
+struct objectivei {
+	const char*					id;
+	const char*					name;
+	char						vp;
+};
 class playeri : public namei, public costi {
 	relation					relations[8];
 	char						commodities;
 	cflags<tech_s>				technologies;
 	cflags<bonus_s>				bonuses;
+	cflags<secret_s>			secrets;
 public:
 	strategy_s					strategy;
 	//
@@ -220,8 +231,9 @@ public:
 	void						add_technology(int value);
 	void						add_trade_goods(int value);
 	void						add_objective(int value) {}
-	void						add_victory_points(int value) {}
-	void						apply(string& sb);
+	void						add_secret_objective(int value, bool interactive = true);
+	void						add_victory_points(int value);
+	void						apply(const char* format);
 	bool						build(army& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
 	void						build_units(int value);
 	void						buy_command_tokens(int cost_influences);
@@ -242,10 +254,12 @@ public:
 	uniti*						create(variant_s id, planeti* planet);
 	static void					create_action_deck();
 	static void					create_agenda_deck();
+	static void					create_objectve_deck();
 	void						draw_political_card(int value) {}
-	bool						is(action_s value) const { return costi::get(value); }
-	bool						is(bonus_s value) const { return bonuses.is(value); }
-	bool						is(tech_s value) const { return technologies.is(value); }
+	bool						is(action_s v) const { return costi::get(v); }
+	bool						is(bonus_s v) const { return bonuses.is(v); }
+	bool						is(tech_s v) const { return technologies.is(v); }
+	bool						is(secret_s v) const { return secrets.is(v); }
 	bool						isactive() const { return getactive() == this; }
 	bool						isallow(play_s type, action_s id) const;
 	bool						isallow(variant_s id) const;
@@ -275,11 +289,11 @@ public:
 	void						message(const char* text);
 	void						moveships(solari* solar);
 	void						open_trade_negatiation() {}
-	void						pay(int cost);
+	int							pay(int maximum, int cost, const char* subject, const char* subjects, bool resource = true);
 	void						predict_next_political_card(int value);
 	void						refresh_planets(int value) {}
 	void						replenish_commodities();
-	void						return_command_from_board(int value);
+	void						remove(secret_s v) { secrets.remove(v); }
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
 	void						select(army& source, unsigned flags) const;
@@ -287,10 +301,10 @@ public:
 	void						select(planeta& result, unsigned flags) const;
 	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
 	void						set(action_s id, char v) { costi::set(id, v); }
-	void						set(tech_s id) { technologies.add(id); }
+	void						set(tech_s v) { technologies.add(v); }
+	void						set(secret_s v) { secrets.add(v); }
 	static void					setup();
 	void						sethuman();
-	void						tactical_action();
 };
 class uniti {
 	unsigned char				player;
@@ -360,7 +374,6 @@ public:
 	static solari*				getsolar(short unsigned index);
 	bool						isactivated(const playeri* v) const { return (flags & (1 << v->getid())) != 0; }
 	bool						ismekatol() const;
-	//static void					select(solara& result, const playeri* player, bool include_mekatol_rex);
 	void						select(planeta& result, unsigned flags) const;
 	void						set(variant_s v) { type = v; }
 	void						setindex(unsigned char v) { index = v; }
