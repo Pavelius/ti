@@ -39,26 +39,6 @@ int	uniti::getresource() const {
 	return result;
 }
 
-int	uniti::getproduce() const {
-	if(!parent)
-		return 0;
-	auto result = getproduce(type);
-	if(!result)
-		return 0;
-	auto planet = parent.getplanet();
-	if(planet)
-		result += planet->getresource();
-	return result;
-}
-
-int	uniti::getproduce(variant_s type) {
-	return bsmeta<varianti>::elements[type].production_count;
-}
-
-int	uniti::getproduction(variant_s type) {
-	return bsmeta<varianti>::elements[type].production;
-}
-
 int uniti::getmaxhits() const {
 	switch(type) {
 	case Dreadnought:
@@ -190,10 +170,6 @@ bool uniti::isplanetary(variant_s type) {
 	}
 }
 
-int	uniti::getcount() const {
-	return getgroup().count;
-}
-
 int	uniti::getcarried() const {
 	auto result = 0;
 	for(auto& e : bsmeta<uniti>()) {
@@ -214,46 +190,39 @@ int uniti::getjoincount(variant_s object) const {
 }
 
 bool uniti::build(variant_s object, bool run) {
-	auto solar = getsolar();
-	if(!solar)
-		return false;
-	auto produce_count = getproduction(object);
-	auto available_count = bsmeta<varianti>::elements[object].available;
-	if(available_count) {
-		auto exist_count = solar->getcount(object, getplayer());
-		if(exist_count + produce_count > available_count)
-			produce_count = available_count - exist_count;
-	}
-	if(produce_count <= 0)
+	auto player = getplayer();
+	if(!player)
 		return false;
 	auto planet = getplanet();
 	if(!planet)
 		return false;
-	if(planet->getplayer() != getplayer())
+	auto solar = planet->getsolar();
+	if(!solar)
 		return false;
-	if(produce_count <= 0)
+	if(uniti::isplanetary(object) && solar->getplayer() && solar->getplayer() != player)
 		return false;
+	auto available_count = bsmeta<varianti>::elements[object].available;
+	if(available_count) {
+		auto exist_count = player->getcount(object);
+		if(exist_count >= available_count)
+			return false;
+	}
 	if(run) {
-		for(auto i = 0; i < produce_count; i++) {
-			auto p = new uniti(object);
+		auto p = new uniti(object);
+		if(uniti::isplanetary(object))
 			p->setplanet(planet);
-			p->setplayer(getplayer());
-		}
+		else
+			p->setsolar(solar);
+		p->setplayer(player);
 	}
 	return true;
 }
 
 int uniti::getweight() const {
 	auto result = getresource() * 2;
-	auto build_count = getproduction(type);
+	auto build_count = bsmeta<varianti>::elements[type].production;
 	if(build_count)
 		result = result / build_count;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(e.parent == this)
-			result += e.getweight();
-	}
 	return result;
 }
 

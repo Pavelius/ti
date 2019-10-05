@@ -1144,38 +1144,33 @@ struct unit_ref_table : table {
 };
 
 struct unit_table : table {
-	struct element {
-		uniti	unit;
-		int			count;
-	};
-	static const int table_maximum = (WarSun - GroundForces + 1);
-	adat<element, table_maximum> source;
+	builda&			source;
 	bool			focusable;
 	int				fleet, fleet_used, resource, maximal;
 	int				total_fleet, total_resource, total_maximal;
-	int getmaximum() const override {
+	int	getmaximum() const override {
 		return source.getcount();
 	}
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
-			return getstr(source[line].unit.type);
+			return getstr(source[line].type);
 		return 0;
 	}
 	int getnumber(int line, int column) const override {
 		if(columns[column] == "resource")
-			return source[line].unit.getresource();
+			return source[line].getresource();
 		if(columns[column] == "count")
 			return source[line].count;
 		if(columns[column] == "count_units")
-			return source[line].count * uniti::getproduction(source[line].unit.type);
+			return source[line].count * bsmeta<varianti>::elements[source[line].type].production;
 		if(columns[column] == "total")
-			return source[line].unit.getresource()*source[line].count;
+			return source[line].getresource()*source[line].count;
 		if(columns[column] == "fleet")
-			return source[line].unit.isfleet() ? source[line].count * 1 : 0;
+			return source[line].isfleet() ? source[line].count * 1 : 0;
 		return 0;
 	}
 	variant_s getvalue() const {
-		return source[current].unit.type;
+		return source[current].type;
 	}
 	static const column* getcolumns() {
 		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
@@ -1185,11 +1180,6 @@ struct unit_table : table {
 		{Number | AlignRight, "fleet", "Флот", 48},
 		{}};
 		return columns;
-	}
-	static int compare(const void* p1, const void* p2) {
-		auto i1 = *((variant_s*)p1);
-		auto i2 = *((variant_s*)p2);
-		return strcmp(getstr(i1), getstr(i2));
 	}
 	static void add_value() {
 		auto p = (unit_table*)hot.param;
@@ -1214,7 +1204,7 @@ struct unit_table : table {
 			disabled = true;
 		if(total_resource >= resource)
 			disabled = true;
-		if(source[index].unit.isfleet() && total_fleet >= fleet)
+		if(source[index].isfleet() && total_fleet >= fleet)
 			disabled = true;
 		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "+", Alpha + '+', true)) {
 			execute(add_value, (int)this);
@@ -1237,18 +1227,8 @@ struct unit_table : table {
 		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], продукция [%3i]", resource, fleet, maximal, total_fleet);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
 	}
-	unit_table(playeri* player) : table(getcolumns()), fleet(-1), resource(-1), maximal(0) {
-		memset(source.data, 0, sizeof(source.data));
-		const auto i1 = GroundForces;
-		for(auto i = i1; i <= WarSun; i = (variant_s)(i + 1)) {
-			if(!bsmeta<varianti>::elements[i].cost)
-				continue;
-			if(!player->isallow(i))
-				continue;
-			auto p = source.add();
-			p->unit.type = i;
-			p->unit.setplayer(player);
-		}
+	unit_table(builda& source) : table(getcolumns()), source(source),
+		fleet(-1), resource(-1), maximal(0) {
 	}
 };
 
@@ -1315,9 +1295,9 @@ void playeri::slide(unsigned char index) {
 	slide(pt.x, pt.y);
 }
 
-bool playeri::build(unita& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
+bool playeri::build(builda& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
-	unit_table u1(this);
+	unit_table u1(units);
 	u1.fleet = fleet;
 	u1.fleet_used = system->getfleet(this);
 	u1.resource = resources;
@@ -1340,18 +1320,7 @@ bool playeri::build(unita& units, const planeti* planet, solari* system, int res
 		domodal();
 		control_standart();
 	}
-	auto result = getresult() != 0;
-	if(result) {
-		for(auto& e : u1.source) {
-			for(auto i = e.count * uniti::getproduction(e.unit.type); i > 0; i--) {
-				if(e.unit.isplanetary())
-					create(e.unit.type, const_cast<planeti*>(planet));
-				else
-					create(e.unit.type, system);
-			}
-		}
-	}
-	return result;
+	return getresult() != 0;
 }
 
 bool playeri::choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement) const {

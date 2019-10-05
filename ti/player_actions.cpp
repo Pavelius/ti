@@ -134,7 +134,7 @@ static void redistribute_tokens(playeri* p) {
 }
 
 static solari* activate_system(playeri* p) {
-	solara source; p->select(source, 0);
+	solara source; p->selecta(source);
 	return p->choose(source, "Выбирайте систему, которую вы хотите активировать");
 }
 
@@ -152,7 +152,7 @@ void tactical_action(playeri* p) {
 	p->add(Tactical, -1);
 	after_activation(p, solar);
 	p->moveships(solar);
-	p->build_units(1);
+	p->build_units();
 }
 
 static void score_public_objective(int value) {

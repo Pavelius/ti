@@ -503,18 +503,25 @@ solari* playeri::gethomesystem() const {
 	return bsmeta<solari>::elements + 33 + index;
 }
 
-void playeri::build_units(int value) {
+void playeri::build_units() {
 	planeta result; select(result, Friendly | DockPresent);
 	auto planet = choose(result, "”кажите планету, на которой будете строить");
 	if(!planet)
 		return;
 	auto solar = planet->getsolar();
-	unita a1;
+	builda a1(this);
 	if(iscomputer()) {
 
 	} else {
-		if(build(a1, planet, solar, getresources(), getfleet(), 0, planet->getproduction(), true)) {
-
+		if(!build(a1, planet, solar, getresources(), getfleet(), 0, planet->getproduction(), true))
+			return;
+	}
+	for(auto& e : a1) {
+		for(auto i = e.count * bsmeta<varianti>::elements[e.type].production; i > 0; i--) {
+			if(e.isplanetary())
+				create(e.type, planet);
+			else
+				create(e.type, solar);
 		}
 	}
 }
@@ -575,21 +582,6 @@ void playeri::replenish_commodities() {
 	apply(sb);
 }
 
-unsigned playeri::select(uniti** result, uniti* const* pe, unsigned flags, variant_s type) const {
-	auto ps = result;
-	for(auto& e : bsmeta<uniti>()) {
-		if(!e)
-			continue;
-		if(flags&Friendly && e.getplayer() != this)
-			continue;
-		if(e.type != SpaceDock)
-			continue;
-		if(ps < pe)
-			*ps++ = &e;
-	}
-	return ps - result;
-}
-
 void playeri::select(solara& result, unsigned flags) const {
 	for(auto& e : bsmeta<solari>()) {
 		if(!e)
@@ -599,6 +591,19 @@ void playeri::select(solara& result, unsigned flags) const {
 		if((flags&NoMekatol) != 0 && &e == bsmeta<solari>::elements)
 			continue;
 		if((flags&Activated) != 0 && !e.isactivated(this))
+			continue;
+		result.add(&e);
+	}
+}
+
+void playeri::selecta(solara& result) const {
+	for(auto& e : bsmeta<solari>()) {
+		if(!e)
+			continue;
+		auto g = e.getgroup();
+		if(g == Supernova || g == AsteroidField)
+			continue;
+		if(e.isactivated(this))
 			continue;
 		result.add(&e);
 	}
@@ -735,4 +740,16 @@ void playeri::add_victory_points(int value) {
 	sb.adds("ѕобеда близка, галактика скоро будет нашей.");
 	apply(sb);
 	add(VictoryPoints, value);
+}
+
+int	playeri::getcount(variant_s unit) const {
+	auto result = 0;
+	for(auto& e : bsmeta<uniti>()) {
+		if(!e)
+			continue;
+		if(e.getplayer() != this)
+			continue;
+		result++;
+	}
+	return result;
 }

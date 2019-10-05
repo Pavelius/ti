@@ -40,12 +40,3 @@ void unita::rollup() {
 			*ps++ = *pd;
 	}
 }
-
-//void army::transform(target_s v) {
-//	auto ps = data;
-//	auto pe = data + count;
-//	while(ps < pe) {
-//		*ps = (*ps)->get(v);
-//		ps++;
-//	}
-//}

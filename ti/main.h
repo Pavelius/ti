@@ -64,8 +64,9 @@ enum target_s : unsigned {
 enum variant_s : unsigned char {
 	NoVariant,
 	Player, Solar, AsteroidField, Nebula, Supernova,
-	Planet, Unit, SpaceDock,
-	GroundForces, Fighters, PDS,
+	Planet, Unit,
+	SpaceDock, PDS,
+	GroundForces, Fighters, 
 	Carrier, Cruiser, Destroyer, Dreadnought, WarSun,
 	Agenda, TechnologyVar,
 	Variant
@@ -81,6 +82,7 @@ enum secret_s : unsigned char {
 	FirstSecret = UnveilFlagship, LastSecret = MonopolizeProduction,
 };
 struct agendai;
+struct builda;
 class answeri;
 class planeti;
 class playeri;
@@ -173,8 +175,6 @@ struct varianti {
 	char						cost;
 	char						production;
 	char						movements;
-	char						count;
-	char						production_count;
 	weaponi						combat;
 };
 class costi {
@@ -218,8 +218,8 @@ public:
 	void						add_secret_objective(int value, bool interactive = true);
 	void						add_victory_points(int value);
 	void						apply(const char* format);
-	bool						build(unita& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
-	void						build_units(int value);
+	bool						build(builda& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button);
+	void						build_units();
 	void						buy_command_tokens(int cost_influences);
 	void						buy_technology(int cost_resources);
 	void						choose_speaker(int exclude);
@@ -259,6 +259,7 @@ public:
 	static playeri*				getactive();
 	int							getcardscount() const;
 	int							getcommodities() const { return commodities; }
+	int							getcount(variant_s unit) const;
 	int							getfleet() const;
 	static playeri*				gethuman();
 	unsigned char				getid() const;
@@ -283,10 +284,9 @@ public:
 	void						remove(secret_s v) { secrets.remove(v); }
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
-	void						select(unita& source, unsigned flags) const;
 	void						select(solara& result, unsigned flags) const;
 	void						select(planeta& result, unsigned flags) const;
-	unsigned					select(uniti** result, uniti* const* result_maximum, unsigned flags, variant_s type) const;
+	void						selecta(solara& result) const;
 	void						selectp(solara& result, unsigned flags) const;
 	void						set(action_s id, char v) { costi::set(id, v); }
 	void						set(tech_s v) { technologies.add(v); }
@@ -311,7 +311,6 @@ public:
 	void						destroy();
 	int							getcapacity() const;
 	int							getcarried() const;
-	int							getcount() const;
 	const varianti&				getgroup() const { return bsmeta<varianti>::elements[type]; }
 	int							getjoincount(variant_s object) const;
 	int							getmaxhits() const;
@@ -319,12 +318,8 @@ public:
 	static int					getmovement(short unsigned index);
 	const char*					getname() const { return getgroup().name; }
 	playeri*					getplayer() const;
-	static int					getproduction(variant_s type);
-	int							getproduction() const { return getproduction(type); }
 	int							getresource() const;
 	planeti*					getplanet() const;
-	int							getproduce() const;
-	static int					getproduce(variant_s type);
 	solari*						getsolar() const;
 	int							getstrenght() const { return getweapon().chance; }
 	weaponi						getweapon() const;
@@ -341,6 +336,14 @@ public:
 	void						setplayer(const playeri* v);
 	void						setsolar(const solari* v);
 };
+struct squad : uniti {
+	unsigned char				count;
+	unsigned char				getcount() const;
+};
+struct builda : adat<squad, WarSun - GroundForces + 1> {
+	builda(playeri* player);
+	unsigned					getcount() const { return count; }
+};
 class solari {
 	variant_s					type;
 	unsigned char				player;
@@ -350,7 +353,6 @@ public:
 	constexpr explicit operator bool() const { return index != 0xFF; }
 	void						activate(const playeri* v);
 	void						deactivate(const playeri* v) { flags &= ~(1 << (v->getid())); }
-	uniti*						find(variant_s group) const;
 	int							getcount(variant_s type, const playeri* player) const;
 	int							getfleet(const playeri* player) const;
 	int							getfleetsupport(const playeri* player) const;

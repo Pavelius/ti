@@ -153,6 +153,9 @@
     <ClCompile Include="unita.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="build.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">
