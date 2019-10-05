@@ -11,63 +11,63 @@ struct player_pregen_info {
 	variant_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
-static player_pregen_info player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3}, 4,
-{CombatBonusDefend},
+static player_pregen_info player_pregen_data[] = { { "xxcha", "Королевство Иксча", { 2, 3, 3 }, 4,
+{ CombatBonusDefend },
 {},
-{Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
-{GravitonLaserSystem}},
-{"barony", "Баронство Летнева", {2, 3, 3}, 2,
-{BonusFleetTokens},
+{ Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser },
+{ GravitonLaserSystem } },
+{ "barony", "Баронство Летнева", { 2, 3, 3 }, 2,
+{ BonusFleetTokens },
 {},
-{Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces},
-{AntimassDeflectors, PlasmaScoring}
+{ Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces },
+{ AntimassDeflectors, PlasmaScoring }
 },
-{"naalu", "Община Наалу", {2, 3, 3}, 3,
-{BonusInitiative, CombatBonusFighters},
+{ "naalu", "Община Наалу", { 2, 3, 3 }, 3,
+{ BonusInitiative, CombatBonusFighters },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
-{SarweenTools, NeuralMotivator}
+{ GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters },
+{ SarweenTools, NeuralMotivator }
 },
-{"mindnet", "Сеть раума L1z1x", {2, 3, 3}, 2,
-{BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
+{ "mindnet", "Сеть раума L1z1x", { 2, 3, 3 }, 2,
+{ BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
-{NeuralMotivator, PlasmaScoring}
+{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS },
+{ NeuralMotivator, PlasmaScoring }
 },
-{"yssaril", "Племена Изарилов", {2, 3, 3}, 3,
-{BonusActionCards},
+{ "yssaril", "Племена Изарилов", { 2, 3, 3 }, 3,
+{ BonusActionCards },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS},
-{NeuralMotivator}
+{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS },
+{ NeuralMotivator }
 },
-{"sol", "Федерация Солнца", {2, 3, 3}, 4,
-{BonusCommandCounter},
+{ "sol", "Федерация Солнца", { 2, 3, 3 }, 4,
+{ BonusCommandCounter },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
-{NeuralMotivator, AntimassDeflectors}
+{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer },
+{ NeuralMotivator, AntimassDeflectors }
 },
-{"mentax", "Коалиция Ментаков", {2, 3, 3}, 2,
+{ "mentax", "Коалиция Ментаков", { 2, 3, 3 }, 2,
 {},
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
-{SarweenTools, PlasmaScoring}
+{ GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS },
+{ SarweenTools, PlasmaScoring }
 },
-{"hacan", "Эмираты Хакканов", {2, 3, 3}, 6,
-{BonusTrade},
+{ "hacan", "Эмираты Хакканов", { 2, 3, 3 }, 6,
+{ BonusTrade },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
-{AntimassDeflectors, SarweenTools}
+{ GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters },
+{ AntimassDeflectors, SarweenTools }
 },
-{"jelnar", "Университеты Джолнаров", {2, 3, 3}, 4,
-{CombatPenalty, BonusTechnology},
+{ "jelnar", "Университеты Джолнаров", { 2, 3, 3 }, 4,
+{ CombatPenalty, BonusTechnology },
 {},
-{GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought},
-{AntimassDeflectors, NeuralMotivator, SarweenTools, PlasmaScoring}
+{ GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought },
+{ AntimassDeflectors, NeuralMotivator, SarweenTools, PlasmaScoring }
 },
-{"norr", "Сардак Норры", {2, 3, 3}, 3,
-{CombatBonusAll},
+{ "norr", "Сардак Норры", { 2, 3, 3 }, 3,
+{ CombatBonusAll },
 {},
-{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS},
+{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS },
 {}
 },
 };
@@ -256,7 +256,12 @@ playeri* playeri::gethuman() {
 }
 
 int	playeri::get(action_s id) const {
-	int r = costi::get(id);
+	int r;
+	switch(id) {
+	case Resource: r = getresources(); break;
+	case Influence: r = getinfluences(); break;
+	default: r = costi::get(id); break;
+	}
 	switch(id) {
 	case Fleet:
 		if(is(BonusFleetTokens))
@@ -333,7 +338,8 @@ void playeri::add_action_cards(int value) {
 				if(first_card) {
 					sb.adds("Это");
 					first_card = false;
-				} else if(i == value - 1)
+				}
+				else if(i == value - 1)
 					sb.adds("и");
 				else
 					sb.add(",");
@@ -349,12 +355,13 @@ void playeri::add_action_cards(int value) {
 }
 
 void playeri::add_command_tokens(int value) {
-	static action_s command_area[] = {Strategic, Fleet, Tactical};
+	static action_s command_area[] = { Strategic, Fleet, Tactical };
 	string sb;
 	sb.add("%1 получили [%2i] командных жетона.", getyouname(), value);
 	if(iscomputer()) {
 		message(sb);
-	} else {
+	}
+	else {
 		for(auto i = 1; i <= value; i++) {
 			answeri ai; ai.clear();
 			for(auto e : command_area)
@@ -387,10 +394,10 @@ static int getcn(action_s currency) {
 }
 
 static const char* getcn(action_s currency, int count) {
-	static const char* names[][3] = {{"стратегический жетон", "стратегических жетона", "стратегических жетонов"},
-	{"ресурс", "ресурса", "ресурсов"},
-	{"влияние", "влияния", "влияния"},
-	{"непонятно что", "непонятно чего", "непонятно чего"},
+	static const char* names[][3] = { { "стратегический жетон", "стратегических жетона", "стратегических жетонов" },
+	{ "ресурс", "ресурса", "ресурсов" },
+	{ "влияние", "влияния", "влияния" },
+	{ "непонятно что", "непонятно чего", "непонятно чего" },
 	};
 	auto i = getcn(currency);
 	if(count == 0 || count >= 5)
@@ -400,14 +407,6 @@ static const char* getcn(action_s currency, int count) {
 	else
 		count = 1;
 	return names[i][count];
-}
-
-static int getsummary(const playeri* p, action_s currency) {
-	switch(currency) {
-	case Resource: return p->getresources(); break;
-	case Influence: return p->getinfluences(); break;
-	default: return p->get(currency); break;
-	}
 }
 
 void playeri::pay_apply(int cost, action_s id) {
@@ -430,7 +429,7 @@ void playeri::pay_apply(int cost, action_s id) {
 		auto goods_koeff = 1;
 		auto need_goods = (cost - payed + goods_koeff - 1) / goods_koeff;
 		if(need_goods && need_goods <= goods) {
-			if(goods_koeff>1)
+			if(goods_koeff > 1)
 				ai.add(0, "Товары: %1ix%2i", need_goods, goods_koeff);
 			else
 				ai.add(0, "Товары: %1i", need_goods);
@@ -439,7 +438,8 @@ void playeri::pay_apply(int cost, action_s id) {
 		if(!r) {
 			payed += need_goods*goods_koeff;
 			add(Goods, -need_goods);
-		} else {
+		}
+		else {
 			payed += r->get(id);
 			//slide(r->getsolar()->getindex());
 			r->set(Exhaused);
@@ -450,7 +450,9 @@ void playeri::pay_apply(int cost, action_s id) {
 int playeri::pay_choose(int maximum, int cost, const char* subject, const char* subjects, action_s currency) const {
 	string sb; answeri ai;
 	auto counter = 1;
-	auto total = getsummary(this, currency) + get(Goods);
+	auto total = get(currency);
+	if(currency == Influence || currency == Resource)
+		total += get(Goods);
 	if(!subjects)
 		subjects = subject;
 	while(counter <= maximum) {
@@ -461,7 +463,8 @@ int playeri::pay_choose(int maximum, int cost, const char* subject, const char* 
 					ai.add(counter, "Купить %1 за %2", subject, getcn(currency, total_cost));
 				else
 					ai.add(counter, "Купить %1 за %2i %3", subject, total_cost, getcn(currency, total_cost));
-			} else
+			}
+			else
 				ai.add(counter, "Купить %3i %1 за %2i %3", subjects, total_cost, counter, getcn(currency, total_cost));
 		}
 		counter++;
@@ -512,7 +515,8 @@ void playeri::build_units() {
 	builda a1(this);
 	if(iscomputer()) {
 
-	} else {
+	}
+	else {
 		if(!build(a1, planet, solar, getresources(), getfleet(), 0, planet->getproduction(), true))
 			return;
 	}
@@ -637,7 +641,7 @@ void playeri::select(planeta& result, unsigned flags) const {
 			continue;
 		if((flags&Ready) != 0 && e.is(Exhaused))
 			continue;
-		if((flags&DockPresent) != 0 && e.getcount(SpaceDock, this)==0)
+		if((flags&DockPresent) != 0 && e.getcount(SpaceDock, this) == 0)
 			continue;
 		result.add(&e);
 	}
@@ -711,7 +715,8 @@ bool playeri::isallow(tech_s v) const {
 				if(n < r - 1)
 					return false;
 				free_requisit--;
-			} else
+			}
+			else
 				return false;
 		}
 	}
