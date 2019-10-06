@@ -219,7 +219,7 @@ public:
 	void						add_victory_points(int value);
 	void						apply(const char* format);
 	bool						build(builda& units, const planeti* planet, solari* system, int resources, int& used_resurces, int fleet, int minimal, int maximal, bool cancel_button);
-	void						build_units();
+	void						build_units(solari * solar);
 	void						buy_command_tokens(int cost_influences);
 	void						buy_technology(int cost_resources);
 	void						choose_speaker(int exclude);

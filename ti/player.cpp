@@ -508,12 +508,13 @@ solari* playeri::gethomesystem() const {
 	return bsmeta<solari>::elements + 33 + index;
 }
 
-void playeri::build_units() {
-	planeta result; select(result, Friendly | DockPresent);
+void playeri::build_units(solari* solar) {
+	if(!solar)
+		return;
+	planeta result; solar->select(result, Friendly | DockPresent);
 	auto planet = choose(result, "”кажите планету, на которой будете строить");
 	if(!planet)
 		return;
-	auto solar = planet->getsolar();
 	builda a1(this);
 	int used_resources = 0;
 	if(iscomputer()) {

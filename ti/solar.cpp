@@ -80,10 +80,13 @@ int	solari::getcount(variant_s type, const playeri* player) const {
 }
 
 void solari::select(planeta& result, unsigned flags) const {
+	auto player = getplayer();
 	for(auto& e : bsmeta<planeti>()) {
 		if(!e)
 			continue;
 		if(e.getsolar() != this)
+			continue;
+		if((flags&DockPresent) != 0 && e.getcount(SpaceDock, player) == 0)
 			continue;
 		result.add(&e);
 		if(flags&FirstEntry)
