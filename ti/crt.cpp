@@ -13,14 +13,6 @@ unsigned szupper(unsigned u) {
 	return u;
 }
 
-char* szupper(char* p, int count) {
-	auto s1 = p;
-	const char* p1 = p;
-	while(count-- > 0)
-		szput(&s1, szupper(szget(&p1)));
-	return p;
-}
-
 unsigned szlower(unsigned u) {
 	if(u >= 0x41 && u <= 0x5A)
 		return u - 0x41 + 0x61;
@@ -79,23 +71,6 @@ bool matchuc(const char* name, const char* filter) {
 		}
 	}
 	return false;
-}
-
-void szlower(char* p, int count) {
-	auto s1 = p;
-	const char* p1 = p;
-	if(count == -1) {
-		while(true) {
-			unsigned sym = szget(&p1);
-			if(!sym)
-				break;
-			szput(&s1, szlower(sym));
-		}
-		szput(&s1, 0);
-	} else {
-		while(count-- > 0)
-			szput(&s1, szlower(szget(&p1)));
-	}
 }
 
 unsigned szget(const char** input, codepage_s code) {
