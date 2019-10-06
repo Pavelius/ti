@@ -418,13 +418,15 @@ void playeri::pay_apply(int cost, action_s id) {
 	}
 	auto payed = 0;
 	while(payed < cost) {
-		planeta planets; select(planets, Friendly | Ready);
 		string sb; answeri ai;
 		sb.adds("Вам надо заплатить %1i %2.", cost, getcn(id, cost));
 		sb.adds("Вы заплатили [%1i].", payed);
 		sb.adds("Чем хотите заплатить?");
+		planeta planets; select(planets, Friendly | Ready);
 		for(auto p : planets) {
 			auto c = p->get(id);
+			if(!c)
+				continue;
 			ai.add((int)p, "%1: %2i", p->getname(), c);
 		}
 		auto goods = get(Goods);

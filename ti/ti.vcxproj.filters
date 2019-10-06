@@ -34,6 +34,9 @@
     <ClInclude Include="stringbuilder.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
+    <ClInclude Include="base.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -155,6 +158,9 @@
     </ClCompile>
     <ClCompile Include="build.cpp">
       <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="base.cpp">
+      <Filter>Поддержка</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

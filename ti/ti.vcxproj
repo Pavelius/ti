@@ -119,6 +119,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="base.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="bstream.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="crt.h" />
@@ -136,6 +139,9 @@
     <ClCompile Include="action.cpp" />
     <ClCompile Include="agenda.cpp" />
     <ClCompile Include="answer.cpp" />
+    <ClCompile Include="base.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="build.cpp" />
