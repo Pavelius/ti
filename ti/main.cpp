@@ -1,10 +1,17 @@
 #include "main.h"
 #include "draw.h"
 
+using namespace code;
+
 static void test_proc(const playeri* p) {
 	planeta source; p->select(source, Ready|Friendly);
 	if(source)
 		source[0]->set(Exhaused);
+}
+
+static void test_metadata() {
+	metadata::initialize();
+	auto p = metadata::addtype("Rectangle");
 }
 
 int main() {

@@ -5,9 +5,9 @@
 namespace code {
 struct metadata;
 struct requisit {
-	metadata*				parent;
-	metadata*				type;
 	const char*				id; // Identificator, must be filled
+	metadata*				type;
+	metadata*				parent;
 	unsigned				offset;
 	unsigned				count;
 	constexpr operator bool() const { return id != 0; }
@@ -21,7 +21,9 @@ struct metadata {
 	metadata*				type;
 	const char*				id;
 	unsigned				size;
-	requisit*				add(const char* id, metadata* type);
+	constexpr operator bool() const { return id != 0; }
+	requisit*				add(const char* id, metadata* type, unsigned count = 1);
+	static metadata*		addtype(const char* id, metadata* type = 0);
 	static void				initialize();
 	bool					is(const char* id) const;
 	bool					isarray() const { return id[0] == '[' && id[1] == ']' && id[2]==0; }
@@ -30,6 +32,7 @@ struct metadata {
 	bool					ispredefined() const;
 	bool					istext() const;
 	requisit*				find(const char* id) const;
+	static metadata*		findtype(const char* id);
 	const requisit*			getid() const;
 	const metadata*			gettype() const;
 	void					update();
