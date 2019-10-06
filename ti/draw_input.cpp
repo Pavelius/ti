@@ -312,7 +312,7 @@ static void before_render() {
 	if(hot.mouse.x < 0 || hot.mouse.y < 0)
 		sys_static_area.clear();
 	else
-		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
+		sys_static_area = { 0, 0, draw::getwidth(), draw::getheight() };
 }
 
 bool draw::ismodal() {
@@ -365,7 +365,7 @@ static int render_text(int x, int y, int width, const char* string) {
 }
 
 static int windowf(int x, int y, int width, const char* string) {
-	rect rc = {x, y, x + width, y};
+	rect rc = { x, y, x + width, y };
 	draw::state push;
 	draw::font = metrics::font;
 	auto height = textf(rc, string);
@@ -377,7 +377,7 @@ static int windowf(int x, int y, int width, const char* string) {
 
 static int window(int x, int y, int width, const char* string, int right_width = 0, areas* pa = 0, bool only_height = false) {
 	auto right_side = (right_width != 0);
-	rect rc = {x, y, x + width, y};
+	rect rc = { x, y, x + width, y };
 	draw::state push;
 	draw::font = metrics::font;
 	auto height = textf(rc, string);
@@ -400,7 +400,7 @@ static int render_picture(int x, int y, const char* id, areas* pa = 0) {
 	static piclib avatars;
 	auto& e = avatars.get(id, "portraits", gui.hero_width, gui.hero_width);
 	blit(*draw::canvas, x, y, gui.hero_width, gui.hero_width, 0, e, 0, 0);
-	rect rc = {x, y, x + gui.hero_width, y + gui.hero_width};
+	rect rc = { x, y, x + gui.hero_width, y + gui.hero_width };
 	rectb(rc, colors::border);
 	if(pa)
 		*pa = area(rc);
@@ -411,8 +411,8 @@ static int render_picture(int x, int y, const char* id, areas* pa = 0) {
 static int window(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0, bool only_height = false) {
 	x -= width_picture;
 	auto width = width_picture + width_text;
-	rect rc = {x, y, x + width, y};
-	rect rc1 = {x + width_picture + gui.padding, y, x + width, y};
+	rect rc = { x, y, x + width, y };
+	rect rc1 = { x + width_picture + gui.padding, y, x + width, y };
 	draw::state push;
 	draw::font = metrics::font;
 	auto height = textf(rc1, string);
@@ -431,7 +431,7 @@ static int window(int x, int y, int width_picture, int width_text, const char* p
 static int windowb(int x, int y, int width, const char* string, bool& result, bool disabled, int border = 0, unsigned key = 0, const char* tips = 0) {
 	draw::state push;
 	draw::font = metrics::font;
-	rect rc = {x, y, x + width, y + draw::texth()};
+	rect rc = { x, y, x + width, y + draw::texth() };
 	auto ra = window(rc, disabled, true, border);
 	draw::text(rc, string, AlignCenterCenter);
 	if((ra == AreaHilited || ra == AreaHilitedPressed) && tips)
@@ -457,13 +457,13 @@ static int windowb(int x, int y, int width, const char* string, callback proc, b
 static point getscreen(const rect& rc, point pt) {
 	auto x = pt.x - camera.x + rc.x1 + rc.width() / 2;
 	auto y = pt.y - camera.y + rc.y1 + rc.height() / 2;
-	return {(short)x, (short)y};
+	return { (short)x, (short)y };
 }
 
 static point getmappos(const rect& rc, point pt) {
 	auto x = pt.x + camera.x - rc.x1 - rc.width() / 2;
 	auto y = pt.y + camera.y - rc.y1 - rc.height() / 2;
-	return {(short)x, (short)y};
+	return { (short)x, (short)y };
 }
 
 static void breakparam() {
@@ -632,41 +632,41 @@ void draw::domodal() {
 }
 
 const int size2 = size - 2;
-static const point hexagon_offset2[6] = {{(short)(size2 * cos_30), -(short)(size2 / 2)},
-{(short)(size2 * cos_30), (short)(size2 / 2)},
-{0, size2},
-{-(short)(size2 * cos_30), (short)(size2 / 2)},
-{-(short)(size2 * cos_30), -(short)(size2 / 2)},
-{0, -size2},
+static const point hexagon_offset2[6] = { { (short)(size2 * cos_30), -(short)(size2 / 2) },
+{ (short)(size2 * cos_30), (short)(size2 / 2) },
+{ 0, size2 },
+{ -(short)(size2 * cos_30), (short)(size2 / 2) },
+{ -(short)(size2 * cos_30), -(short)(size2 / 2) },
+{ 0, -size2 },
 };
 const int size3 = size - 4;
-static const point hexagon_offset3[6] = {{(short)(size3 * cos_30), -(short)(size3 / 2)},
-{(short)(size3 * cos_30), (short)(size3 / 2)},
-{0, size3},
-{-(short)(size3 * cos_30), (short)(size3 / 2)},
-{-(short)(size3 * cos_30), -(short)(size3 / 2)},
-{0, -size3},
+static const point hexagon_offset3[6] = { { (short)(size3 * cos_30), -(short)(size3 / 2) },
+{ (short)(size3 * cos_30), (short)(size3 / 2) },
+{ 0, size3 },
+{ -(short)(size3 * cos_30), (short)(size3 / 2) },
+{ -(short)(size3 * cos_30), -(short)(size3 / 2) },
+{ 0, -size3 },
 };
-static const point hexagon_offset[6] = {{(short)(size * cos_30), -(short)(size / 2)},
-{(short)(size * cos_30), (short)(size / 2)},
-{0, size},
-{-(short)(size * cos_30), (short)(size / 2)},
-{-(short)(size * cos_30), -(short)(size / 2)},
-{0, -size},
+static const point hexagon_offset[6] = { { (short)(size * cos_30), -(short)(size / 2) },
+{ (short)(size * cos_30), (short)(size / 2) },
+{ 0, size },
+{ -(short)(size * cos_30), (short)(size / 2) },
+{ -(short)(size * cos_30), -(short)(size / 2) },
+{ 0, -size },
 };
 
-static const point planets_n2[] = {{(short)(size / 2), (short)(-size / 4)},
-{(short)(-size / 2), (short)(size / 4)}
+static const point planets_n2[] = { { (short)(size / 2), (short)(-size / 4) },
+{ (short)(-size / 2), (short)(size / 4) }
 };
-static const point planets_n3[] = {{0, (short)(-size / 2)},
-{(short)(-size / 2), 0},
-{(short)(size / 3), (short)(size / 3)}
+static const point planets_n3[] = { { 0, (short)(-size / 2) },
+{ (short)(-size / 2), 0 },
+{ (short)(size / 3), (short)(size / 3) }
 };
 
 static point h2p(point hex) {
 	short x = short(size * sqrt_3) * hex.x + (short(size * sqrt_3) / 2) * hex.y;
 	short y = size * 3 / 2 * hex.y;
-	return {x, y};
+	return { x, y };
 }
 
 static cube cube_round(cube c) {
@@ -682,25 +682,25 @@ static cube cube_round(cube c) {
 		ry = -rx - rz;
 	else
 		rz = -rx - ry;
-	return {rx, ry, rz};
+	return { rx, ry, rz };
 }
 
 static point cube_to_oddr(cube c) {
 	auto col = c.x + (c.z - (((int)c.z) & 1)) / 2;
 	auto row = c.z;
-	return {(short)col, (short)row};
+	return { (short)col, (short)row };
 }
 
 static point flat_hex_to_pixel(point hex) {
 	auto x = (short)((size * 3.0 * hex.x) / 2);
 	auto y = (short)(size * sqrt_3 * hex.x + 0.5 * (hex.y & 1));
-	return {x, y};
+	return { x, y };
 }
 
 static point pixel_to_flat_hex(point pixel) {
 	auto q = (short)(((2.0 / 3.0) * pixel.x) / size);
 	auto r = (short)(((-1.0 / 3.0) * pixel.x + sqrt_3 / 3 * pixel.y) / size);
-	return {q, r};
+	return { q, r };
 }
 
 point hex_round(point pt) {
@@ -708,17 +708,17 @@ point hex_round(point pt) {
 }
 
 static cube axial_to_cube(point pt) {
-	return {0, 0, 0};
+	return { 0, 0, 0 };
 }
 
 static point cube_to_axial(cube c) {
-	return {0, 0};
+	return { 0, 0 };
 }
 
 static point p2h(point pt) {
 	auto q = ((sqrt_3 / 3.0) * (double)pt.x - (1.0 / 3.0) * (double)pt.y) / (double)size;
 	auto r = ((2.0 / 3.0) * (double)pt.y) / (double)size;
-	return cube_to_oddr(cube_round(axial_to_cube({(short)q, (short)r})));
+	return cube_to_oddr(cube_round(axial_to_cube({ (short)q, (short)r })));
 }
 
 static void hexagon2(point pt) {
@@ -788,11 +788,10 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 		circle(x, y, r, c2);
 		break;
 	case GroundForces:
-		rectf({x - r, y - r, x + r, y + r}, c1);
-		rectb({x - r, y - r, x + r, y + r}, c2);
+		rectf({ x - r, y - r, x + r, y + r }, c1);
+		rectb({ x - r, y - r, x + r, y + r }, c2);
 		break;
 	case PDS:
-		x += r;
 		trianglef(x, y - r, r * 2, r, c1);
 		triangleb(x, y - r, r * 2, r, c2);
 		break;
@@ -804,23 +803,23 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 	case Carrier:
 		zcat(temp, "Т");
 		n = r + r;
-		rectf({x - r, y - r, x + n, y + r}, c1);
-		rectb({x - r, y - r, x + n, y + r}, c2);
+		rectf({ x - r, y - r, x + n, y + r }, c1);
+		rectb({ x - r, y - r, x + n, y + r }, c2);
 		cannon(x + n, y, c1, c2);
 		break;
 	case Destroyer:
 		zcat(temp, "Э");
 		n = r + r / 2;
-		rectf({x - r, y - r, x + n, y + r}, c1);
-		rectb({x - r, y - r, x + n, y + r}, c2);
+		rectf({ x - r, y - r, x + n, y + r }, c1);
+		rectb({ x - r, y - r, x + n, y + r }, c2);
 		cannon(x + n, y - 2, c1, c2);
 		cannon(x + n, y + 2, c1, c2);
 		break;
 	case Cruiser:
 		zcat(temp, "К");
 		n = r + r / 2;
-		rectf({x - r, y - r, x + n, y + r}, c1);
-		rectb({x - r, y - r, x + n, y + r}, c2);
+		rectf({ x - r, y - r, x + n, y + r }, c1);
+		rectb({ x - r, y - r, x + n, y + r }, c2);
 		cannon(x + n, y - 3, c1, c2);
 		cannon(x + n, y, c1, c2);
 		cannon(x + n, y + 3, c1, c2);
@@ -828,8 +827,8 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 	case Dreadnought:
 		zcat(temp, "Л");
 		n = r + r;
-		rectf({x - r, y - r, x + n, y + r}, c1);
-		rectb({x - r, y - r, x + n, y + r}, c2);
+		rectf({ x - r, y - r, x + n, y + r }, c1);
+		rectb({ x - r, y - r, x + n, y + r }, c2);
 		cannon(x + n, y - 6, c1, c2);
 		cannon(x + n, y - 3, c1, c2);
 		cannon(x + n, y, c1, c2);
@@ -923,11 +922,13 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	}
 	drawing.count = (pd - drawing.data) + 1;
 	// Draw
+	auto w0 = unit_size * 2 + 2;
 	if(planet) {
-		auto x0 = x - ((unit_size * 2 + 2) * drawing.count) / 2 + (unit_size * 2 + 2) / 2;
+		auto x0 = x - (w0 * drawing.count) / 2 + w0 / 2;
 		for(unsigned i = 0; i < drawing.count; i++) {
-			draw_unit(x0, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
-			x0 += unit_size + 2;
+			draw_unit(x0 + 1, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
+			//line(x0 + 1, y - 10, x0 + 1, y + 10, colors::red);
+			x0 += w0;
 		}
 	} else {
 		for(unsigned i = 0; i < drawing.count; i++) {
@@ -960,7 +961,7 @@ static int render_left() {
 	for(auto& e : bsmeta<playeri>()) {
 		areas a = AreaNormal;
 		auto w = render_picture(x, y, e.id, &a);
-		rect rc = {x, y, x + w, y + w};
+		rect rc = { x, y, x + w, y + w };
 		if(e.isactive()) {
 			current_y = y;
 			current_w = w;
@@ -991,14 +992,14 @@ static int render_left() {
 }
 
 static void render_board(bool use_hilite_solar = false, bool show_movement = false, const aref<solari*>& hilite = aref<solari*>()) {
-	last_board = {0, 0, getwidth(), getheight()};
+	last_board = { 0, 0, getwidth(), getheight() };
 	rectf(last_board, colors::window);
 	area(last_board);
 	hilited.clear();
 	for(auto y = 0; y < 8; y++) {
 		for(auto x = 0; x < 8; x++) {
-			auto pt = h2p({(short)x, (short)y}) - camera;
-			rect rcp = {pt.x - size, pt.y - size, pt.x + size, pt.y + size};
+			auto pt = h2p({ (short)x, (short)y }) - camera;
+			rect rcp = { pt.x - size, pt.y - size, pt.x + size, pt.y + size };
 			if(rcp.x2<last_board.x1 || rcp.y2<last_board.y1
 				|| rcp.x1 > last_board.x2 || rcp.y1 > last_board.y2)
 				continue;
@@ -1016,7 +1017,7 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 			}
 			if(use_hilite_solar && !disabled) {
 				auto dx = size2 / 2;
-				rect rc = {pt.x - dx, pt.y - dx, pt.x + dx, pt.y + dx};
+				rect rc = { pt.x - dx, pt.y - dx, pt.x + dx, pt.y + dx };
 				if(areb(rc))
 					hilited = p;
 			}
@@ -1131,8 +1132,8 @@ struct unit_ref_table : table {
 		return true;
 	}
 	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
-		{}};
+		static constexpr column columns[] = { { Text, "name", "Наименование", 176 },
+		{} };
 		return columns;
 	}
 	static int compare(const void* p1, const void* p2) {
@@ -1177,12 +1178,12 @@ struct unit_table : table {
 		return source[current].type;
 	}
 	static const column* getcolumns() {
-		static constexpr column columns[] = {{Text, "name", "Наименование", 176},
-		{Number | AlignRight, "resource", "Цена", 32},
-		{Number | AlignRight, "count_units", "К-во", 32},
-		{Number | AlignRight, "total", "Сумма", 48},
-		{Number | AlignRight, "fleet", "Флот", 48},
-		{}};
+		static constexpr column columns[] = { { Text, "name", "Наименование", 176 },
+		{ Number | AlignRight, "resource", "Цена", 32 },
+		{ Number | AlignRight, "count_units", "К-во", 32 },
+		{ Number | AlignRight, "total", "Сумма", 48 },
+		{ Number | AlignRight, "fleet", "Флот", 48 },
+		{} };
 		return columns;
 	}
 	static void add_value() {
@@ -1210,14 +1211,14 @@ struct unit_table : table {
 			disabled = true;
 		if(source[index].isfleet() && total_fleet >= fleet)
 			disabled = true;
-		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "+", Alpha + '+', true)) {
+		if(buttonh({ x - h, y1, x, y2 }, false, focused, disabled, true, "+", Alpha + '+', true)) {
 			execute(add_value, (int)this);
 		}
 		x -= h + 2;
 		disabled = false;
 		if(source[index].count <= 0)
 			disabled = true;
-		if(buttonh({x - h, y1, x, y2}, false, focused, disabled, true, "-", Alpha + '-', true)) {
+		if(buttonh({ x - h, y1, x, y2 }, false, focused, disabled, true, "-", Alpha + '-', true)) {
 			execute(sub_value, (int)this);
 		}
 	}
@@ -1226,7 +1227,7 @@ struct unit_table : table {
 		total_resource = gettotal("total");
 		total_fleet = gettotal("fleet") + fleet_used;
 		table::view(rc);
-		rect rv = {rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2};
+		rect rv = { rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2 };
 		string sb;
 		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], продукция [%3i]", resource, fleet, maximal, total_fleet);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
@@ -1248,7 +1249,7 @@ void playeri::slide(int x, int y) {
 		h = getheight();
 	auto x1 = x - w / 2;
 	auto y1 = y - h / 2;
-	auto lenght = distance({(short)x0, (short)y0}, {(short)x1, (short)y1});
+	auto lenght = distance({ (short)x0, (short)y0 }, { (short)x1, (short)y1 });
 	if(!lenght)
 		return;
 	auto start = 0;
@@ -1295,7 +1296,7 @@ void playeri::slide(unsigned char index) {
 		return;
 	auto x = gmx(index);
 	auto y = gmy(index);
-	point pt = h2p({x, y});
+	point pt = h2p({ x, y });
 	slide(pt.x, pt.y);
 }
 
@@ -1313,7 +1314,7 @@ bool playeri::build(builda& units, const planeti* planet, solari* system, int re
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1};
+		rect rc = { x, y, x + gui.window_width, y + u1.getrowheight()*(u1.getmaximum() + 2) + 1 };
 		window(rc, false, false);
 		u1.view(rc);
 		x = getwidth() - gui.right_width - gui.border * 2;
@@ -1342,17 +1343,17 @@ bool playeri::choose(unita& a1, unita& a2, const char* format, const char* actio
 	unit_ref_table u1(a1); u1.show_header = false;
 	unit_ref_table u2(a2); u2.show_header = false;
 	auto maximum = imax(u1.getmaximum(), u2.getmaximum()) + 1;
-	auto header_height = render_report(0, 0, id, format, true) - gui.padding*3;
+	auto header_height = render_report(0, 0, id, format, true) - gui.padding * 3;
 	auto height = header_height + u1.getrowheight()*maximum + 1;
 	while(ismodal()) {
 		render_board(false, show_movement);
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + height};
+		rect rc = { x, y, x + gui.window_width, y + height };
 		auto w2 = rc.width() / 2 - gui.padding / 2;
-		rect rc1 = {rc.x1, rc.y1 + header_height, rc.x1 + w2, rc.y2};
-		rect rc2 = {rc1.x2 + gui.padding, rc.y1 + header_height, rc.x2, rc.y2};
+		rect rc1 = { rc.x1, rc.y1 + header_height, rc.x1 + w2, rc.y2 };
+		rect rc2 = { rc1.x2 + gui.padding, rc.y1 + header_height, rc.x2, rc.y2 };
 		window(rc, false, false);
 		render_picture(rc.x1, rc.y1, picture);
 		render_text(rc.x1 + gui.hero_width + gui.padding, y, rc.x2 - (rc.x1 + gui.hero_width + gui.padding), format);
