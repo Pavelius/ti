@@ -375,7 +375,7 @@ static int windowf(int x, int y, int width, const char* string) {
 	return height + gui.border * 2 + gui.padding;
 }
 
-static int window(int x, int y, int width, const char* string, int right_width = 0, areas* pa = 0) {
+static int window(int x, int y, int width, const char* string, int right_width = 0, areas* pa = 0, bool only_height = false) {
 	auto right_side = (right_width != 0);
 	rect rc = {x, y, x + width, y};
 	draw::state push;
@@ -387,10 +387,12 @@ static int window(int x, int y, int width, const char* string, int right_width =
 		rc.x1 = x;
 		rc.x2 = rc.x1 + w1;
 	}
-	auto a = window(rc, false, false);
-	if(pa)
-		*pa = a;
-	render_text(x, y, rc.width(), string);
+	if(!only_height) {
+		auto a = window(rc, false, false);
+		if(pa)
+			*pa = a;
+		render_text(x, y, rc.width(), string);
+	}
 	return height + gui.border * 2;
 }
 
@@ -406,7 +408,7 @@ static int render_picture(int x, int y, const char* id, areas* pa = 0) {
 	return 0;
 }
 
-static int window(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0) {
+static int window(int x, int y, int width_picture, int width_text, const char* picture, const char* string, areas* pa = 0, bool only_height = false) {
 	x -= width_picture;
 	auto width = width_picture + width_text;
 	rect rc = {x, y, x + width, y};
@@ -416,11 +418,13 @@ static int window(int x, int y, int width_picture, int width_text, const char* p
 	auto height = textf(rc1, string);
 	if(height < width_picture)
 		height = width_picture;
-	auto a = window({x, y, x + width, y + height}, false, false);
-	if(pa)
-		*pa = a;
-	render_picture(x, y, picture);
-	render_text(x + width_picture + gui.padding, y, width_text, string);
+	if(!only_height) {
+		auto a = window({ x, y, x + width, y + height }, false, false);
+		if(pa)
+			*pa = a;
+		render_picture(x, y, picture);
+		render_text(x + width_picture + gui.padding, y, width_text, string);
+	}
 	return height + gui.border * 2;
 }
 
@@ -1058,12 +1062,12 @@ static void render_board(bool use_hilite_solar = false, bool show_movement = fal
 	}
 }
 
-static int render_report(int x, int y, const char* picture, const char* format) {
+static int render_report(int x, int y, const char* picture, const char* format, bool only_height = false) {
 	if(!format)
 		return 0;
 	auto y0 = y;
 	if(picture)
-		y += window(x, y, gui.hero_width, gui.window_width, picture, format);
+		y += window(x, y, gui.hero_width, gui.window_width, picture, format, 0, only_height);
 	else
 		y += window(x, y, gui.window_width, format, gui.window_width);
 	y += gui.padding;
@@ -1327,26 +1331,31 @@ bool playeri::build(builda& units, const planeti* planet, solari* system, int re
 	return false;
 }
 
-bool playeri::choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement) const {
+bool playeri::choose(unita& a1, unita& a2, const char* format, const char* action, bool cancel_button, bool show_movement) const {
 	if(iscomputer()) {
 		for(auto& e : a1)
 			a2.add(e);
 		return true;
 	}
 	int x, y;
+	auto picture = id;
 	unit_ref_table u1(a1); u1.show_header = false;
 	unit_ref_table u2(a2); u2.show_header = false;
 	auto maximum = imax(u1.getmaximum(), u2.getmaximum()) + 1;
+	auto header_height = render_report(0, 0, id, format, true) - gui.padding*3;
+	auto height = header_height + u1.getrowheight()*maximum + 1;
 	while(ismodal()) {
 		render_board(false, show_movement);
 		render_left();
 		x = getwidth() - gui.window_width - gui.border * 2;
 		y = gui.border * 2;
-		rect rc = {x, y, x + gui.window_width, y + u1.getrowheight()*maximum + 1};
+		rect rc = {x, y, x + gui.window_width, y + height};
 		auto w2 = rc.width() / 2 - gui.padding / 2;
-		rect rc1 = {rc.x1, rc.y1, rc.x1 + w2, rc.y2};
-		rect rc2 = {rc1.x2 + gui.padding, rc.y1, rc.x2, rc.y2};
+		rect rc1 = {rc.x1, rc.y1 + header_height, rc.x1 + w2, rc.y2};
+		rect rc2 = {rc1.x2 + gui.padding, rc.y1 + header_height, rc.x2, rc.y2};
 		window(rc, false, false);
+		render_picture(rc.x1, rc.y1, picture);
+		render_text(rc.x1 + gui.hero_width + gui.padding, y, rc.x2 - (rc.x1 + gui.hero_width + gui.padding), format);
 		u1.view(rc1);
 		u2.view(rc2);
 		x = getwidth() - gui.right_width - gui.border * 2;

@@ -225,7 +225,7 @@ public:
 	void						choose_speaker(int exclude);
 	void						check_card_limin();
 	uniti*						choose(unita& source, const char* format) const;
-	bool						choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement = false) const;
+	bool						choose(unita& a1, unita& a2, const char* format, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format) const;
 	int							choose(answeri& ai, bool cancel_button, const char* format) const;
