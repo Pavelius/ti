@@ -17,7 +17,11 @@ extern "C" int				strcmp(const char* s1, const char* s2); // Compare two strings
 extern "C" int				strncmp(const char* s1, const char* s2, unsigned size); // Compare two strings
 extern "C" int				system(const char* command); // Execute system command
 
-#define assert(v);
+#ifdef _DEBUG
+#define assert(e) if(!(e)) {exit(255);}
+#else
+#define assert(e)
+#endif
 #define FO(c,f) ((unsigned)&((c*)0)->f)
 #define SH(v) (1<<v)
 #define maptbl(t,i) t[(i>(sizeof(t)/sizeof(t[0])-1)) ? sizeof(t)/sizeof(t[0])-1: i]

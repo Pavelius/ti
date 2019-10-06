@@ -129,6 +129,7 @@
     <ClInclude Include="draw_control.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="code.h" />
     <ClInclude Include="point.h" />
     <ClInclude Include="rect.h" />
     <ClInclude Include="stringbuilder.h" />
@@ -142,6 +143,8 @@
     <ClCompile Include="base.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="code_metadata.cpp" />
+    <ClCompile Include="code_requisit.cpp" />
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="build.cpp" />

@@ -445,7 +445,6 @@ void playeri::pay_apply(int cost, action_s id) {
 		}
 		else {
 			payed += r->get(id);
-			//slide(r->getsolar()->getindex());
 			r->set(Exhaused);
 		}
 	}
