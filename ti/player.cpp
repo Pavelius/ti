@@ -410,6 +410,8 @@ static const char* getcn(action_s currency, int count) {
 }
 
 void playeri::pay_apply(int cost, action_s id) {
+	if(!cost)
+		return;
 	if(id != Resource && id != Influence) {
 		add(id, -cost);
 		return;
@@ -513,13 +515,15 @@ void playeri::build_units() {
 		return;
 	auto solar = planet->getsolar();
 	builda a1(this);
+	int used_resources = 0;
 	if(iscomputer()) {
 
 	}
 	else {
-		if(!build(a1, planet, solar, getresources(), getfleet(), 0, planet->getproduction(), true))
+		if(!build(a1, planet, solar, getresources(), used_resources, getfleet(), 0, planet->getproduction(), true))
 			return;
 	}
+	pay_apply(used_resources, Resource);
 	for(auto& e : a1) {
 		for(auto i = e.count * bsmeta<varianti>::elements[e.type].production; i > 0; i--) {
 			if(e.isplanetary())

@@ -1295,7 +1295,7 @@ void playeri::slide(unsigned char index) {
 	slide(pt.x, pt.y);
 }
 
-bool playeri::build(builda& units, const planeti* planet, solari* system, int resources, int fleet, int minimal, int maximal, bool cancel_button) {
+bool playeri::build(builda& units, const planeti* planet, solari* system, int resources, int& used_resurces, int fleet, int minimal, int maximal, bool cancel_button) {
 	int x, y;
 	unit_table u1(units);
 	u1.fleet = fleet;
@@ -1320,7 +1320,11 @@ bool playeri::build(builda& units, const planeti* planet, solari* system, int re
 		domodal();
 		control_standart();
 	}
-	return getresult() != 0;
+	if(getresult() != 0) {
+		used_resurces = u1.total_resource;
+		return true;
+	}
+	return false;
 }
 
 bool playeri::choose(unita& a1, unita& a2, const char* action, bool cancel_button, bool show_movement) const {
