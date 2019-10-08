@@ -2,7 +2,7 @@
 
 using namespace code;
 
-DECLBASE(metadata, 1024 * 4);
+DECLBASE(metadata, 1024 * 8);
 
 const unsigned pointer_size = sizeof(void*);
 const unsigned array_size = pointer_size * 2;

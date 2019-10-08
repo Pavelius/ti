@@ -17,11 +17,10 @@ struct requisit {
 	constexpr void*			ptr(void* object) const { return (char*)object + offset; }
 	void*					ptr(void* object, unsigned index) const { return (char*)object + offset + index * getsize(); }
 	requisit*				setcount(int v) { if(this) count = v; return this; }
-	void					write(const char* url) const;
 };
 struct metadata {
-	metadata*				type;
 	const char*				id;
+	metadata*				type;
 	unsigned				size;
 	constexpr operator bool() const { return id != 0; }
 	requisit*				add(const char* id, metadata* type, unsigned count = 1);
