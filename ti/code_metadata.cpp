@@ -7,7 +7,7 @@ DECLBASE(metadata, 1024 * 8);
 const unsigned pointer_size = sizeof(void*);
 const unsigned array_size = pointer_size * 2;
 
-requisit* metadata::add(const char* id, metadata* type, unsigned count) {
+requisit* metadata::add(const char* id, metadata* type) {
 	auto p = find(id);
 	if(p)
 		return p;
@@ -15,17 +15,16 @@ requisit* metadata::add(const char* id, metadata* type, unsigned count) {
 	p->id = id;
 	p->parent = this;
 	p->offset = size;
-	p->count = count;
 	p->type = type;
 	size += p->getsize();
 	return p;
 }
 
-requisit* metadata::add(const char* id, const char* type, unsigned count) {
+requisit* metadata::add(const char* id, const char* type) {
 	auto p = addtype(type);
 	if(!p)
 		return 0;
-	return add(id, p, count);
+	return add(id, p);
 }
 
 requisit* metadata::find(const char* id) const {

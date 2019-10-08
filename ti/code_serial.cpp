@@ -122,13 +122,12 @@ struct archive {
 	void setex(requisit& e) {
 		set(e.parent);
 		set(e.id);
-		set(e.count);
 		set(e.type);
 	}
 	void setreq() {
 		requisit e1;
 		setex(e1);
-		e1.parent->add(e1.id, e1.type, e1.count);
+		e1.parent->add(e1.id, e1.type);
 	}
 	template<> void set<requisit>(requisit& e) {
 		if(writemode)
