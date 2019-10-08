@@ -41,9 +41,9 @@ struct metadata {
 	static metadata*		findtype(const char* id, const metadata* type);
 	const requisit*			getid() const;
 	const metadata*			gettype() const;
+	static bool				read(const char* url);
 	metadata*				reference() const;
 	void					update();
 	void					write(const char* url) const;
-	static void				write(const char* url, arem<metadata*>& types);
 };
 }

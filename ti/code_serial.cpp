@@ -9,10 +9,12 @@ using namespace code;
 
 // Fast and simple driver for streaming binary data
 struct archive {
+	typedef arem<metadata*> metadataa;
 	io::stream&			source;
 	bool				writemode;
+	metadataa			types;
 	constexpr archive(io::stream& source, bool writemode) : source(source), writemode(writemode) {}
-	
+
 	void setstring(const char** e) {
 		unsigned len = 0;
 		char temp[128 * 128];
@@ -42,7 +44,7 @@ struct archive {
 		else
 			source.read(value, size);
 	}
-	
+
 	// Any pointer class
 	template<class T> void set(T*& value) {
 		setpointer((void**)&value);
@@ -79,29 +81,63 @@ struct archive {
 	template<class T> void set(T& value) {
 		set(&value, sizeof(value));
 	}
+	// Custom aref collection
+	void set(metadataa& value) {
+		set(value.count);
+		if(!writemode)
+			value.reserve(value.count);
+		unsigned len;
+		for(auto& e : value) {
+			char temp[2048]; temp[0] = 0;
+			if(!writemode) {
+				source.read(&len, sizeof(len));
+				e = 0;
+				if(len) {
+					source.read(temp, len);
+					temp[len] = 0;
+				}
+				e = metadata::addtype(temp);
+			} else {
+				stringbuilder sb(temp);
+				e->getname(sb);
+				len = zlen(sb.begin());
+				source.write(&len, sizeof(len));
+				source.write(temp, len);
+			}
+		}
+	}
+	void prepare(metadata* type) {
+		if(!type)
+			return;
+		if(types.indexof(type) != -1)
+			return;
+		types.add(type);
+		prepare(type->type);
+		for(auto& e : bsmeta<requisit>()) {
+			if(!e)
+				continue;
+			if(e.parent != type)
+				continue;
+			prepare(e.type);
+		}
+	}
 };
 
-static void prepare(metadata* type, arem<metadata*>& source) {
-	if(!type)
-		return;
-	if(source.indexof(type) != -1)
-		return;
-	source.add(type);
-	prepare(type->type, source);
-	for(auto& e : bsmeta<requisit>()) {
-		if(!e)
-			continue;
-		if(e.parent != type)
-			continue;
-		prepare(e.type, source);
-	}
-}
 
 void metadata::write(const char* url) const {
 	io::file file(url, StreamWrite);
 	if(!file)
 		return;
-	arem<metadata*> types;
-	prepare(const_cast<metadata*>(this), types);
 	archive a(file, true);
+	a.prepare(const_cast<metadata*>(this));
+	a.set(a.types);
+}
+
+bool metadata::read(const char* url) {
+	io::file file(url, StreamRead);
+	if(!file)
+		return false;
+	archive a(file, false);
+	a.set(a.types);
+	return true;
 }
