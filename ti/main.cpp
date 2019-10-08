@@ -12,10 +12,19 @@ static void test_proc(const playeri* p) {
 static void test_metadata() {
 	metadata::initialize();
 	auto p = metadata::addtype("Rectangle");
+	p->add("x1", "Integer");
+	p->add("y1", "Integer");
+	p->add("x2", "Integer");
+	p->add("y2", "Integer");
+	p = metadata::addtype("Box");
+	p->add("rect", "Rectangle*");
+	p->add("points", "Point[]");
+	p->write("Box.mtd");
 }
 
 int main() {
 	//return 0;
+	test_metadata();
 	srand(1231);
 	draw::initialize();
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);

@@ -34,9 +34,6 @@
     <ClInclude Include="stringbuilder.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
-    <ClInclude Include="base.h">
-      <Filter>Поддержка</Filter>
-    </ClInclude>
     <ClInclude Include="code.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
@@ -162,13 +159,13 @@
     <ClCompile Include="build.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="base.cpp">
-      <Filter>Поддержка</Filter>
-    </ClCompile>
     <ClCompile Include="code_requisit.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
     <ClCompile Include="code_metadata.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="code_serial.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
   </ItemGroup>
