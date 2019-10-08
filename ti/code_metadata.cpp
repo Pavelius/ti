@@ -142,3 +142,14 @@ metadata* metadata::array() const {
 		return p;
 	return add_type("[]", const_cast<metadata*>(this));
 }
+
+unsigned metadata::getcount() const {
+	unsigned result = 0;
+	for(auto& e : bsmeta<requisit>()) {
+		if(!e)
+			continue;
+		if(e.parent == this)
+			result++;
+	}
+	return result;
+}

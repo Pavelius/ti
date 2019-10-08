@@ -26,7 +26,7 @@ struct archive {
 				source.write(*e, len);
 		} else {
 			source.read(&len, sizeof(len));
-			e = 0;
+			*e = 0;
 			if(len) {
 				source.read(temp, len);
 				temp[len] = 0;
@@ -106,6 +106,36 @@ struct archive {
 			}
 		}
 	}
+	template<> void set<metadata>(metadata*& value) {
+		unsigned data;
+		if(writemode) {
+			data = types.indexof(value);
+			source.write(&data, sizeof(data));
+		} else {
+			source.read(&data, sizeof(data));
+			if(data == 0xFFFFFFFF)
+				value = 0;
+			else
+				value = types[data];
+		}
+	}
+	void setex(requisit& e) {
+		set(e.parent);
+		set(e.id);
+		set(e.count);
+		set(e.type);
+	}
+	void setreq() {
+		requisit e1;
+		setex(e1);
+		e1.parent->add(e1.id, e1.type, e1.count);
+	}
+	template<> void set<requisit>(requisit& e) {
+		if(writemode)
+			setex(e);
+		else
+			setreq();
+	}
 	void prepare(metadata* type) {
 		if(!type)
 			return;
@@ -121,8 +151,25 @@ struct archive {
 			prepare(e.type);
 		}
 	}
+	void setreq(metadata* p) {
+		if(writemode) {
+			auto count = p->getcount();
+			source.write(&count, sizeof(count));
+			for(auto& e : bsmeta<requisit>()) {
+				if(!e)
+					continue;
+				if(e.parent != p)
+					continue;
+				set(e);
+			}
+		} else {
+			unsigned count;
+			source.read(count);
+			for(unsigned i = 0; i < count; i++)
+				setreq();
+		}
+	}
 };
-
 
 void metadata::write(const char* url) const {
 	io::file file(url, StreamWrite);
@@ -131,6 +178,7 @@ void metadata::write(const char* url) const {
 	archive a(file, true);
 	a.prepare(const_cast<metadata*>(this));
 	a.set(a.types);
+	a.setreq(const_cast<metadata*>(this));
 }
 
 bool metadata::read(const char* url) {
@@ -139,5 +187,6 @@ bool metadata::read(const char* url) {
 		return false;
 	archive a(file, false);
 	a.set(a.types);
+	a.setreq(0);
 	return true;
 }

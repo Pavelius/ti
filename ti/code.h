@@ -28,22 +28,16 @@ struct metadata {
 	requisit*				add(const char* id, const char* type, unsigned count = 1);
 	static metadata*		addtype(const char* id);
 	metadata*				array() const;
+	unsigned				getcount() const;
 	void					getname(stringbuilder& sb) const;
 	static void				initialize();
-	bool					is(const char* id) const;
 	bool					isarray() const { return id[0] == '[' && id[1] == ']'; }
-	bool					isnumber() const;
 	bool					isreference() const { return id[0] == '*'; }
-	bool					ispredefined() const;
-	bool					istext() const;
 	requisit*				find(const char* id) const;
 	static metadata*		findtype(const char* id);
 	static metadata*		findtype(const char* id, const metadata* type);
-	const requisit*			getid() const;
-	const metadata*			gettype() const;
 	static bool				read(const char* url);
 	metadata*				reference() const;
-	void					update();
 	void					write(const char* url) const;
 };
 }

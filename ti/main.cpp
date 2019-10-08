@@ -28,6 +28,7 @@ static void test_read() {
 
 int main() {
 	//return 0;
+	//test_metadata();
 	test_read();
 	srand(1231);
 	draw::initialize();
