@@ -125,7 +125,7 @@ struct archive {
 		set(e.type);
 	}
 	void setreq() {
-		requisit e1;
+		requisit e1 = {0};
 		setex(e1);
 		e1.parent->add(e1.id, e1.type);
 	}
