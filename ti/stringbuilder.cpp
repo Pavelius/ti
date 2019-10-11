@@ -91,6 +91,13 @@ const char*	stringbuilder::readid(const char* p, char* ps, const char* pe) {
 	return p;
 }
 
+const char*	stringbuilder::readint(const char* p, int& result) {
+	result = 0;
+	while(*p >= '0' && *p <= '9')
+		result = result * 10 + (*p++) - '0';
+	return p;
+}
+
 const char* stringbuilder::readvariable(const char* p) {
 	char temp[260];
 	p = readid(p, temp, temp + sizeof(temp) - 1);
@@ -154,13 +161,9 @@ const char* stringbuilder::readformat(const char* src, const char* vl) {
 	if(*src >= '0' && *src <= '9') {
 		// ≈сли число, просто подставим нужный параметр
 		int pn = 0, pnp = 0;
-		while(isnum(*src))
-			pn = pn * 10 + (*src++) - '0';
-		if(src[0] == '.' && (src[1] >= '0' && src[1] <= '9')) {
-			src++;
-			while(*src >= '0' && *src <= '9')
-				pnp = pnp * 10 + (*src++) - '0';
-		}
+		src = readint(src, pn);
+		if(src[0] == '.' && (src[1] >= '0' && src[1] <= '9'))
+			src = readint(src+1, pnp);
 		if(*src == 'i') {
 			src++;
 			auto value = ((int*)vl)[pn - 1];

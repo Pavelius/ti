@@ -7,6 +7,10 @@ DECLBASE(metadata, 1024 * 8);
 const unsigned pointer_size = sizeof(void*);
 const unsigned array_size = pointer_size * 2;
 
+bool isnum(char sym) {
+	return sym >= '0' && sym <= '9';
+}
+
 requisit* metadata::add(const char* id, metadata* type) {
 	auto p = find(id);
 	if(p)
@@ -59,12 +63,13 @@ metadata* metadata::findtype(const char* id, const metadata* type) {
 	return 0;
 }
 
-static metadata* add_type(const char* id, metadata* type) {
+static metadata* add_type(const char* id, metadata* type, unsigned count) {
 	auto p = metadata::findtype(id);
 	if(p)
 		return p;
 	p = bsmeta<metadata>::add();
 	p->id = szdup(id);
+	p->count = count;
 	if(type) {
 		p->type = type;
 		if(p->isarray() || p->isreference())
@@ -90,7 +95,7 @@ metadata* metadata::addtype(const char* id) {
 		p++;
 	}
 	*ps = 0;
-	auto type = add_type(temp, 0);
+	auto type = add_type(temp, 0, 1);
 	while(*p) {
 		if(*p == '*') {
 			type = type->reference();
@@ -98,6 +103,10 @@ metadata* metadata::addtype(const char* id) {
 		} else if(p[0] == '[' && p[1] == ']') {
 			type = type->array();
 			p += 2;
+		} else if(p[0] == '[' && isnum(p[1])) {
+			type = type->array();
+			int count;
+			p = stringbuilder::readint(p+1, count);
 		} else
 			return 0;
 	}
@@ -132,14 +141,14 @@ metadata* metadata::reference() const {
 	auto p = findtype("*", this);
 	if(p)
 		return p;
-	return add_type("*", const_cast<metadata*>(this));
+	return add_type("*", const_cast<metadata*>(this), 1);
 }
 
 metadata* metadata::array() const {
 	auto p = findtype("[]", this);
 	if(p)
 		return p;
-	return add_type("[]", const_cast<metadata*>(this));
+	return add_type("[]", const_cast<metadata*>(this), 1);
 }
 
 unsigned metadata::getcount() const {

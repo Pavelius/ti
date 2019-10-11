@@ -40,5 +40,6 @@ public:
 	static unsigned char lower(unsigned char sym);
 	void				set(char* v) { p = v; p[0] = 0; }
 	static const char*	readid(const char* p, char* result, const char* result_end);
+	static const char*	readint(const char* p, int& result);
 	static unsigned char upper(unsigned char sym);
 };
