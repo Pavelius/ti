@@ -17,7 +17,7 @@ struct requisit {
 };
 struct metadata {
 	const char*				id;
-	metadata*				type;
+	metadata*				type; // basic type
 	unsigned				size;
 	unsigned				count;
 	constexpr operator bool() const { return id != 0; }
@@ -25,6 +25,7 @@ struct metadata {
 	requisit*				add(const char* id, const char* type);
 	static metadata*		addtype(const char* id);
 	metadata*				array() const;
+	metadata*				array(int maximum) const;
 	unsigned				getcount() const;
 	void					getname(stringbuilder& sb) const;
 	static void				initialize();

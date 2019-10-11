@@ -104,9 +104,11 @@ metadata* metadata::addtype(const char* id) {
 			type = type->array();
 			p += 2;
 		} else if(p[0] == '[' && isnum(p[1])) {
-			type = type->array();
-			int count;
-			p = stringbuilder::readint(p+1, count);
+			int i;
+			p = stringbuilder::readint(p + 1, i);
+			if(p[0] == ']')
+				p++;
+			type = type->array(i);
 		} else
 			return 0;
 	}
@@ -149,6 +151,20 @@ metadata* metadata::array() const {
 	if(p)
 		return p;
 	return add_type("[]", const_cast<metadata*>(this), 1);
+}
+
+metadata* metadata::array(int i) const {
+	for(auto& e : bsmeta<metadata>()) {
+		if(!e)
+			continue;
+		if(e.type != type)
+			continue;
+		if(e.count != i)
+			continue;
+		if(strcmp(e.id, id) == 0)
+			return &e;
+	}
+	return add_type("[]", const_cast<metadata*>(this), i);
 }
 
 unsigned metadata::getcount() const {
