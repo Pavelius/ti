@@ -34,6 +34,7 @@ struct metadata {
 	requisit*				find(const char* id) const;
 	static metadata*		findtype(const char* id);
 	static metadata*		findtype(const char* id, const metadata* type);
+	static void				primitive(const char* id, unsigned size);
 	static bool				read(const char* url);
 	metadata*				reference() const;
 	void					write(const char* url) const;

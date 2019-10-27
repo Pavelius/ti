@@ -115,7 +115,7 @@ metadata* metadata::addtype(const char* id) {
 	return type;
 }
 
-static void create(const char* id, unsigned size) {
+void metadata::primitive(const char* id, unsigned size) {
 	auto p = metadata::findtype(id);
 	if(!p)
 		p = bsmeta<metadata>::add();
@@ -132,11 +132,11 @@ void metadata::getname(stringbuilder& sb) const {
 }
 
 void metadata::initialize() {
-	create("Void", 0);
-	create("Text", pointer_size);
-	create("Integer", 4);
-	create("Short", 2);
-	create("Byte", 1);
+	primitive("Void", 0);
+	primitive("Text", pointer_size);
+	primitive("Integer", 4);
+	primitive("Short", 2);
+	primitive("Byte", 1);
 }
 
 metadata* metadata::reference() const {

@@ -1244,7 +1244,7 @@ void playeri::slide(int x, int y) {
 	auto w = last_board.width();
 	if(!w)
 		w = getwidth();
-	auto h = last_board.width();
+	auto h = last_board.height();
 	if(!h)
 		h = getheight();
 	auto x1 = x - w / 2;
