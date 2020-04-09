@@ -14,12 +14,12 @@ int main() {
 	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
 	planeti::initialize();
-	bsmeta<playeri>::add()->create("jelnar");
-	bsmeta<playeri>::add()->create("hacan");
-	bsmeta<playeri>::add()->create("barony");
-	bsmeta<playeri>::add()->create("sol");
-	bsmeta<playeri>::add()->create("norr").sethuman();
-	bsmeta<playeri>::add()->create("xxcha");
+	bsdata<playeri>::add()->create("jelnar");
+	bsdata<playeri>::add()->create("hacan");
+	bsdata<playeri>::add()->create("barony");
+	bsdata<playeri>::add()->create("sol");
+	bsdata<playeri>::add()->create("norr").sethuman();
+	bsdata<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
 	playeri::make_move(true, true);

@@ -13,7 +13,7 @@ void answeri::sort() {
 }
 
 void answeri::addv(int param, const char* format, const char* format_param) {
-	if(elements.getcount() >= elements.maximum)
+	if(elements.getcount() >= elements.count_maximum)
 		return;
 	if(get() >= end())
 		return;

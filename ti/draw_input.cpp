@@ -875,7 +875,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	auto c2 = player_colors[player_index][1];
 	adat<uniti*, 32> source;
 	if(planet) {
-		for(auto& e : bsmeta<uniti>()) {
+		for(auto& e : bsdata<uniti>()) {
 			if(!e)
 				continue;
 			if(e.getplanet() != planet)
@@ -883,7 +883,7 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 			source.add(&e);
 		}
 	} else {
-		for(auto& e : bsmeta<uniti>()) {
+		for(auto& e : bsdata<uniti>()) {
 			if(!e)
 				continue;
 			if(e.getsolar() != solar)
@@ -958,7 +958,7 @@ static int render_left() {
 	int x = gui.border;
 	int y = gui.border;
 	int current_y, current_w;
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		areas a = AreaNormal;
 		auto w = render_picture(x, y, e.id, &a);
 		rect rc = { x, y, x + w, y + w };
@@ -1167,7 +1167,7 @@ struct unit_table : table {
 		if(columns[column] == "count")
 			return source[line].count;
 		if(columns[column] == "count_units")
-			return source[line].count * bsmeta<varianti>::elements[source[line].type].production;
+			return source[line].count * bsdata<varianti>::elements[source[line].type].production;
 		if(columns[column] == "total")
 			return source[line].getresource()*source[line].count;
 		if(columns[column] == "fleet")

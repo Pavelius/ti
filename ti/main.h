@@ -1,4 +1,5 @@
 #include "crt.h"
+#include "pair.h"
 #include "stringbuilder.h"
 
 #pragma once
@@ -103,7 +104,7 @@ struct variant {
 	constexpr variant(variant_s t, decltype(value) v) : type(t), value(v) {}
 	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
 	constexpr variant(variant_s v) : type(Variant), var(v) {}
-	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsmeta<T>::elements : 0) {}
+	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsdata<T>::elements : 0) {}
 	constexpr variant(const agendai* v) : variant(Agenda, v) {}
 	constexpr variant(const planeti* v) : variant(Planet, v) {}
 	constexpr variant(const playeri* v) : variant(Player, v) {}
@@ -112,7 +113,7 @@ struct variant {
 	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
 	constexpr operator bool() const { return type != NoVariant; }
 	void						clear() { type = NoVariant; value = 0; }
-	template<class T> constexpr T* get() const { return &bsmeta<T>::elements[value]; }
+	template<class T> constexpr T* get() const { return &bsdata<T>::elements[value]; }
 	constexpr agendai*			getagenda() const { return get<agendai>(); }
 	constexpr planeti*			getplanet() const { return get<planeti>(); }
 	constexpr playeri*			getplayer() const { return get<playeri>(); }
@@ -311,7 +312,7 @@ public:
 	void						destroy();
 	int							getcapacity() const;
 	int							getcarried() const;
-	const varianti&				getgroup() const { return bsmeta<varianti>::elements[type]; }
+	const varianti&				getgroup() const { return bsdata<varianti>::elements[type]; }
 	int							getjoincount(variant_s object) const;
 	int							getmaxhits() const;
 	int							getmovement() const;
@@ -361,7 +362,7 @@ public:
 	static solari*				getmekatol();
 	const char*					getname() const;
 	planeti*					getplanet(int index) const;
-	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsmeta<playeri>::elements[player]; }
+	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsdata<playeri>::elements[player]; }
 	static solari*				getsolar(short unsigned index);
 	bool						isactivated(const playeri* v) const { return (flags & (1 << v->getid())) != 0; }
 	bool						ismekatol() const;
@@ -404,15 +405,15 @@ public:
 	int							getone() const { return 1; }
 	int							getproduction() const;
 	int							getresource() const;
-	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsmeta<playeri>::elements[player]; }
-	solari*						getsolar() const { return &bsmeta<solari>::elements[solar]; }
+	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsdata<playeri>::elements[player]; }
+	solari*						getsolar() const { return &bsdata<solari>::elements[solar]; }
 	bool						is(object_s v) const { return (flags & (1 << v)) != 0; }
 	static void					refresh();
 	void						remove(object_s v) { flags &= ~(1 << v); }
 	static void					setup();
 	void						set(object_s v) { flags |= 1 << v; }
-	void						setplayer(const playeri* v) { if(v) player = v - bsmeta<playeri>::elements; else player = 0xFF; }
-	void						setsolar(const solari* v) { if(v) solar = v - bsmeta<solari>::elements; else solar = 0xFF; }
+	void						setplayer(const playeri* v) { if(v) player = v - bsdata<playeri>::elements; else player = 0xFF; }
+	void						setsolar(const solari* v) { if(v) solar = v - bsdata<solari>::elements; else solar = 0xFF; }
 };
 struct techi {
 	const char*					id;

@@ -1,13 +1,13 @@
   #include "main.h"
 
-DECLBASE(uniti, 32 * 6);
+INSTDATAC(uniti, 32 * 6);
 
 void* uniti::operator new(unsigned size) {
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			return &e;
 	}
-	return bsmeta<uniti>::add();
+	return bsdata<uniti>::add();
 }
 
 uniti::~uniti() {
@@ -172,7 +172,7 @@ bool uniti::isplanetary(variant_s type) {
 
 int	uniti::getcarried() const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.parent == this)
@@ -201,7 +201,7 @@ bool uniti::build(variant_s object, bool run) {
 		return false;
 	if(uniti::isplanetary(object) && solar->getplayer() && solar->getplayer() != player)
 		return false;
-	auto available_count = bsmeta<varianti>::elements[object].available;
+	auto available_count = bsdata<varianti>::elements[object].available;
 	if(available_count) {
 		auto exist_count = player->getcount(object);
 		if(exist_count >= available_count)
@@ -220,7 +220,7 @@ bool uniti::build(variant_s object, bool run) {
 
 int uniti::getweight() const {
 	auto result = getresource() * 2;
-	auto build_count = bsmeta<varianti>::elements[type].production;
+	auto build_count = bsdata<varianti>::elements[type].production;
 	if(build_count)
 		result = result / build_count;
 	return result;
@@ -231,14 +231,14 @@ void uniti::destroy() {}
 playeri* uniti::getplayer() const {
 	if(player == 0xFF)
 		return 0;
-	return &bsmeta<playeri>::elements[player];
+	return &bsdata<playeri>::elements[player];
 }
 
 void uniti::setplayer(const playeri* v) {
 	if(!v)
 		player = 0xFF;
 	else
-		player = v - bsmeta<playeri>::elements;
+		player = v - bsdata<playeri>::elements;
 }
 
 void uniti::setplanet(const planeti* v) {

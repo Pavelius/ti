@@ -1,17 +1,5 @@
 #include "crt.h"
 
-template<class T>
-static void seqclear(T* p) {
-	T* z = p->next;
-	while(z) {
-		T* n = z->next;
-		z->next = 0;
-		delete z;
-		z = n;
-	}
-	p->next = 0;
-}
-
 // Support class making string copy from strings storage.
 template <class T> struct strcol {
 

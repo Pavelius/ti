@@ -1,11 +1,10 @@
 #include "main.h"
 
-solari					bsmeta<solari>::elements[48];
-unsigned				bsmeta<solari>::count = sizeof(bsmeta<solari>::elements) / sizeof(bsmeta<solari>::elements[0]);
+INSTDATAC(solari, 48);
 static unsigned char	solar_indecies[map_scan_line * map_scan_line];
 static unsigned char	movement_rate[map_scan_line * map_scan_line];
 
-planeti bsmeta<planeti>::elements[] = {{"Архон рен", "xxcha", 2, 3, 0},
+INSTDATA(planeti) = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
 {"Мейлук", "naalu", 0, 2, 0},
 {"[0.0.0]", "mindnet", 5, 0, 0},
@@ -60,8 +59,7 @@ planeti bsmeta<planeti>::elements[] = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Файра", 11, 2, 0, 0, Blue},
 {"Ксехан", 12, 1, 1, 2, Green},
 };
-unsigned bsmeta<planeti>::count = sizeof(bsmeta<planeti>::elements) / sizeof(bsmeta<planeti>::elements[0]);
-const unsigned bsmeta<planeti>::count_maximum = sizeof(bsmeta<planeti>::elements) / sizeof(bsmeta<planeti>::elements[0]);
+INSTELEM(planeti)
 struct solar_range {
 	variant_s	type;
 	char		from;
@@ -89,7 +87,7 @@ int	planeti::getproduction() const {
 
 int planeti::get(const playeri* player, int(planeti::*getproc)() const, unsigned flags) {
 	auto result = 0;
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(e.getplayer() != player)
 			continue;
 		if((flags & Ready) != 0 && e.is(Exhaused))
@@ -100,25 +98,25 @@ int planeti::get(const playeri* player, int(planeti::*getproc)() const, unsigned
 }
 
 void planeti::refresh() {
-	for(auto& e : bsmeta<planeti>())
+	for(auto& e : bsdata<planeti>())
 		e.flags = 0;
 }
 
 void planeti::initialize() {
-	for(auto& e : bsmeta<solari>())
+	for(auto& e : bsdata<solari>())
 		e.set(Solar);
 	for(auto& e : solar_range_data) {
 		for(auto i = e.from; i <= e.to; i++)
-			bsmeta<solari>::elements[i].set(e.type);
+			bsdata<solari>::elements[i].set(e.type);
 	}
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		e.player = 0xFF;
 		e.flags = 0;
 	}
 }
 
 void planeti::setup() {
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e.home)
 			continue;
 		e.setplayer(playeri::find(e.home));
@@ -139,7 +137,7 @@ int get_system_count() {
 void planeti::create_stars() {
 	char player_pos[][2] = {{3, 0}, {6, 0}, {0, 3}, {6, 3}, {0, 6}, {3, 6}};
 	memset(solar_indecies, 0, sizeof(solar_indecies));
-	for(auto& e : bsmeta<solari>()) {
+	for(auto& e : bsdata<solari>()) {
 		e.setplayer(0);
 		e.setindex(0xFF);
 	}
@@ -173,7 +171,7 @@ void planeti::create_stars() {
 	// Расположили Менкатол Рекс
 	solar_indecies[gmi(3, 3)] = 0;
 	// Расопложим игроков
-	for(auto& pn : bsmeta<planeti>()) {
+	for(auto& pn : bsdata<planeti>()) {
 		if(!pn.home)
 			continue;
 		pn.setsolar(0);
@@ -181,12 +179,12 @@ void planeti::create_stars() {
 	}
 	index = 33;
 	int player_index = 0;
-	for(auto& e : bsmeta<playeri>()) {
-		for(auto& pn : bsmeta<planeti>()) {
+	for(auto& e : bsdata<playeri>()) {
+		for(auto& pn : bsdata<planeti>()) {
 			if(!pn.home)
 				continue;
 			if(strcmp(pn.home, e.id) == 0)
-				pn.setsolar(bsmeta<solari>::elements + index);
+				pn.setsolar(bsdata<solari>::elements + index);
 		}
 		solar_indecies[gmi(player_pos[player_index][0], player_pos[player_index][1])] = index;
 		player_index++;
@@ -197,9 +195,9 @@ void planeti::create_stars() {
 		auto s = solar_indecies[i];
 		if(s == Blocked)
 			continue;
-		auto& e = bsmeta<solari>::elements[s];
+		auto& e = bsdata<solari>::elements[s];
 		e.setindex(i);
-		for(auto& u : bsmeta<planeti>()) {
+		for(auto& u : bsdata<planeti>()) {
 			if(u.getsolar() == &e)
 				u.set(ObjectUsed);
 		}
@@ -222,7 +220,7 @@ solari* solari::getsolar(short unsigned index) {
 	auto n = solar_indecies[index];
 	if(n == Blocked)
 		return 0;
-	return bsmeta<solari>::elements + n;
+	return bsdata<solari>::elements + n;
 }
 
 enum direction_s : unsigned char {
@@ -293,7 +291,7 @@ static void make_wave(unsigned char start_index, const playeri* player, unsigned
 static void make_wave(unsigned char start_index, const playeri* player) {
 	for(auto& e : movement_rate)
 		e = DefaultCost;
-	for(auto& e : bsmeta<solari>()) {
+	for(auto& e : bsdata<solari>()) {
 		if(!e)
 			continue;
 		auto type = e.getgroup();
@@ -312,7 +310,7 @@ void playeri::moveships(solari* solar) {
 	// Расчет ходов
 	make_wave(solar->getindex(), this);
 	// Выбор кораблей
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.getplayer() != this)
@@ -342,7 +340,7 @@ void playeri::moveships(solari* solar) {
 planeti* planeti::find(const solari* parent, int index) {
 	if(!index)
 		return 0;
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(e.getsolar() == parent) {
 			if(--index == 0)
 				return &e;
@@ -353,7 +351,7 @@ planeti* planeti::find(const solari* parent, int index) {
 
 int	planeti::getcount(variant_s type, const playeri* player) const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.type == type && e.getplayer() == player && e.getplanet()==this)

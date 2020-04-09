@@ -33,7 +33,7 @@ static bool action_strategy(playeri* p, bool run) {
 	return true;
 }
 
-actioni bsmeta<actioni>::elements[] = {{"NoAction", "Нет действия"},
+INSTDATA(actioni) = {{"NoAction", "Нет действия"},
 {"AncientBurialSites", "Руины древних цивилизаций", 1, BeforeAgendaPhase},
 {"AssassinateRepresentative", "Убийство посла", 1, AfterAgendaRevealed},
 {"Bunker", "Бункер", 1, BeforeBombardment},
@@ -61,7 +61,7 @@ assert_enum(action, LastAction);
 deck<action_s>	action_deck;
 
 bool playeri::isallow(play_s type, action_s id) const {
-	auto& e = bsmeta<actioni>::elements[id];
+	auto& e = bsdata<actioni>::elements[id];
 	if(type != e.type)
 		return false;
 	if(e.proc && !e.proc(const_cast<playeri*>(this), false))
@@ -72,7 +72,7 @@ bool playeri::isallow(play_s type, action_s id) const {
 void playeri::create_action_deck() {
 	action_deck.clear();
 	for(auto i = NoAction; i <= LastAction; i=(action_s)(i+1)) {
-		for(auto j = 0; j < bsmeta<actioni>::elements[i].count; j++)
+		for(auto j = 0; j < bsdata<actioni>::elements[i].count; j++)
 			action_deck.add(i);
 	}
 	action_deck.shuffle();

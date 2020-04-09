@@ -1,7 +1,7 @@
 #include "crt.h"
 #include "io.h"
 
-void* loadb(const char* url, unsigned* size, unsigned additional) {
+void* loadb(const char* url, int* size, int additional) {
 	void* p = 0;
 	if(size)
 		*size = 0;

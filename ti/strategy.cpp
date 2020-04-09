@@ -1,6 +1,6 @@
 #include "main.h"
 
-strategyi bsmeta<strategyi>::elements[] = {{"", "", -1},
+INSTDATA(strategyi) = {{"", "", -1},
 {"Leadership", "Ћидерска€", 1,
 "” нашей нации должен быть сильный лидер. “ака€ стретеги€ даст нам [3] коммандных жетона и позволит преобрести любое количество дополнительные жетонов за [3] очка вли€ни€."},
 {"Diplomacy", "ƒипломатическа€", 2,
@@ -18,8 +18,8 @@ strategyi bsmeta<strategyi>::elements[] = {{"", "", -1},
 {"Imperial", "»мпериалистическа€", 8,
 "¬ этой гонке на выживание мы ставим на насто€щую истинную цель - на победу в глобальной переспективе. ћы может тут же попытатьс€ выполнить публичную цель, если соответствуем ее требовани€м. ¬ дополнение получаем [1] победное очко если контролируем ћекатол –екс, в противном случае берем [1] секретную цель."},
 };
-assert_enum(strategy, Imperial);
+assert_enum(strategy, Imperial)
 
 int playeri::getinitiative(strategy_s value) {
-	return bsmeta<strategyi>::elements[value].initiative;
+	return bsdata<strategyi>::elements[value].initiative;
 }

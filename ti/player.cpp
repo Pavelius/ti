@@ -1,7 +1,7 @@
 #include "main.h"
 
-DECLBASE(playeri, 6);
-struct player_pregen_info {
+INSTDATAC(playeri, 6);
+struct playerpregeni {
 	const char*			id;
 	const char*			name;
 	char				tokens[3];
@@ -11,69 +11,69 @@ struct player_pregen_info {
 	variant_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
-static player_pregen_info player_pregen_data[] = { { "xxcha", "Королевство Иксча", { 2, 3, 3 }, 4,
-{ CombatBonusDefend },
+static playerpregeni player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 3, 3}, 4,
+{CombatBonusDefend},
 {},
-{ Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser },
-{ GravitonLaserSystem } },
-{ "barony", "Баронство Летнева", { 2, 3, 3 }, 2,
-{ BonusFleetTokens },
+{Fighters, Fighters, Fighters, PDS, Carrier, GroundForces, GroundForces, Cruiser, Cruiser},
+{GravitonLaserSystem}},
+{"barony", "Баронство Летнева", {2, 3, 3}, 2,
+{BonusFleetTokens},
 {},
-{ Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces },
-{ AntimassDeflectors, PlasmaScoring }
+{Dreadnought, Destroyer, Carrier, GroundForces, GroundForces, GroundForces},
+{AntimassDeflectors, PlasmaScoring}
 },
-{ "naalu", "Община Наалу", { 2, 3, 3 }, 3,
-{ BonusInitiative, CombatBonusFighters },
+{"naalu", "Община Наалу", {2, 3, 3}, 3,
+{BonusInitiative, CombatBonusFighters},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters },
-{ SarweenTools, NeuralMotivator }
+{GroundForces, GroundForces, GroundForces, GroundForces, PDS, Carrier, Cruiser, Destroyer, Fighters, Fighters, Fighters, Fighters},
+{SarweenTools, NeuralMotivator}
 },
-{ "mindnet", "Сеть раума L1z1x", { 2, 3, 3 }, 2,
-{ BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack },
+{"mindnet", "Сеть раума L1z1x", {2, 3, 3}, 2,
+{BonusCostDreadnought, BonusCostDreadnought, CombatBonusGroundForcesAttack},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS },
-{ NeuralMotivator, PlasmaScoring }
+{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Dreadnought, Fighters, Fighters, Fighters, PDS},
+{NeuralMotivator, PlasmaScoring}
 },
-{ "yssaril", "Племена Изарилов", { 2, 3, 3 }, 3,
-{ BonusActionCards },
+{"yssaril", "Племена Изарилов", {2, 3, 3}, 3,
+{BonusActionCards},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS },
-{ NeuralMotivator }
+{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters, PDS},
+{NeuralMotivator}
 },
-{ "sol", "Федерация Солнца", { 2, 3, 3 }, 4,
-{ BonusCommandCounter },
+{"sol", "Федерация Солнца", {2, 3, 3}, 4,
+{BonusCommandCounter},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer },
-{ NeuralMotivator, AntimassDeflectors }
+{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
+{NeuralMotivator, AntimassDeflectors}
 },
-{ "mentax", "Коалиция Ментаков", { 2, 3, 3 }, 2,
+{"mentax", "Коалиция Ментаков", {2, 3, 3}, 2,
 {},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS },
-{ SarweenTools, PlasmaScoring }
+{GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, Cruiser, Cruiser, PDS},
+{SarweenTools, PlasmaScoring}
 },
-{ "hacan", "Эмираты Хакканов", { 2, 3, 3 }, 6,
-{ BonusTrade },
+{"hacan", "Эмираты Хакканов", {2, 3, 3}, 6,
+{BonusTrade},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters },
-{ AntimassDeflectors, SarweenTools }
+{GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
+{AntimassDeflectors, SarweenTools}
 },
-{ "jelnar", "Университеты Джолнаров", { 2, 3, 3 }, 4,
-{ CombatPenalty, BonusTechnology },
+{"jelnar", "Университеты Джолнаров", {2, 3, 3}, 4,
+{CombatPenalty, BonusTechnology},
 {},
-{ GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought },
-{ AntimassDeflectors, NeuralMotivator, SarweenTools, PlasmaScoring }
+{GroundForces, GroundForces, Carrier, Carrier, Fighters, PDS, PDS, Dreadnought},
+{AntimassDeflectors, NeuralMotivator, SarweenTools, PlasmaScoring}
 },
-{ "norr", "Сардак Норры", { 2, 3, 3 }, 3,
-{ CombatBonusAll },
+{"norr", "Сардак Норры", {2, 3, 3}, 3,
+{CombatBonusAll},
 {},
-{ GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS },
+{GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Cruiser, PDS},
 {}
 },
 };
-static playeri*		active_player;
-static playeri*		speaker;
-static playeri*		human_player;
+static playeri*	active_player;
+static playeri*	speaker;
+static playeri*	human_player;
 
 static int compare_planets(const void* p1, const void* p2) {
 	auto e1 = *((planeti**)p1);
@@ -95,7 +95,7 @@ playeri* playeri::getactive() {
 }
 
 playeri* playeri::find(const char* id) {
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		if(!e)
 			continue;
 		if(strcmp(e.id, id) == 0)
@@ -114,10 +114,8 @@ bool playeri::isally(const playeri* enemy) const {
 
 bool playeri::isallow(variant_s id) const {
 	switch(id) {
-	case WarSun:
-		return is(WarSunTech);
-	default:
-		return true;
+	case WarSun: return is(WarSunTech);
+	default: return true;
 	}
 }
 
@@ -140,7 +138,7 @@ uniti* playeri::create(variant_s id, planeti* planet) {
 }
 
 playeri* playeri::get(const char* id) {
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		if(!e)
 			continue;
 		if(strcmp(e.id, id) == 0)
@@ -149,7 +147,7 @@ playeri* playeri::get(const char* id) {
 	return 0;
 }
 
-const player_pregen_info* find_by_id(const char* id) {
+const playerpregeni* find_by_id(const char* id) {
 	for(auto& e : player_pregen_data) {
 		if(strcmp(e.id, id) == 0)
 			return &e;
@@ -158,11 +156,11 @@ const player_pregen_info* find_by_id(const char* id) {
 }
 
 static void update_control() {
-	for(auto& e : bsmeta<solari>()) {
+	for(auto& e : bsdata<solari>()) {
 		if(!e)
 			continue;
 		auto player = e.getplayer();
-		for(auto& u : bsmeta<uniti>()) {
+		for(auto& u : bsdata<uniti>()) {
 			if(!u)
 				continue;
 			if(u.getsolar() != &e)
@@ -180,7 +178,7 @@ static void create_start_units(playeri* player) {
 	auto p = find_by_id(player->id);
 	assert(p);
 	planeta planets;
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		auto ph = e.gethome();
 		if(!ph)
 			continue;
@@ -227,7 +225,7 @@ playeri& playeri::create(const char* id) {
 unsigned char playeri::getid() const {
 	if(!this)
 		return 0;
-	return this - bsmeta<playeri>::elements;
+	return this - bsdata<playeri>::elements;
 }
 
 const char* playeri::getname() const {
@@ -282,7 +280,7 @@ int	playeri::getresources() const {
 void playeri::getinfo(string& sb) const {
 	sb.add("###%1", getname());
 	if(strategy)
-		sb.addn("[+%1 стратегия]", bsmeta<strategyi>::elements[strategy].name);
+		sb.addn("[+%1 стратегия]", bsdata<strategyi>::elements[strategy].name);
 	sb.addn("%1i ресурсов", getresources());
 	sb.add(", %1i влияния", getinfluences());
 	sb.addn("%1i стратегических маркеров", get(Strategic));
@@ -298,9 +296,9 @@ void playeri::getinfo(string& sb) const {
 void playeri::setup() {
 	create_action_deck();
 	create_agenda_deck();
-	speaker = &bsmeta<playeri>::elements[rand() % (sizeof(bsmeta<playeri>::elements) / sizeof(bsmeta<playeri>::elements[0]))];
+	speaker = &bsdata<playeri>::elements[rand() % (sizeof(bsdata<playeri>::elements) / sizeof(bsdata<playeri>::elements[0]))];
 	planeti::setup();
-	for(auto& e : bsmeta<playeri>())
+	for(auto& e : bsdata<playeri>())
 		create_start_units(&e);
 	update_control();
 }
@@ -318,7 +316,7 @@ void playeri::check_card_limin() {
 
 playeri* playeri::choose_opponent(const char* text) {
 	answeri ai;
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		if(this == &e)
 			continue;
 		ai.add((int)&e, e.getname());
@@ -338,8 +336,7 @@ void playeri::add_action_cards(int value) {
 				if(first_card) {
 					sb.adds("Это");
 					first_card = false;
-				}
-				else if(i == value - 1)
+				} else if(i == value - 1)
 					sb.adds("и");
 				else
 					sb.add(",");
@@ -355,13 +352,12 @@ void playeri::add_action_cards(int value) {
 }
 
 void playeri::add_command_tokens(int value) {
-	static action_s command_area[] = { Strategic, Fleet, Tactical };
+	static action_s command_area[] = {Strategic, Fleet, Tactical};
 	string sb;
 	sb.add("%1 получили [%2i] командных жетона.", getyouname(), value);
 	if(iscomputer()) {
 		message(sb);
-	}
-	else {
+	} else {
 		for(auto i = 1; i <= value; i++) {
 			answeri ai; ai.clear();
 			for(auto e : command_area)
@@ -394,10 +390,10 @@ static int getcn(action_s currency) {
 }
 
 static const char* getcn(action_s currency, int count) {
-	static const char* names[][3] = { { "стратегический жетон", "стратегических жетона", "стратегических жетонов" },
-	{ "ресурс", "ресурса", "ресурсов" },
-	{ "влияние", "влияния", "влияния" },
-	{ "непонятно что", "непонятно чего", "непонятно чего" },
+	static const char* names[][3] = {{"стратегический жетон", "стратегических жетона", "стратегических жетонов"},
+	{"ресурс", "ресурса", "ресурсов"},
+	{"влияние", "влияния", "влияния"},
+	{"непонятно что", "непонятно чего", "непонятно чего"},
 	};
 	auto i = getcn(currency);
 	if(count == 0 || count >= 5)
@@ -442,8 +438,7 @@ void playeri::pay_apply(int cost, action_s id) {
 		if(!r) {
 			payed += need_goods*goods_koeff;
 			add(Goods, -need_goods);
-		}
-		else {
+		} else {
 			payed += r->get(id);
 			r->set(Exhaused);
 		}
@@ -466,8 +461,7 @@ int playeri::pay_choose(int maximum, int cost, const char* subject, const char* 
 					ai.add(counter, "Купить %1 за %2", subject, getcn(currency, total_cost));
 				else
 					ai.add(counter, "Купить %1 за %2i %3", subject, total_cost, getcn(currency, total_cost));
-			}
-			else
+			} else
 				ai.add(counter, "Купить %3i %1 за %2i %3", subjects, total_cost, counter, getcn(currency, total_cost));
 		}
 		counter++;
@@ -506,7 +500,7 @@ int	playeri::getfleet() const {
 
 solari* playeri::gethomesystem() const {
 	auto index = getid();
-	return bsmeta<solari>::elements + 33 + index;
+	return bsdata<solari>::elements + 33 + index;
 }
 
 void playeri::build_units(solari* solar) {
@@ -520,14 +514,13 @@ void playeri::build_units(solari* solar) {
 	int used_resources = 0;
 	if(iscomputer()) {
 
-	}
-	else {
+	} else {
 		if(!build(a1, planet, solar, getresources(), used_resources, getfleet(), 0, planet->getproduction(), true))
 			return;
 	}
 	pay_apply(used_resources, Resource);
 	for(auto& e : a1) {
-		for(auto i = e.count * bsmeta<varianti>::elements[e.type].production; i > 0; i--) {
+		for(auto i = e.count * bsdata<varianti>::elements[e.type].production; i > 0; i--) {
 			if(e.isplanetary())
 				create(e.type, planet);
 			else
@@ -553,7 +546,7 @@ void playeri::choose_diplomacy() {
 		"Любая активность в этой системе находится под особым надзором дипломатической миссии, которую мы возглавляем. "
 		"Все игроки, кроме нас, ставят в эту систему жетон команд из сброса.",
 		p->getname());
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		if(!e)
 			continue;
 		if(&e == this)
@@ -561,7 +554,7 @@ void playeri::choose_diplomacy() {
 		p->activate(&e);
 	}
 	auto count_planets = 0;
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		if(e.getsolar() != p)
@@ -593,12 +586,12 @@ void playeri::replenish_commodities() {
 }
 
 void playeri::select(solara& result, unsigned flags) const {
-	for(auto& e : bsmeta<solari>()) {
+	for(auto& e : bsdata<solari>()) {
 		if(!e)
 			continue;
 		if((flags&Friendly) != 0 && e.getplayer() != this)
 			continue;
-		if((flags&NoMekatol) != 0 && &e == bsmeta<solari>::elements)
+		if((flags&NoMekatol) != 0 && &e == bsdata<solari>::elements)
 			continue;
 		if((flags&Activated) != 0 && !e.isactivated(this))
 			continue;
@@ -607,7 +600,7 @@ void playeri::select(solara& result, unsigned flags) const {
 }
 
 void playeri::selecta(solara& result) const {
-	for(auto& e : bsmeta<solari>()) {
+	for(auto& e : bsdata<solari>()) {
 		if(!e)
 			continue;
 		auto g = e.getgroup();
@@ -620,13 +613,13 @@ void playeri::selecta(solara& result) const {
 }
 
 void playeri::selectp(solara& result, unsigned flags) const {
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		auto s = e.getsolar();
 		if(!s)
 			continue;
-		if((flags&NoMekatol) != 0 && s == bsmeta<solari>::elements)
+		if((flags&NoMekatol) != 0 && s == bsdata<solari>::elements)
 			continue;
 		if((flags&Friendly) != 0 && e.getplayer() != this)
 			continue;
@@ -638,7 +631,7 @@ void playeri::selectp(solara& result, unsigned flags) const {
 }
 
 void playeri::select(planeta& result, unsigned flags) const {
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		if((flags&Friendly) != 0 && e.getplayer() != this)
@@ -662,7 +655,7 @@ void playeri::message(const char* text) {
 void playeri::choose_speaker(int exclude) {
 	string sb;
 	answeri ai;
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		if(!e)
 			continue;
 		if(&e == speaker)
@@ -699,7 +692,7 @@ int	playeri::choose(answeri& ai, bool cancel_button, const char* format) const {
 int get_tech_color_count(const playeri* p, tech_color_s c) {
 	auto result = 0;
 	for(auto i = FirstTech; i <= LastTech; i = tech_s(i + 1)) {
-		if(bsmeta<techi>::elements[i].color != c)
+		if(bsdata<techi>::elements[i].color != c)
 			continue;
 		if(!p->is(i))
 			continue;
@@ -709,7 +702,7 @@ int get_tech_color_count(const playeri* p, tech_color_s c) {
 }
 
 bool playeri::isallow(tech_s v) const {
-	auto& e = bsmeta<techi>::elements[v];
+	auto& e = bsdata<techi>::elements[v];
 	auto free_requisit = 0;
 	for(auto i = Red; i <= Yellow; i = tech_color_s(i + 1)) {
 		auto r = e.required[i - Red];
@@ -721,8 +714,7 @@ bool playeri::isallow(tech_s v) const {
 				if(n < r - 1)
 					return false;
 				free_requisit--;
-			}
-			else
+			} else
 				return false;
 		}
 	}
@@ -755,7 +747,7 @@ void playeri::add_victory_points(int value) {
 
 int	playeri::getcount(variant_s unit) const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.getplayer() != this)

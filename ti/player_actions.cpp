@@ -5,7 +5,7 @@ static const char* number_which[] = {"нулевую", "первую", "вторую", "третью", "ч
 static const int last_initiative = 8;
 
 static void refresh_players() {
-	for(auto& e : bsmeta<playeri>()) {
+	for(auto& e : bsdata<playeri>()) {
 		e.set(StrategyAction, 1);
 		e.set(TacticalAction, 1);
 		e.set(Pass, 1);
@@ -14,7 +14,7 @@ static void refresh_players() {
 
 static planeti* choose_planet_construct(const playeri* p, variant_s type, const char* format) {
 	planeta source;
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		if(e.getplayer() != p)
@@ -66,7 +66,7 @@ static void trade_activity(playeri* p) {
 			}
 		} else
 			sb.adds("На данный момент список кандидатов пустой.");
-		for(auto& e : bsmeta<playeri>()) {
+		for(auto& e : bsdata<playeri>()) {
 			if(!e || p == &e)
 				continue;
 			if(e.get(Commodities) == e.getcommodities())
@@ -272,8 +272,8 @@ void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) 
 		while(p != pp) {
 			strategy_secondanary_action(pp, id);
 			pp++;
-			if(pp >= bsmeta<playeri>::elements + bsmeta<playeri>::count)
-				pp = bsmeta<playeri>::elements;
+			if(pp >= (playeri*)bsdata<playeri>::source.end())
+				pp = (playeri*)bsdata<playeri>::source.begin();
 		}
 	}
 }
@@ -296,16 +296,16 @@ static action_s choose_action(playeri* p, play_s play) {
 }
 
 static void play_action(playeri* p, action_s id) {
-	auto& e = bsmeta<actioni>::elements[id];
+	auto& e = bsdata<actioni>::elements[id];
 	if(e.proc)
 		e.proc(p, true);
 }
 
 static void select(playera& source, const playeri* start) {
 	auto index = start->getid();
-	for(auto& e : bsmeta<playeri>()) {
-		source.add(&bsmeta<playeri>::elements[index++]);
-		if(index >= (int)bsmeta<playeri>::count)
+	for(auto& e : bsdata<playeri>()) {
+		source.add(&bsdata<playeri>::elements[index++]);
+		if(index >= (int)bsdata<playeri>::source.getcount())
 			index = 0;
 	}
 }
@@ -331,7 +331,7 @@ static void strategic_phase() {
 			"Ваши оппоненты также выбирают одну стратегию из этого же списка.");
 		string sb;
 		sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
-		sb.adds(bsmeta<strategyi>::elements[p->strategy].text);
+		sb.adds(bsdata<strategyi>::elements[p->strategy].text);
 		p->message(sb);
 		politics.remove(politics.indexof(p->strategy));
 	}
@@ -343,7 +343,7 @@ static void action_phase() {
 	while(someone_move) {
 		someone_move = false;
 		for(auto i = 0; i <= last_initiative; i++) {
-			for(auto& e : bsmeta<playeri>()) {
+			for(auto& e : bsdata<playeri>()) {
 				if(e.get(Pass) == 0)
 					continue;
 				if(e.getinitiative() != i)

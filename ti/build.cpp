@@ -13,5 +13,5 @@ builda::builda(playeri* player) {
 }
 
 unsigned char squad::getcount() const {
-	return count*bsmeta<varianti>::elements[type].production;
+	return count*bsdata<varianti>::elements[type].production;
 }

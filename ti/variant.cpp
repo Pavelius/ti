@@ -1,6 +1,6 @@
 #include "main.h"
 
-varianti bsmeta<varianti>::elements[] = {{""},
+INSTDATA(varianti) = {{""},
 {"Player", "Игрок"},
 {"Solar", "Звездная система"},
 {"AsteroidField", "Поле астероидов"},

@@ -87,7 +87,7 @@ draw::surface::surface(const char* url, color* pallette) :surface() {
 }
 
 bool draw::surface::read(const char* url, color* pallette, int need_bpp) {
-	unsigned size;
+	int size;
 	resize(0, 0, 0, true);
 	unsigned char* pin = (unsigned char*)loadb(url, &size);
 	if(!pin)

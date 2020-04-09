@@ -1,7 +1,7 @@
 #include "main.h"
 
 void unita::sort(int (uniti::*proc)() const) {
-	const auto i2 = maximum - 1;
+	const auto i2 = count_maximum - 1;
 	const auto i1 = 0;
 	for(int i = i2; i > i1; i--) {
 		for(int j = i1; j < i; j++) {

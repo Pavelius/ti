@@ -8,11 +8,11 @@ const char*	solari::getname() const {
 }
 
 bool solari::ismekatol() const {
-	return this == bsmeta<solari>::elements;
+	return this == bsdata<solari>::elements;
 }
 
 planeti* solari::getplanet(int index) const {
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		if(e.getsolar() != this)
@@ -25,14 +25,14 @@ planeti* solari::getplanet(int index) const {
 
 void solari::setplayer(const playeri* v) {
 	if(v)
-		player = v - bsmeta<playeri>::elements;
+		player = v - bsdata<playeri>::elements;
 	else
 		player = 0xFF;
 }
 
 int	solari::getfleet(const playeri* player) const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.getsolar() != this)
@@ -46,7 +46,7 @@ int	solari::getfleet(const playeri* player) const {
 
 int	solari::getfleetsupport(const playeri* player) const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.getplayer() != player)
@@ -70,7 +70,7 @@ void solari::activate(const playeri* v) {
 
 int	solari::getcount(variant_s type, const playeri* player) const {
 	auto result = 0;
-	for(auto& e : bsmeta<uniti>()) {
+	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
 		if(e.type == type && e.getplayer() == player && e.getsolar()==this)
@@ -81,7 +81,7 @@ int	solari::getcount(variant_s type, const playeri* player) const {
 
 void solari::select(planeta& result, unsigned flags) const {
 	auto player = getplayer();
-	for(auto& e : bsmeta<planeti>()) {
+	for(auto& e : bsdata<planeti>()) {
 		if(!e)
 			continue;
 		if(e.getsolar() != this)
@@ -95,5 +95,5 @@ void solari::select(planeta& result, unsigned flags) const {
 }
 
 solari* solari::getmekatol() {
-	return bsmeta<solari>::elements;
+	return bsdata<solari>::elements;
 }
