@@ -1,8 +1,11 @@
 #include "main.h"
 
-INSTDATAC(solari, 48);
-static unsigned char	solar_indecies[map_scan_line * map_scan_line];
-static unsigned char	movement_rate[map_scan_line * map_scan_line];
+template<> solari bsdata<solari>::elements[48];
+template<> array bsdata<solari>::source(bsdata<solari>::elements, sizeof(bsdata<solari>::elements[0]),
+	sizeof(bsdata<solari>::elements) / sizeof(bsdata<solari>::elements[0]),
+	sizeof(bsdata<solari>::elements) / sizeof(bsdata<solari>::elements[0]));
+static unsigned char solar_indecies[map_scan_line * map_scan_line];
+static unsigned char movement_rate[map_scan_line * map_scan_line];
 
 INSTDATA(planeti) = {{"Архон рен", "xxcha", 2, 3, 0},
 {"Арк Прайм", "barony", 4, 0, 0},
