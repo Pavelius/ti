@@ -454,7 +454,7 @@ class answeri : stringbuilder {
 	adat<element, 8>			elements;
 	typedef void(*tips_proc)(stringbuilder& sb, int param);
 public:
-	constexpr explicit operator bool() const { return elements.count != 0; }
+	explicit operator bool() const { return elements.count != 0; }
 	answeri();
 	void						add(int param, const char* format, ...);
 	void						addv(int param, const char* format, const char* format_param);
