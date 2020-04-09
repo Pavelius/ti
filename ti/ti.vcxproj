@@ -126,7 +126,6 @@
     <ClInclude Include="draw_control.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="code.h" />
     <ClInclude Include="point.h" />
     <ClInclude Include="rect.h" />
     <ClInclude Include="stringbuilder.h" />
@@ -137,9 +136,6 @@
     <ClCompile Include="action.cpp" />
     <ClCompile Include="agenda.cpp" />
     <ClCompile Include="answer.cpp" />
-    <ClCompile Include="code_metadata.cpp" />
-    <ClCompile Include="code_requisit.cpp" />
-    <ClCompile Include="code_serial.cpp" />
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="build.cpp" />
