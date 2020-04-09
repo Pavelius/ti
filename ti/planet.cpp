@@ -113,7 +113,7 @@ void planeti::initialize() {
 			bsdata<solari>::elements[i].set(e.type);
 	}
 	for(auto& e : bsdata<planeti>()) {
-		e.player = 0xFF;
+		e.player.clear();
 		e.flags = 0;
 	}
 }
@@ -211,12 +211,6 @@ int uniti::getmovement(short unsigned index) {
 	if(index == Blocked)
 		return 0;
 	return movement_rate[index];
-}
-
-planeti* uniti::getplanet() const {
-	if(parent.type == Planet)
-		return parent.getplanet();
-	return 0;
 }
 
 solari* solari::getsolar(short unsigned index) {
@@ -357,7 +351,7 @@ int	planeti::getcount(variant_s type, const playeri* player) const {
 	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
-		if(e.type == type && e.getplayer() == player && e.getplanet()==this)
+		if(e.is(type) && e.getplayer() == player && e.getplanet()==this)
 			result++;
 	}
 	return result;

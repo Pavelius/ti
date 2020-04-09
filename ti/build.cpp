@@ -7,11 +7,11 @@ builda::builda(playeri* player) {
 		if(!player->isallow(i))
 			continue;
 		auto p = add();
-		p->type = i;
+		p->settype(i);
 		p->setplayer(player);
 	}
 }
 
 unsigned char squad::getcount() const {
-	return count*bsdata<varianti>::elements[type].production;
+	return count*bsdata<varianti>::elements[gettype()].production;
 }

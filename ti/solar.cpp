@@ -4,7 +4,7 @@ const char*	solari::getname() const {
 	auto p = getplanet(1);
 	if(p)
 		return p->getname();
-	return getstr(type);
+	return bsdata<varianti>::elements[type].name;
 }
 
 bool solari::ismekatol() const {
@@ -21,13 +21,6 @@ planeti* solari::getplanet(int index) const {
 			return &e;
 	}
 	return 0;
-}
-
-void solari::setplayer(const playeri* v) {
-	if(v)
-		player = v - bsdata<playeri>::elements;
-	else
-		player = 0xFF;
 }
 
 int	solari::getfleet(const playeri* player) const {
@@ -73,7 +66,7 @@ int	solari::getcount(variant_s type, const playeri* player) const {
 	for(auto& e : bsdata<uniti>()) {
 		if(!e)
 			continue;
-		if(e.type == type && e.getplayer() == player && e.getsolar()==this)
+		if(e.is(type) && e.getplayer() == player && e.getsolar()==this)
 			result++;
 	}
 	return result;

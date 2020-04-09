@@ -227,30 +227,3 @@ int uniti::getweight() const {
 }
 
 void uniti::destroy() {}
-
-playeri* uniti::getplayer() const {
-	if(player == 0xFF)
-		return 0;
-	return &bsdata<playeri>::elements[player];
-}
-
-void uniti::setplayer(const playeri* v) {
-	if(!v)
-		player = 0xFF;
-	else
-		player = v - bsdata<playeri>::elements;
-}
-
-void uniti::setplanet(const planeti* v) {
-	parent = const_cast<planeti*>(v);
-}
-
-void uniti::setsolar(const solari* v) {
-	parent = const_cast<solari*>(v);
-}
-
-solari* uniti::getsolar() const {
-	if(parent.type == Solar)
-		return parent.getsolar();
-	return 0;
-}

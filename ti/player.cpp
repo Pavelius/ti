@@ -341,7 +341,7 @@ void playeri::add_action_cards(int value) {
 				else
 					sb.add(",");
 				sb.adds("[+");
-				sb.add(getstr(a));
+				sb.add(bsdata<actioni>::elements[a].name);
 				sb.add("]");
 			}
 		}
@@ -520,11 +520,11 @@ void playeri::build_units(solari* solar) {
 	}
 	pay_apply(used_resources, Resource);
 	for(auto& e : a1) {
-		for(auto i = e.count * bsdata<varianti>::elements[e.type].production; i > 0; i--) {
+		for(auto i = e.count * bsdata<varianti>::elements[e.gettype()].production; i > 0; i--) {
 			if(e.isplanetary())
-				create(e.type, planet);
+				create(e.gettype(), planet);
 			else
-				create(e.type, solar);
+				create(e.gettype(), solar);
 		}
 	}
 }

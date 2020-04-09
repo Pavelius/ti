@@ -21,4 +21,4 @@ INSTDATA(varianti) = {{""},
 {"Technology", "Технология"},
 {"Variant", "Вариант"},
 };
-assert_enum(variant, Variant);
+assert_enum(variant, Variant)

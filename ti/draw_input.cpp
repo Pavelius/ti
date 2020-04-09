@@ -777,7 +777,7 @@ static void cannon(int x, int y, color c1, color c2) {
 	line(x, y, x + unit_size / 2, y, c2);
 }
 
-static void draw_unit(int x, int y, variant_s type, int count, color c1, color c2) {
+static void draw_unit(int x, int y, variant_s type, int count, color c1, color c2, const uniti* pu) {
 	int n;
 	char temp[32]; zprint(temp, "%1i", count);
 	const int r = unit_size;
@@ -788,8 +788,8 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 		circle(x, y, r, c2);
 		break;
 	case GroundForces:
-		rectf({ x - r, y - r, x + r, y + r }, c1);
-		rectb({ x - r, y - r, x + r, y + r }, c2);
+		rectf({x - r, y - r, x + r, y + r}, c1);
+		rectb({x - r, y - r, x + r, y + r}, c2);
 		break;
 	case PDS:
 		trianglef(x, y - r, r * 2, r, c1);
@@ -803,23 +803,23 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 	case Carrier:
 		zcat(temp, "Т");
 		n = r + r;
-		rectf({ x - r, y - r, x + n, y + r }, c1);
-		rectb({ x - r, y - r, x + n, y + r }, c2);
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y, c1, c2);
 		break;
 	case Destroyer:
 		zcat(temp, "Э");
 		n = r + r / 2;
-		rectf({ x - r, y - r, x + n, y + r }, c1);
-		rectb({ x - r, y - r, x + n, y + r }, c2);
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y - 2, c1, c2);
 		cannon(x + n, y + 2, c1, c2);
 		break;
 	case Cruiser:
 		zcat(temp, "К");
 		n = r + r / 2;
-		rectf({ x - r, y - r, x + n, y + r }, c1);
-		rectb({ x - r, y - r, x + n, y + r }, c2);
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y - 3, c1, c2);
 		cannon(x + n, y, c1, c2);
 		cannon(x + n, y + 3, c1, c2);
@@ -827,8 +827,8 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 	case Dreadnought:
 		zcat(temp, "Л");
 		n = r + r;
-		rectf({ x - r, y - r, x + n, y + r }, c1);
-		rectb({ x - r, y - r, x + n, y + r }, c2);
+		rectf({x - r, y - r, x + n, y + r}, c1);
+		rectb({x - r, y - r, x + n, y + r}, c2);
 		cannon(x + n, y - 6, c1, c2);
 		cannon(x + n, y - 3, c1, c2);
 		cannon(x + n, y, c1, c2);
@@ -846,12 +846,19 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 		text(x - textw(temp) / 2 - 1, y - texth() / 2, temp);
 		font = push_font;
 	}
+	if(pu) {
+		auto a = area({x - r, y - r, x + r, y + r});
+		if(a == AreaHilited || a == AreaHilitedPressed) {
+			hilited = Unit;
+			hilited.value = pu->getindex();
+		}
+	}
 }
 
 static int compare_units(const void* v1, const void* v2) {
 	auto e1 = *((uniti**)v1);
 	auto e2 = *((uniti**)v2);
-	return (int)e1->type - (int)e2->type;
+	return (int)e1->gettype() - (int)e2->gettype();
 }
 
 static void draw_units(int x, int y, const planeti* planet, const solari* solar) {
@@ -900,8 +907,8 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	}
 	qsort(source.data, source.count, sizeof(source.data[0]), compare_units);
 	// Stardock draw separately
-	if(source.data[0]->type == SpaceDock) {
-		draw_unit(x, y, SpaceDock, 1, c1, c2);
+	if(source.data[0]->is(SpaceDock)) {
+		draw_unit(x, y, SpaceDock, 1, c1, c2, source.data[0]);
 		source.remove(0);
 		if(!source)
 			return;
@@ -911,12 +918,12 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	memset(drawing.data, 0, sizeof(drawing.data));
 	auto pd = drawing.data;
 	for(unsigned i = 0; i < source.count; i++) {
-		if(pd->type == source.data[i]->type)
+		if(source.data[i]->is(pd->type))
 			pd->count++;
 		else {
 			if(pd->type != NoVariant)
 				pd++;
-			pd->type = source.data[i]->type;
+			pd->type = source.data[i]->gettype();
 			pd->count = 1;
 		}
 	}
@@ -926,13 +933,13 @@ static void draw_units(int x, int y, const planeti* planet, const solari* solar)
 	if(planet) {
 		auto x0 = x - (w0 * drawing.count) / 2 + w0 / 2;
 		for(unsigned i = 0; i < drawing.count; i++) {
-			draw_unit(x0 + 1, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
+			draw_unit(x0 + 1, y, drawing.data[i].type, drawing.data[i].count, c1, c2, 0);
 			//line(x0 + 1, y - 10, x0 + 1, y + 10, colors::red);
 			x0 += w0;
 		}
 	} else {
 		for(unsigned i = 0; i < drawing.count; i++) {
-			draw_unit(x, y, drawing.data[i].type, drawing.data[i].count, c1, c2);
+			draw_unit(x, y, drawing.data[i].type, drawing.data[i].count, c1, c2, 0);
 			y += unit_size * 2 + 2;
 		}
 	}
@@ -1158,7 +1165,7 @@ struct unit_table : table {
 	}
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
 		if(columns[column] == "name")
-			return getstr(source[line].type);
+			return bsdata<varianti>::elements[source[line].gettype()].name;
 		return 0;
 	}
 	int getnumber(int line, int column) const override {
@@ -1167,7 +1174,7 @@ struct unit_table : table {
 		if(columns[column] == "count")
 			return source[line].count;
 		if(columns[column] == "count_units")
-			return source[line].count * bsdata<varianti>::elements[source[line].type].production;
+			return source[line].count * bsdata<varianti>::elements[source[line].gettype()].production;
 		if(columns[column] == "total")
 			return source[line].getresource()*source[line].count;
 		if(columns[column] == "fleet")
@@ -1175,7 +1182,7 @@ struct unit_table : table {
 		return 0;
 	}
 	variant_s getvalue() const {
-		return source[current].type;
+		return source[current].gettype();
 	}
 	static const column* getcolumns() {
 		static constexpr column columns[] = { { Text, "name", "Наименование", 176 },

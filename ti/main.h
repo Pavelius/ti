@@ -93,38 +93,51 @@ class uniti;
 typedef adat<playeri*, 6> playera;
 typedef adat<solari*, 64> solara;
 typedef adat<planeti*, 64> planeta;
-struct variant {
+class variant {
+	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant),
+		value(p ? p - bsdata<T>::elements : 0) {}
+	template<typename T, variant_s V> constexpr T* get() const {
+		return (type == V) ? &bsdata<T>::elements[value] : 0;
+	}
+public:
 	variant_s					type;
-	union {
-		variant_s				var;
-		tech_s					tech;
-		unsigned char			value;
-	};
+	unsigned char				value;
 	constexpr variant() : type(NoVariant), value(0) {}
-	constexpr variant(variant_s t, decltype(value) v) : type(t), value(v) {}
-	constexpr variant(tech_s v) : type(TechnologyVar), tech(v) {}
-	constexpr variant(variant_s v) : type(Variant), var(v) {}
-	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant), value(p ? p - bsdata<T>::elements : 0) {}
+	constexpr variant(variant_s t, unsigned char v) : type(t), value(v) {}
+	constexpr variant(tech_s v) : type(TechnologyVar), value(v) {}
+	constexpr variant(variant_s v) : type(Variant), value(v) {}
 	constexpr variant(const agendai* v) : variant(Agenda, v) {}
 	constexpr variant(const planeti* v) : variant(Planet, v) {}
 	constexpr variant(const playeri* v) : variant(Player, v) {}
 	constexpr variant(const solari* v) : variant(Solar, v) {}
 	constexpr variant(const uniti* v) : variant(Unit, v) {}
 	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
-	constexpr operator bool() const { return type != NoVariant; }
+	constexpr explicit operator bool() const { return type != NoVariant; }
 	void						clear() { type = NoVariant; value = 0; }
-	template<class T> constexpr T* get() const { return &bsdata<T>::elements[value]; }
-	constexpr agendai*			getagenda() const { return get<agendai>(); }
-	constexpr planeti*			getplanet() const { return get<planeti>(); }
-	constexpr playeri*			getplayer() const { return get<playeri>(); }
-	constexpr solari*			getsolar() const { return get<solari>(); }
-	constexpr uniti*			getunit() const { return get<uniti>(); }
+	constexpr agendai*			getagenda() const { return get<agendai, Agenda>(); }
+	constexpr planeti*			getplanet() const { return get<planeti, Planet>(); }
+	constexpr playeri*			getplayer() const { return get<playeri, Player>(); }
+	constexpr solari*			getsolar() const { return get<solari, Solar>(); }
+	constexpr uniti*			getunit() const { return get<uniti, Unit>(); }
 };
 typedef adat<variant, 64>		varianta;
 struct unita : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
 	void						sort(int (uniti::*proc)() const);
+};
+template<typename T, variant_s V>
+struct indexable {
+	unsigned char getindex() const {
+		if(!this)
+			return 0xFF;
+		return (T*)this - bsdata<T>::elements;
+	}
+	variant getvariant() const {
+		if(!this)
+			return variant();
+		return variant(V, this - bsdata<T>::elements);
+	}
 };
 struct namei {
 	const char*					id;
@@ -199,7 +212,7 @@ struct objectivei {
 	const char*					name;
 	char						vp;
 };
-class playeri : public namei, public costi {
+class playeri : public namei, public costi, public indexable<playeri, Player> {
 	relation					relations[8];
 	char						commodities;
 	cflags<tech_s>				technologies;
@@ -295,21 +308,22 @@ public:
 	static void					setup();
 	void						sethuman();
 };
-class uniti {
-	unsigned char				player;
+class uniti : public indexable<uniti, Unit> {
 	variant						parent;
+	variant						player;
 	unsigned char				flags;
-public:
 	variant_s					type;
-	constexpr uniti() : type(NoVariant), player(0xFF), parent(), flags(0) {}
-	constexpr uniti(variant_s type) : type(type), player(0xFF), parent(), flags(0) {}
-	constexpr uniti(variant_s type, variant parent) : type(type), player(0xFF), parent(), flags(0) {}
+public:
+	constexpr uniti() : type(NoVariant), player(), parent(), flags(0) {}
+	constexpr uniti(variant_s type) : type(type), player(), parent(), flags(0) {}
+	constexpr uniti(variant_s type, variant parent) : type(type), player(), parent(), flags(0) {}
 	explicit operator bool() const { return type != NoVariant; }
 	void* operator new(unsigned size);
 	void operator delete(void* pointer, unsigned size) {}
 	~uniti();
 	bool						build(variant_s object, bool run);
 	void						destroy();
+	bool						is(variant_s v) const { return type == v; }
 	int							getcapacity() const;
 	int							getcarried() const;
 	const varianti&				getgroup() const { return bsdata<varianti>::elements[type]; }
@@ -318,11 +332,12 @@ public:
 	int							getmovement() const;
 	static int					getmovement(short unsigned index);
 	const char*					getname() const { return getgroup().name; }
-	playeri*					getplayer() const;
+	playeri*					getplayer() const { return player.getplayer(); }
 	int							getresource() const;
-	planeti*					getplanet() const;
-	solari*						getsolar() const;
+	planeti*					getplanet() const { return parent.getplanet(); }
+	solari*						getsolar() const { return parent.getsolar(); }
 	int							getstrenght() const { return getweapon().chance; }
+	variant_s					gettype() const { return type; }
 	weaponi						getweapon() const;
 	weaponi						getweapon(bool attacker, const playeri* opponent, char round) const;
 	int							getweight() const;
@@ -333,9 +348,10 @@ public:
 	bool						isinvaders() const;
 	bool						isplanetary() const { return isplanetary(type); }
 	static bool					isplanetary(variant_s type);
-	void						setplanet(const planeti* v);
-	void						setplayer(const playeri* v);
-	void						setsolar(const solari* v);
+	void						setplanet(const planeti* v) { parent = v; }
+	void						setplayer(const playeri* v) { player = v; }
+	void						setsolar(const solari* v) { parent = v; }
+	void						settype(variant_s v) { type = v; }
 };
 struct squad : uniti {
 	unsigned char				count;
@@ -346,12 +362,12 @@ struct builda : adat<squad, WarSun - GroundForces + 1> {
 	unsigned					getcount() const { return count; }
 };
 class solari {
+	variant						player;
 	variant_s					type;
-	unsigned char				player;
 	unsigned char				flags;
 	unsigned char				index;
 public:
-	constexpr explicit operator bool() const { return index != 0xFF; }
+	explicit operator bool() const { return index != 0xFF; }
 	void						activate(const playeri* v);
 	void						deactivate(const playeri* v) { flags &= ~(1 << (v->getid())); }
 	int							getcount(variant_s type, const playeri* player) const;
@@ -362,20 +378,20 @@ public:
 	static solari*				getmekatol();
 	const char*					getname() const;
 	planeti*					getplanet(int index) const;
-	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsdata<playeri>::elements[player]; }
+	playeri*					getplayer() const { return player.getplayer(); }
 	static solari*				getsolar(short unsigned index);
 	bool						isactivated(const playeri* v) const { return (flags & (1 << v->getid())) != 0; }
 	bool						ismekatol() const;
 	void						select(planeta& result, unsigned flags) const;
 	void						set(variant_s v) { type = v; }
 	void						setindex(unsigned char v) { index = v; }
-	void						setplayer(const playeri* v);
+	void						setplayer(const playeri* v) { player = v; }
 };
 class planeti {
 	const char*					name;
 	const char*					home;
-	unsigned char				solar;
-	unsigned char				player;
+	variant						solar;
+	variant						player;
 	tech_color_s				tech_color;
 	wormhole_s					wormhole;
 	char						resource;
@@ -384,11 +400,11 @@ class planeti {
 	unsigned char				flags;
 public:
 	constexpr planeti(const char* name, unsigned char solar, char resource, char influence, char avatar, tech_color_s tech_color, wormhole_s wormhole = NoHole)
-		: name(name), home(0), solar(solar), player(0xFF), resource(resource),
+		: name(name), home(0), solar(Solar, solar), player(), resource(resource),
 		influence(influence), avatar(avatar), tech_color(tech_color), wormhole(wormhole), flags(0) {
 	}
 	constexpr planeti(const char* name, const char* home, char resource, char influence, char avatar)
-		: name(name), home(home), solar(0xFF), player(0xFF), resource(resource),
+		: name(name), home(home), solar(), player(), resource(resource),
 		influence(influence), avatar(avatar), tech_color(NoTech), wormhole(NoHole), flags(0) {
 	}
 	constexpr explicit operator bool() const { return flags != 0; }
@@ -405,15 +421,15 @@ public:
 	int							getone() const { return 1; }
 	int							getproduction() const;
 	int							getresource() const;
-	playeri*					getplayer() const { return (player == 0xFF) ? 0 : &bsdata<playeri>::elements[player]; }
-	solari*						getsolar() const { return &bsdata<solari>::elements[solar]; }
+	playeri*					getplayer() const { return player.getplayer(); }
+	solari*						getsolar() const { return solar.getsolar(); }
 	bool						is(object_s v) const { return (flags & (1 << v)) != 0; }
 	static void					refresh();
 	void						remove(object_s v) { flags &= ~(1 << v); }
 	static void					setup();
 	void						set(object_s v) { flags |= 1 << v; }
-	void						setplayer(const playeri* v) { if(v) player = v - bsdata<playeri>::elements; else player = 0xFF; }
-	void						setsolar(const solari* v) { if(v) solar = v - bsdata<solari>::elements; else solar = 0xFF; }
+	void						setplayer(const playeri* v) { player = v; }
+	void						setsolar(const solari* v) { solar = v; }
 };
 struct techi {
 	const char*					id;

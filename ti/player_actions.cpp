@@ -29,7 +29,7 @@ static planeti* choose_planet_construct(const playeri* p, variant_s type, const 
 		source.add(&e);
 	}
 	string sb;
-	sb.adds(format, getstr(type));
+	sb.adds(format, bsdata<varianti>::elements[type].name);
 	return p->choose(source, sb);
 }
 
