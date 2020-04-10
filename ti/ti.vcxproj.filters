@@ -159,6 +159,9 @@
     <ClCompile Include="build.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="varianta.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Коллекция">

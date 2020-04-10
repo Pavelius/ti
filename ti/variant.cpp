@@ -22,3 +22,21 @@ INSTDATA(varianti) = {{""},
 {"Variant", "Вариант"},
 };
 assert_enum(variant, Variant)
+
+int	variant::getweight() const {
+	if(type==Unit) {
+		auto p = getunit();
+		if(p)
+			return p->getweight();
+	}
+	return 0;
+}
+
+void variant::destroy() {
+	if(type == Unit) {
+		auto p = getunit();
+		if(p)
+			p->destroy();
+	} else
+		clear();
+}

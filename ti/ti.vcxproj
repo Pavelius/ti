@@ -169,6 +169,7 @@
     <ClCompile Include="tech.cpp" />
     <ClCompile Include="unit.cpp" />
     <ClCompile Include="variant.cpp" />
+    <ClCompile Include="varianta.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_draw_dlg.cpp" />

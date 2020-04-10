@@ -116,11 +116,13 @@ public:
 	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
 	constexpr explicit operator bool() const { return type != NoVariant; }
 	void						clear() { type = NoVariant; value = 0; }
+	void						destroy();
 	constexpr agendai*			getagenda() const { return get<agendai, Agenda>(); }
 	constexpr planeti*			getplanet() const { return get<planeti, Planet>(); }
 	constexpr playeri*			getplayer() const { return get<playeri, Player>(); }
 	constexpr solari*			getsolar() const { return get<solari, Solar>(); }
 	constexpr uniti*			getunit() const { return get<uniti, Unit>(); }
+	int							getweight() const;
 };
 struct unita : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
@@ -465,6 +467,18 @@ public:
 	void						clear() { stringbuilder::clear(); elements.clear(); }
 	static int					compare(const void* p1, const void* p2);
 	void						sort();
+};
+class varianta : adat<variant, 64> {
+public:
+	void						add_planets(const playeri* player);
+	void						add_solars(const playeri* player);
+	void						add_units(const playeri* player);
+	void						match_activated(const playeri* player, bool value);
+	void						match(const solari* solar, bool value);
+	void						removecasualty(const playeri* player);
+	void						rollup();
+	void						select(const playeri* player, unsigned flags);
+	void						sort(int (variant::*proc)() const);
 };
 extern deck<action_s>			action_deck;
 inline unsigned char			gmi(int x, int y) { return y * map_scan_line + x; }
