@@ -64,7 +64,8 @@ enum target_s : unsigned {
 };
 enum variant_s : unsigned char {
 	NoVariant,
-	Player, Solar, AsteroidField, Nebula, Supernova,
+	Player,
+	Solar, AsteroidField, Nebula, Supernova,
 	Planet, Unit,
 	SpaceDock, PDS,
 	GroundForces, Fighters, 
@@ -93,6 +94,7 @@ class uniti;
 typedef adat<playeri*, 6> playera;
 typedef adat<solari*, 64> solara;
 typedef adat<planeti*, 64> planeta;
+typedef void(*tips_proc)(stringbuilder& sb, int param);
 class variant {
 	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant),
 		value(p ? p - bsdata<T>::elements : 0) {}
@@ -120,24 +122,10 @@ public:
 	constexpr solari*			getsolar() const { return get<solari, Solar>(); }
 	constexpr uniti*			getunit() const { return get<uniti, Unit>(); }
 };
-typedef adat<variant, 64>		varianta;
 struct unita : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
 	void						rollup();
 	void						sort(int (uniti::*proc)() const);
-};
-template<typename T, variant_s V>
-struct indexable {
-	unsigned char getindex() const {
-		if(!this)
-			return 0xFF;
-		return (T*)this - bsdata<T>::elements;
-	}
-	variant getvariant() const {
-		if(!this)
-			return variant();
-		return variant(V, this - bsdata<T>::elements);
-	}
 };
 struct namei {
 	const char*					id;
@@ -212,7 +200,7 @@ struct objectivei {
 	const char*					name;
 	char						vp;
 };
-class playeri : public namei, public costi, public indexable<playeri, Player> {
+class playeri : public namei, public costi {
 	relation					relations[8];
 	char						commodities;
 	cflags<tech_s>				technologies;
@@ -242,7 +230,7 @@ public:
 	bool						choose(unita& a1, unita& a2, const char* format, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format) const;
-	int							choose(answeri& ai, bool cancel_button, const char* format) const;
+	int							choose(answeri& ai, bool cancel_button, const char* format, tips_proc tips = 0) const;
 	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
@@ -308,7 +296,7 @@ public:
 	static void					setup();
 	void						sethuman();
 };
-class uniti : public indexable<uniti, Unit> {
+class uniti {
 	variant						parent;
 	variant						player;
 	unsigned char				flags;
@@ -467,8 +455,7 @@ class answeri : stringbuilder {
 		const char*				getname() const { return text; }
 	};
 	char						buffer[4096];
-	adat<element, 8>			elements;
-	typedef void(*tips_proc)(stringbuilder& sb, int param);
+	adat<element, 9>			elements;
 public:
 	explicit operator bool() const { return elements.count != 0; }
 	answeri();

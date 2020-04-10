@@ -371,15 +371,6 @@ void playeri::add_command_tokens(int value) {
 	}
 }
 
-static const char* getcurrencynameof(action_s currency) {
-	switch(currency) {
-	case Strategic: return "стратегических жетонов";
-	case Resource: return "ресурсов";
-	case Influence: return "влияния";
-	default: return "непонятно чего";
-	}
-}
-
 static int getcn(action_s currency) {
 	switch(currency) {
 	case Strategic: return 0;
@@ -685,8 +676,8 @@ planeti* playeri::choose(const aref<planeti*>& source, const char* format) const
 	return (planeti*)choose(ai, false, format);
 }
 
-int	playeri::choose(answeri& ai, bool cancel_button, const char* format) const {
-	return ai.choose(cancel_button, iscomputer(), 0, id, format);
+int	playeri::choose(answeri& ai, bool cancel_button, const char* format, tips_proc proc) const {
+	return ai.choose(cancel_button, iscomputer(), proc, id, format);
 }
 
 int get_tech_color_count(const playeri* p, tech_color_s c) {

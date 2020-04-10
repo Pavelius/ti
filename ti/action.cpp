@@ -57,7 +57,7 @@ INSTDATA(actioni) = {{"NoAction", "Нет действия"},
 {"Commodities", "Продукция"},
 {"Goods", "Товары"},
 };
-assert_enum(action, LastAction);
+assert_enum(action, LastAction)
 deck<action_s>	action_deck;
 
 bool playeri::isallow(play_s type, action_s id) const {

@@ -99,7 +99,7 @@ struct gui_info {
 		window_width = 400;
 		hero_width = 64;
 		right_width = 220;
-		tips_width = 200;
+		tips_width = 220;
 		button_width = 64;
 		opacity_hilighted = 200;
 	}
@@ -434,7 +434,7 @@ static int windowb(int x, int y, int width, const char* string, bool& result, bo
 	rect rc = { x, y, x + width, y + draw::texth() };
 	auto ra = window(rc, disabled, true, border);
 	draw::text(rc, string, AlignCenterCenter);
-	if((ra == AreaHilited || ra == AreaHilitedPressed) && tips)
+	if((ra == AreaHilited || ra == AreaHilitedPressed) && tips && tips[0])
 		tooltips(x, y, rc.width(), tips);
 	result = false;
 	if(!disabled) {
@@ -848,10 +848,8 @@ static void draw_unit(int x, int y, variant_s type, int count, color c1, color c
 	}
 	if(pu) {
 		auto a = area({x - r, y - r, x + r, y + r});
-		if(a == AreaHilited || a == AreaHilitedPressed) {
-			hilited = Unit;
-			hilited.value = pu->getindex();
-		}
+		if(a == AreaHilited || a == AreaHilitedPressed)
+			hilited = pu;
 	}
 }
 
@@ -1090,6 +1088,7 @@ int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, cons
 		return elements[rand() % elements.getcount()].param;
 	if(cancel_button && !elements)
 		return 0;
+	char temp[2048]; stringbuilder sb(temp);
 	while(ismodal()) {
 		render_board();
 		render_left();
@@ -1097,9 +1096,13 @@ int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, cons
 		y = gui.border * 2;
 		y += render_report(x, y, picture, format);
 		x = getwidth() - gui.right_width - gui.border * 2;
+		auto index = 0;
 		for(auto& e : elements) {
 			bool run;
-			y += windowb(x, y, gui.right_width, e.getname(), run, false);
+			sb.clear();
+			if(tips)
+				tips(sb, e.param);
+			y += windowb(x, y, gui.right_width, e.getname(), run, false, 0, Alpha + '1' + index, sb);
 			if(run)
 				execute(breakparam, e.param);
 		}
@@ -1107,6 +1110,8 @@ int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, cons
 			y += windowb(x, y, gui.right_width, "Отмена", buttoncancel, false, 0, KeyEscape);
 		domodal();
 		control_standart();
+		if((hot.key == KeyEnter || hot.key == KeySpace) && elements.getcount() == 1)
+			breakmodal(elements[0].param);
 	}
 	return getresult();
 }
@@ -1236,7 +1241,7 @@ struct unit_table : table {
 		table::view(rc);
 		rect rv = { rc.x1, rc.y2 - getrowheight(), rc.x2, rc.y2 };
 		string sb;
-		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], продукция [%3i]", resource, fleet, maximal, total_fleet);
+		sb.add("Ваши ресурсы [%1i], флот [%4i]/[%2i], производство [%3i]", resource, fleet, maximal, total_fleet);
 		textf(rv.x1 + 4, rv.y1 + 4, rv.width(), sb);
 	}
 	unit_table(builda& source) : table(getcolumns()), source(source),

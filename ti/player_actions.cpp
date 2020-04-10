@@ -310,6 +310,11 @@ static void select(playera& source, const playeri* start) {
 	}
 }
 
+static void strategy_tips(stringbuilder& sb, int param) {
+	auto& e = bsdata<strategyi>::elements[param];
+	sb.add(e.text);
+}
+
 static void strategic_phase() {
 	playera source;
 	select(source, playeri::getspeaker());
@@ -328,7 +333,8 @@ static void strategic_phase() {
 		p->strategy = (strategy_s)p->choose(ai, false,
 			"Эта стратегическая фаза. "
 			"Вам нужно выбрать одну стратегию из списка ниже, которую будете использовать на этот ход. "
-			"Ваши оппоненты также выбирают одну стратегию из этого же списка.");
+			"Ваши оппоненты также выбирают одну стратегию из этого же списка.",
+			strategy_tips);
 		string sb;
 		sb.adds("Наш выбор [%-1] стратегия.", getstr(p->strategy));
 		sb.adds(bsdata<strategyi>::elements[p->strategy].text);
