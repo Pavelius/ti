@@ -137,11 +137,6 @@ public:
 	void						select(const playeri* player, unsigned flags);
 	void						sort(int (variant::*proc)() const);
 };
-struct unita : adat<uniti*, 32> {
-	void						removecasualty(const playeri* player);
-	void						rollup();
-	void						sort(int (uniti::*proc)() const);
-};
 struct namei {
 	const char*					id;
 	const char*					name;
@@ -241,7 +236,7 @@ public:
 	void						buy_technology(int cost_resources);
 	void						choose_speaker(int exclude);
 	void						check_card_limin();
-	uniti*						choose(unita& source, const char* format) const;
+	uniti*						choose(varianta& source, const char* format) const;
 	bool						choose(varianta& a1, varianta& a2, const char* format, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format) const;

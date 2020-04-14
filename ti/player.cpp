@@ -520,10 +520,14 @@ void playeri::build_units(solari* solar) {
 	}
 }
 
-uniti* playeri::choose(unita& source, const char* format) const {
+uniti* playeri::choose(varianta& source, const char* format) const {
 	answeri ai;
-	for(auto p : source)
-		ai.add((int)p, p->getname());
+	for(auto pv : source) {
+		auto u = pv.getunit();
+		if(!u)
+			continue;
+		ai.add((int)u, u->getname());
+	}
 	return (uniti*)choose(ai, false, format);
 }
 

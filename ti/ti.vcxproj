@@ -140,7 +140,6 @@
     <ClCompile Include="cost.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="build.cpp" />
-    <ClCompile Include="unita.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="color.cpp" />
     <ClCompile Include="draw.cpp" />
