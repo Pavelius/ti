@@ -303,7 +303,7 @@ static void make_wave(unsigned char start_index, const playeri* player) {
 
 
 void playeri::moveships(solari* solar) {
-	unita a1, a2;
+	varianta a1, a2;
 	// Расчет ходов
 	make_wave(solar->getindex(), this);
 	// Выбор кораблей
@@ -326,8 +326,11 @@ void playeri::moveships(solari* solar) {
 	string sb;
 	sb.add("Вы можете переместить несколько ваших кораблей в систему [%1]. Слева находятся корабли, которые можно переместить. Что переместить, кликните на корабле мышью.", solar->getname());
 	if(choose(a1, a2, sb,"Переместить", true)) {
-		for(auto p : a2)
-			p->setsolar(solar);
+		for(auto pv : a2) {
+			auto p = pv.getunit();
+			if(p)
+				p->setsolar(solar);
+		}
 		// Берем под контроль нейтральную систему
 		if(!solar->getplayer())
 			solar->setplayer(this);

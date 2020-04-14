@@ -1117,18 +1117,34 @@ int	answeri::choose(bool cancel_button, bool random_choose, tips_proc tips, cons
 }
 
 struct unit_ref_table : table {
-	unita&		source;
+	varianta&	source;
 	bool		choosed;
+	bool		show_solar;
 	const char* getname(char* result, const char* result_maximum, int line, int column) const override {
-		if(columns[column] == "name")
-			return source[line]->getname();
+		if(columns[column] == "name") {
+			if(show_solar) {
+				stringbuilder sb(result, result_maximum);
+				auto p = source[line].getunit();
+				if(!p)
+					return "Нет отряда";
+				auto s = p->getsolar();
+				sb.add(p->getname());
+				if(s) {
+					sb.adds("(");
+					sb.add(s->getname());
+					sb.add(")");
+				}
+				return sb;
+			}
+			return source[line].getname();
+		}
 		return 0;
 	}
 	int getnumber(int line, int column) const override {
 		return 0;
 	}
 	uniti* getvalue() const {
-		return source[current];
+		return source[current].getunit();
 	}
 	int	getmaximum() const override {
 		return source.getcount();
@@ -1157,7 +1173,7 @@ struct unit_ref_table : table {
 		choosed = false;
 		table::view(rc);
 	}
-	constexpr unit_ref_table(unita& source) : table(getcolumns()), source(source), choosed(false) {}
+	constexpr unit_ref_table(varianta& source) : table(getcolumns()), source(source), choosed(false), show_solar(false) {}
 };
 
 struct unit_table : table {
@@ -1344,7 +1360,7 @@ bool playeri::build(builda& units, const planeti* planet, solari* system, int re
 	return false;
 }
 
-bool playeri::choose(unita& a1, unita& a2, const char* format, const char* action, bool cancel_button, bool show_movement) const {
+bool playeri::choose(varianta& a1, varianta& a2, const char* format, const char* action, bool cancel_button, bool show_movement) const {
 	if(iscomputer()) {
 		for(auto& e : a1)
 			a2.add(e);
@@ -1352,8 +1368,8 @@ bool playeri::choose(unita& a1, unita& a2, const char* format, const char* actio
 	}
 	int x, y;
 	auto picture = id;
-	unit_ref_table u1(a1); u1.show_header = false;
-	unit_ref_table u2(a2); u2.show_header = false;
+	unit_ref_table u1(a1); u1.show_header = false; u1.show_solar = true;
+	unit_ref_table u2(a2); u2.show_header = false; u2.show_solar = true;
 	auto maximum = imax(u1.getmaximum(), u2.getmaximum()) + 1;
 	auto header_height = render_report(0, 0, id, format, true) - gui.padding * 3;
 	auto height = header_height + u1.getrowheight()*maximum + 1;

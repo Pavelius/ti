@@ -118,11 +118,24 @@ public:
 	void						clear() { type = NoVariant; value = 0; }
 	void						destroy();
 	constexpr agendai*			getagenda() const { return get<agendai, Agenda>(); }
+	const char*					getname() const;
 	constexpr planeti*			getplanet() const { return get<planeti, Planet>(); }
 	constexpr playeri*			getplayer() const { return get<playeri, Player>(); }
 	constexpr solari*			getsolar() const { return get<solari, Solar>(); }
 	constexpr uniti*			getunit() const { return get<uniti, Unit>(); }
 	int							getweight() const;
+};
+class varianta : public adat<variant, 64> {
+public:
+	void						add_planets(const playeri* player);
+	void						add_solars(const playeri* player);
+	void						add_units(const playeri* player);
+	void						match_activated(const playeri* player, bool value);
+	void						match(const solari* solar, bool value);
+	void						removecasualty(const playeri* player);
+	void						rollup();
+	void						select(const playeri* player, unsigned flags);
+	void						sort(int (variant::*proc)() const);
 };
 struct unita : adat<uniti*, 32> {
 	void						removecasualty(const playeri* player);
@@ -229,7 +242,7 @@ public:
 	void						choose_speaker(int exclude);
 	void						check_card_limin();
 	uniti*						choose(unita& source, const char* format) const;
-	bool						choose(unita& a1, unita& a2, const char* format, const char* action, bool cancel_button, bool show_movement = false) const;
+	bool						choose(varianta& a1, varianta& a2, const char* format, const char* action, bool cancel_button, bool show_movement = false) const;
 	solari*						choose(const aref<solari*>& source, const char* format) const;
 	planeti*					choose(const aref<planeti*>& source, const char* format) const;
 	int							choose(answeri& ai, bool cancel_button, const char* format, tips_proc tips = 0) const;
@@ -467,18 +480,6 @@ public:
 	void						clear() { stringbuilder::clear(); elements.clear(); }
 	static int					compare(const void* p1, const void* p2);
 	void						sort();
-};
-class varianta : adat<variant, 64> {
-public:
-	void						add_planets(const playeri* player);
-	void						add_solars(const playeri* player);
-	void						add_units(const playeri* player);
-	void						match_activated(const playeri* player, bool value);
-	void						match(const solari* solar, bool value);
-	void						removecasualty(const playeri* player);
-	void						rollup();
-	void						select(const playeri* player, unsigned flags);
-	void						sort(int (variant::*proc)() const);
 };
 extern deck<action_s>			action_deck;
 inline unsigned char			gmi(int x, int y) { return y * map_scan_line + x; }

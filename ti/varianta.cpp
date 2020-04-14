@@ -23,6 +23,11 @@ void varianta::match(const solari* solar, bool value) {
 		if(!v)
 			continue;
 		auto p = v.getsolar();
+		//if(!p) {
+		//	auto planet = v.getplanet();
+		//	if(planet)
+		//		p = planet->getsolar();
+		//}
 		if(p) {
 			if(value) {
 				if(p != solar)
@@ -77,12 +82,17 @@ void varianta::select(const playeri* player, unsigned flags) {
 		add_planets(player);
 		if(flags&Neutral)
 			add_planets(0);
-		if(flags&NoMekatol)
-			match(solari::getmekatol(), false);
+		break;
+	case Solar:
+		add_solars(player);
+		if(flags&Neutral)
+			add_solars(0);
 		break;
 	default:
 		return;
 	}
+	if(flags&NoMekatol)
+		match(solari::getmekatol(), false);
 	if(flags&Activated)
 		match_activated(player, true);
 	if(flags&Ready)

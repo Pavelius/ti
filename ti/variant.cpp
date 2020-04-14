@@ -40,3 +40,12 @@ void variant::destroy() {
 	} else
 		clear();
 }
+
+const char* variant::getname() const {
+	switch(type) {
+	case Planet: return bsdata<planeti>::elements[value].getname();
+	case Solar: return bsdata<solari>::elements[value].getname();
+	case Unit: return bsdata<uniti>::elements[value].getname();
+	default: return "Нет имени";
+	}
+}
