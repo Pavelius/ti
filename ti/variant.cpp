@@ -49,3 +49,16 @@ const char* variant::getname() const {
 	default: return "Нет имени";
 	}
 }
+
+solari* variant::getsolarp() const {
+	auto s = getsolar();
+	if(s)
+		return s;
+	auto p = getplanet();
+	if(p)
+		return p->getsolar();
+	auto u = getunit();
+	if(u)
+		return u->getsolar();
+	return 0;
+}

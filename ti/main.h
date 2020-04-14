@@ -122,17 +122,23 @@ public:
 	constexpr planeti*			getplanet() const { return get<planeti, Planet>(); }
 	constexpr playeri*			getplayer() const { return get<playeri, Player>(); }
 	constexpr solari*			getsolar() const { return get<solari, Solar>(); }
+	solari*						getsolarp() const;
 	constexpr uniti*			getunit() const { return get<uniti, Unit>(); }
 	int							getweight() const;
 };
 class varianta : public adat<variant, 64> {
 public:
 	void						add_planets(const playeri* player);
+	void						add_planets(const varianta& source);
 	void						add_solars(const playeri* player);
+	void						add_solars(const varianta& source);
 	void						add_units(const playeri* player);
 	void						match_activated(const playeri* player, bool value);
 	void						match(const solari* solar, bool value);
+	void						match(variant_s t1, variant_s t2);
+	void						match_movement(const solari* solar);
 	void						removecasualty(const playeri* player);
+	void						remove_no_capacity();
 	void						rollup();
 	void						select(const playeri* player, unsigned flags);
 	void						sort(int (variant::*proc)() const);
@@ -287,6 +293,7 @@ public:
 	static void					make_move(bool strategic, bool action);
 	void						message(const char* text);
 	void						moveships(solari* solar);
+	void						moveground(solari* source, solari* destination);
 	void						open_trade_negatiation() {}
 	int							pay(int maximum, int cost, const char* subject, const char* subjects, action_s currency);
 	void						pay_apply(int cost, action_s currency);

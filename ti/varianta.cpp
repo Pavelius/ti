@@ -17,17 +17,55 @@ void varianta::match_activated(const playeri* player, bool value) {
 	count = pb - data;
 }
 
+void varianta::match(variant_s t1, variant_s t2) {
+	auto pb = data;
+	for(auto v : *this) {
+		auto p = v.getunit();
+		if(!p)
+			continue;
+		if(!p->is(t1) && !p->is(t2))
+			continue;
+		*pb++ = v;
+	}
+	count = pb - data;
+}
+
+void varianta::remove_no_capacity() {
+	auto pb = data;
+	for(auto v : *this) {
+		auto u = v.getunit();
+		if(!u)
+			continue;
+		if(!u->getcapacity())
+			continue;
+		*pb++ = v;
+	}
+	count = pb - data;
+}
+
+void varianta::match_movement(const solari* solar) {
+	auto pb = data;
+	for(auto v : *this) {
+		auto u = v.getunit();
+		if(!u)
+			continue;
+		auto s = u->getsolar();
+		if(!s || s == solar)
+			continue;
+		auto move_cost = u->getmovement(s->getindex());
+		if(u->getmovement() < move_cost)
+			continue;
+		*pb++ = v;
+	}
+	count = pb - data;
+}
+
 void varianta::match(const solari* solar, bool value) {
 	auto pb = data;
 	for(auto v : *this) {
 		if(!v)
 			continue;
-		auto p = v.getsolar();
-		//if(!p) {
-		//	auto planet = v.getplanet();
-		//	if(planet)
-		//		p = planet->getsolar();
-		//}
+		auto p = v.getsolarp();
 		if(p) {
 			if(value) {
 				if(p != solar)
@@ -51,6 +89,15 @@ void varianta::add_solars(const playeri* player) {
 	}
 }
 
+void varianta::add_solars(const varianta& source) {
+	for(auto e : source) {
+		auto p = e.getsolarp();
+		if(!p)
+			continue;
+		add(p);
+	}
+}
+
 void varianta::add_planets(const playeri* player) {
 	for(auto& e : bsdata<planeti>()) {
 		if(!e)
@@ -58,6 +105,15 @@ void varianta::add_planets(const playeri* player) {
 		if(e.getplayer() != player)
 			continue;
 		add(&e);
+	}
+}
+
+void varianta::add_planets(const varianta& source) {
+	for(auto e : source) {
+		auto p = e.getplanet();
+		if(!p)
+			continue;
+		add(p);
 	}
 }
 
@@ -124,20 +180,24 @@ void varianta::removecasualty(const playeri* player) {
 		temp.data[0].destroy();
 }
 
+static bool isexist(const variant* pb, const variant* pe, variant v) {
+	while(pb < pe) {
+		if(*pb == v)
+			return true;
+		pb++;
+	}
+	return false;
+}
+
 void varianta::rollup() {
 	auto ps = data;
 	auto pe = data + count;
 	for(auto pd = data; pd < pe; pd++) {
-		auto found = false;
 		if(!*pd)
 			continue;
-		for(auto pb = data; pb < ps; pb++) {
-			if(*pb == *ps) {
-				found = true;
-				break;
-			}
-		}
-		if(!found)
-			*ps++ = *pd;
+		variant v1 = *ps;
+		if(isexist(data, ps, v1))
+			continue;
+		*ps++ = *pd;
 	}
 }

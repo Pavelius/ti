@@ -301,40 +301,63 @@ static void make_wave(unsigned char start_index, const playeri* player) {
 	make_wave(start_index, player, movement_rate, false);
 }
 
+static int solar_caps(varianta& source) {
+	auto result = 0;
+	for(auto v : source) {
+		auto p = v.getunit();
+		if(!p)
+			continue;
+		result += p->getcapacity();
+	}
+	return result;
+}
+
+void playeri::moveground(solari* source, solari* target) {
+	varianta a1, a2;
+	a1.add_units(this);
+	a1.match(GroundForces, Fighters);
+	if(!a1)
+		return;
+	string sb;
+	sb.add("Вы можете перевезти несколько отрядов. Слева находятся отряды, которые можно перевезти. Чтобы перевезти, два раза кликните на отряде мышью.");
+	if(!choose(a1, a2, sb, "Перевезти", true))
+		return;
+	for(auto pv : a2) {
+		auto p = pv.getunit();
+		if(!p)
+			continue;
+		p->setsolar(target);
+	}
+}
 
 void playeri::moveships(solari* solar) {
-	varianta a1, a2;
+	varianta a1, a2, a3;
 	// Расчет ходов
 	make_wave(solar->getindex(), this);
-	// Выбор кораблей
-	for(auto& e : bsdata<uniti>()) {
-		if(!e)
-			continue;
-		if(e.getplayer() != this)
-			continue;
-		auto s = e.getsolar();
-		if(!s || s == solar)
-			continue;
-		auto move_cost = e.getmovement(s->getindex());
-		if(e.getmovement() < move_cost)
-			continue;
-		a1.add(&e);
-	}
+	a1.add_units(this);
+	a1.match_movement(solar);
 	if(!a1)
 		return;
 	// Перемещение кораблей в систему
 	string sb;
 	sb.add("Вы можете переместить несколько ваших кораблей в систему [%1]. Слева находятся корабли, которые можно переместить. Что переместить, кликните на корабле мышью.", solar->getname());
-	if(choose(a1, a2, sb,"Переместить", true)) {
-		for(auto pv : a2) {
-			auto p = pv.getunit();
-			if(p)
-				p->setsolar(solar);
-		}
-		// Берем под контроль нейтральную систему
-		if(!solar->getplayer())
-			solar->setplayer(this);
+	if(!choose(a1, a2, sb, "Переместить", true))
+		return;
+	// Перемещаем наземные юниты
+	a3.add_solars(a2);
+	a3.rollup();
+	for(auto pv : a3)
+		moveground(pv.getsolar(), solar);
+	// Перемещаем корабли
+	for(auto pv : a2) {
+		auto p = pv.getunit();
+		if(!p)
+			continue;
+		p->setsolar(solar);
 	}
+	// Берем под контроль нейтральную систему
+	if(!solar->getplayer())
+		solar->setplayer(this);
 }
 
 planeti* planeti::find(const solari* parent, int index) {
