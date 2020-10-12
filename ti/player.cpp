@@ -7,7 +7,7 @@ struct playerpregeni {
 	char				tokens[3];
 	char				commodities;
 	cflags<bonus_s>		bonus;
-	adat<action_s, 8>	actions;
+	const std::initializer_list<action_s>& actions;
 	variant_s			start_units[16];
 	cflags<tech_s>		start_tech;
 };
@@ -42,7 +42,7 @@ static playerpregeni player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 
 },
 {"sol", "Федерация Солнца", {2, 3, 3}, 4,
 {BonusCommandCounter},
-{},
+{OrbitalDrop},
 {GroundForces, GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Destroyer},
 {NeuralMotivator, AntimassDeflectors}
 },
@@ -205,7 +205,7 @@ static void create_start_units(playeri* player) {
 	}
 }
 
-playeri& playeri::create(const char* id) {
+playeri* playeri::create(const char* id) {
 	memset(this, 0, sizeof(*this));
 	auto p = find_by_id(id);
 	assert(p);
@@ -214,12 +214,14 @@ playeri& playeri::create(const char* id) {
 	this->commodities = p->commodities;
 	technologies = p->start_tech;
 	bonuses = p->bonus;
+	for(auto v : p->actions)
+		set(v, 1);
 	// Game setup: step 11
 	set(Strategic, p->tokens[0]);
 	set(Tactical, p->tokens[1]);
 	set(Fleet, p->tokens[2]);
 	set(Commodities, p->commodities);
-	return *this;
+	return this;
 }
 
 unsigned char playeri::getid() const {
@@ -270,7 +272,7 @@ int	playeri::get(action_s id) const {
 }
 
 int playeri::getinfluences() const {
-	return planeti::get(this, &planeti::getresource, Ready);
+	return planeti::get(this, &planeti::getinfluence, Ready);
 }
 
 int	playeri::getresources() const {

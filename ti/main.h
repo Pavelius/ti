@@ -20,10 +20,10 @@ enum strategy_s : unsigned char {
 	Trade, Warfare, Technology, Imperial,
 };
 enum action_s : unsigned char {
-	NoAction,
 	AncientBurialSites, AssassinateRepresentative, Bunker, CrippleDefenses, DirectHit, Sabotage, Spy,
 	Uprising, WarfareRider,
 	FirstActionCard = AncientBurialSites, LastActionCard = WarfareRider,
+	OrbitalDrop,
 	//
 	StrategyAction, TacticalAction, Pass,
 	Strategic, Fleet, Tactical,
@@ -50,6 +50,9 @@ enum bonus_s : unsigned char {
 	CombatBonusDefend,
 	CombatBonusFighters,
 	CombatPenalty,
+};
+enum action_flag_s : unsigned char {
+	PayStrategy,
 };
 enum tech_color_s : unsigned char {
 	NoTech, Red, Green, Blue, Yellow,
@@ -94,7 +97,16 @@ class uniti;
 typedef adat<playeri*, 6> playera;
 typedef adat<solari*, 64> solara;
 typedef adat<planeti*, 64> planeta;
+typedef cflags<action_flag_s> actionf;
 typedef void(*tips_proc)(stringbuilder& sb, int param);
+template<unsigned N>
+class aset {
+	char						data[N];
+public:
+	constexpr int				get(int i) const { return data[i]; };
+	constexpr bool				is(int i) const { return data[i]!=0; };
+	void						set(int i, int v) { return data[i] = v; };
+};
 class variant {
 	template<class T> constexpr variant(variant_s t, const T* p) : type(p ? t : NoVariant),
 		value(p ? p - bsdata<T>::elements : 0) {}
@@ -137,6 +149,7 @@ public:
 	void						match(const solari* solar, bool value);
 	void						match(variant_s t1, variant_s t2);
 	void						match_movement(const solari* solar);
+	void						match_use_capacity();
 	void						removecasualty(const playeri* player);
 	void						remove_no_capacity();
 	void						rollup();
@@ -250,8 +263,9 @@ public:
 	void						choose_diplomacy();
 	bool						choose_movement(uniti* solar) const;
 	playeri*					choose_opponent(const char* text);
+	planeti*					choose_planet(const char* text, unsigned flags);
 	bool						choose_trade() const { return true; }
-	playeri&					create(const char* id);
+	playeri*					create(const char* id);
 	uniti*						create(variant_s id, solari* solar);
 	uniti*						create(variant_s id, planeti* planet);
 	static void					create_action_deck();
@@ -263,7 +277,6 @@ public:
 	bool						is(tech_s v) const { return technologies.is(v); }
 	bool						is(secret_s v) const { return secrets.is(v); }
 	bool						isactive() const { return getactive() == this; }
-	bool						isallow(play_s type, action_s id) const;
 	bool						isallow(variant_s id) const;
 	bool						isallow(tech_s v) const;
 	bool						isally(const playeri* enemy) const;
@@ -301,6 +314,7 @@ public:
 	void						predict_next_political_card(int value);
 	void						replenish_commodities();
 	void						remove(secret_s v) { secrets.remove(v); }
+	bool						play(action_s v, bool run);
 	static void					slide(int x, int y);
 	static void					slide(unsigned char hexagon);
 	void						select(solara& result, unsigned flags) const;
@@ -312,6 +326,7 @@ public:
 	void						set(secret_s v) { secrets.add(v); }
 	static void					setup();
 	void						sethuman();
+	void						tactical();
 };
 class uniti {
 	variant						parent;
@@ -442,12 +457,25 @@ struct techi {
 	tech_color_s				color;
 	char						required[4]; // RGBY
 };
+struct choosei {
+	const char*					text;
+	unsigned					flags;
+	constexpr explicit operator bool() const { return text != 0; }
+};
 struct actioni {
+	struct stage {
+		choosei					planet;
+		choosei					solar;
+	};
 	const char*					id;
 	const char*					name;
 	int							count;
 	play_s						type;
-	bool(*proc)(playeri* p, bool run);
+	actionf						flags;
+	stage						stages;
+	int							effect_count;
+	const char*					effect_text;
+	constexpr bool				is(action_flag_s i) const { return flags.is(i); }
 };
 struct agendai {
 	typedef bool(*testp)(variant v);

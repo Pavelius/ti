@@ -1,40 +1,8 @@
 #include "main.h"
 
 void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary);
-void tactical_action(playeri* p);
 
-static bool action_tactic(playeri* p, bool run) {
-	if(p->get(Tactical) <= 0)
-		return false;
-	if(run)
-		tactical_action(p);
-	return true;
-}
-
-static bool action_pass(playeri* p, bool run) {
-	if(p->ispassed())
-		return false;
-	if(p->get(StrategyAction) > 0)
-		return false;
-	if(run) {
-		string sb;
-		sb.add("На этом наш ход закончен. Будем ждать следующего хода.");
-		p->set(Pass, 0);
-		p->apply(sb);
-	}
-	return true;
-}
-
-static bool action_strategy(playeri* p, bool run) {
-	if(p->get(StrategyAction) <= 0)
-		return false;
-	if(run)
-		strategy_primary_action(p, p->strategy, true);
-	return true;
-}
-
-INSTDATA(actioni) = {{"NoAction", "Нет действия"},
-{"AncientBurialSites", "Руины древних цивилизаций", 1, BeforeAgendaPhase},
+INSTDATA(actioni) = {{"AncientBurialSites", "Руины древних цивилизаций", 1, BeforeAgendaPhase},
 {"AssassinateRepresentative", "Убийство посла", 1, AfterAgendaRevealed},
 {"Bunker", "Бункер", 1, BeforeBombardment},
 {"CrippleDefenses", "Подрыв обороноспособности", 1, AsAction},
@@ -44,9 +12,11 @@ INSTDATA(actioni) = {{"NoAction", "Нет действия"},
 {"Uprising", "Восстание", 1, AsAction},
 {"WarfareRider", "", 1, AsAction},
 //
-{"StrategyAction", "%1 стратегия", 0, AsAction, action_strategy},
-{"TacticalAction", "Тактическое действие", 0, AsAction, action_tactic},
-{"Pass", "Пропуск хода", 0, AsAction, action_pass},
+{"OrbitalDrop", "Орбитальная высадка", 0, AsAction, {PayStrategy}, {{"Выбирайте планету, на которую будет осуществлена высадка войск", Friendly}}, 2, "Мы высадили с орбиты [%1i] наземных отряда на свою планету."},
+//
+{"StrategyAction", "%1 стратегия", 0, AsAction},
+{"TacticalAction", "Тактическое действие", 0, AsAction},
+{"Pass", "Пропуск хода", 0, AsAction, {}, {}, 0, "На этом наш ход закончен. Будем ждать следующего хода."},
 //
 {"Strategy", "стратегии"},
 {"Fleet", "флота"},
@@ -60,20 +30,63 @@ INSTDATA(actioni) = {{"NoAction", "Нет действия"},
 assert_enum(action, LastAction)
 deck<action_s>	action_deck;
 
-bool playeri::isallow(play_s type, action_s id) const {
-	auto& e = bsdata<actioni>::elements[id];
-	if(type != e.type)
-		return false;
-	if(e.proc && !e.proc(const_cast<playeri*>(this), false))
-		return false;
-	return true;
-}
-
 void playeri::create_action_deck() {
 	action_deck.clear();
-	for(auto i = NoAction; i <= LastAction; i=(action_s)(i+1)) {
+	for(auto i = FirstActionCard; i <= LastAction; i=(action_s)(i+1)) {
 		for(auto j = 0; j < bsdata<actioni>::elements[i].count; j++)
 			action_deck.add(i);
 	}
 	action_deck.shuffle();
+}
+
+bool playeri::play(action_s id, bool run) {
+	auto& e = bsdata<actioni>::elements[id];
+	if(e.is(PayStrategy) && get(StrategyAction) <= 0)
+		return false;
+	auto effect_count = e.effect_count;
+	planeta planets; planeti* planet = 0;
+	solara solars; solari* solar = 0;
+	if(e.stages.planet) {
+		select(planets, e.stages.planet.flags);
+		if(!planets)
+			return false;
+		if(run)
+			planet = choose(planets, e.stages.planet.text);
+	}
+	switch(id) {
+	case OrbitalDrop:
+		if(run) {
+			create(GroundForces, planet);
+			create(GroundForces, planet);
+		}
+		break;
+	case StrategyAction:
+		if(get(StrategyAction) <= 0)
+			return false;
+		if(run)
+			strategy_primary_action(this, strategy, true);
+		break;
+	case TacticalAction:
+		if(get(Tactical) <= 0)
+			return false;
+		if(run)
+			tactical();
+		break;
+	case Pass:
+		if(ispassed())
+			return false;
+		if(get(StrategyAction) > 0)
+			return false;
+		if(run)
+			set(Pass, 0);
+		break;
+	}
+	if(run) {
+		if(e.effect_text) {
+			string sb;
+			sb.add(e.effect_text, e.effect_count);
+			apply(sb);
+		}
+	}
+	return true;
 }

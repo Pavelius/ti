@@ -30,6 +30,19 @@ void varianta::match(variant_s t1, variant_s t2) {
 	count = pb - data;
 }
 
+void varianta::match_use_capacity() {
+	auto pb = data;
+	for(auto v : *this) {
+		auto u = v.getunit();
+		if(!u)
+			continue;
+		if(!u->getcapacity())
+			continue;
+		*pb++ = v;
+	}
+	count = pb - data;
+}
+
 void varianta::remove_no_capacity() {
 	auto pb = data;
 	for(auto v : *this) {

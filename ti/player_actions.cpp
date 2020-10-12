@@ -138,21 +138,26 @@ static solari* activate_system(playeri* p) {
 	return p->choose(source, "Выбирайте систему, которую вы хотите активировать");
 }
 
+planeti* playeri::choose_planet(const char* format, unsigned flags) {
+	planeta source; select(source, flags);
+	return choose(source, format);
+}
+
 static void after_activation(playeri* p, solari* solar) {
 	string sb;
-	sb.add("Следующий свое действие мы предпримим в системе [%1].", solar->getname());
+	sb.add("Следующее свое действие мы выполним в системе [%1].", solar->getname());
 	p->apply(sb);
 }
 
-void tactical_action(playeri* p) {
-	auto solar = activate_system(p);
+void playeri::tactical() {
+	auto solar = activate_system(this);
 	if(!solar)
 		return;
-	solar->activate(p);
-	p->add(Tactical, -1);
-	after_activation(p, solar);
-	p->moveships(solar);
-	p->build_units(solar);
+	solar->activate(this);
+	add(Tactical, -1);
+	after_activation(this, solar);
+	moveships(solar);
+	build_units(solar);
 }
 
 static void score_public_objective(int value) {
@@ -281,7 +286,9 @@ void strategy_primary_action(playeri* p, strategy_s id, bool allow_secondanary) 
 static action_s choose_action(playeri* p, play_s play) {
 	answeri ai;
 	for(auto a = FirstActionCard; a <= LastAction; a = (action_s)(a + 1)) {
-		if(!p->is(a) || !p->isallow(play, a))
+		if(bsdata<actioni>::elements[a].type != play)
+			continue;
+		if(!p->is(a) || !p->play(a, false))
 			continue;
 		switch(a) {
 		case StrategyAction:
@@ -293,12 +300,6 @@ static action_s choose_action(playeri* p, play_s play) {
 		}
 	}
 	return (action_s)p->choose(ai, false, "Что вы предпочитаете делать в свой ход?");
-}
-
-static void play_action(playeri* p, action_s id) {
-	auto& e = bsdata<actioni>::elements[id];
-	if(e.proc)
-		e.proc(p, true);
 }
 
 static void select(playera& source, const playeri* start) {
@@ -356,7 +357,7 @@ static void action_phase() {
 					continue;
 				e.activate();
 				auto a = choose_action(&e, AsAction);
-				play_action(&e, a);
+				e.play(a, true);
 				e.add(a, -1);
 				someone_move = true;
 			}
