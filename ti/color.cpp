@@ -2,20 +2,20 @@
 #include "crt.h"
 
 // Common used color
-color colors::black = color::create(0, 0, 0);
-color colors::blue = color::create(0, 0, 255);
-color colors::gray = color::create(128, 128, 128);
-color colors::green = color::create(0, 255, 0);
-color colors::red = color::create(255, 0, 0);
-color colors::yellow = color::create(255, 244, 32);
-color colors::white = color::create(255, 255, 255);
+color colors::black = color::add(0, 0, 0);
+color colors::blue = color::add(0, 0, 255);
+color colors::gray = color::add(128, 128, 128);
+color colors::green = color::add(0, 255, 0);
+color colors::red = color::add(255, 0, 0);
+color colors::yellow = color::add(255, 244, 32);
+color colors::white = color::add(255, 255, 255);
 
 char* color::getname(char* result, const char* result_maximum) const {
 	szprint(result, result_maximum, "%1i, %2i, %3i", r, g, b);
 	return result;
 }
 
-color color::create(unsigned char r, unsigned char g, unsigned char b) {
+color color::add(unsigned char r, unsigned char g, unsigned char b) {
 	return{b, g, r};
 }
 

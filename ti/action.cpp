@@ -12,7 +12,7 @@ INSTDATA(actioni) = {{"AncientBurialSites", "Руины древних цивилизаций", 1, Befo
 {"Uprising", "Восстание", 1, AsAction},
 {"WarfareRider", "", 1, AsAction},
 //
-{"OrbitalDrop", "Орбитальная высадка", 0, AsAction, {PayStrategy}, {{"Выбирайте планету, на которую будет осуществлена высадка войск", Friendly}}, 2, "Мы высадили с орбиты [%1i] наземных отряда на свою планету."},
+{"OrbitalDrop", "Орбитальная высадка", 0, AsAction, {PayStrategy}, {{"Выбирайте планету, на которую будет осуществлена высадка войск", Friendly}}, 2, "Мы высадили с орбиты [%count] наземных отряда на планету [%planet]."},
 //
 {"StrategyAction", "%1 стратегия", 0, AsAction},
 {"TacticalAction", "Тактическое действие", 0, AsAction},
@@ -56,8 +56,8 @@ bool playeri::play(action_s id, bool run) {
 	switch(id) {
 	case OrbitalDrop:
 		if(run) {
-			create(GroundForces, planet);
-			create(GroundForces, planet);
+			add(GroundForces, planet);
+			add(GroundForces, planet);
 		}
 		break;
 	case StrategyAction:
@@ -84,7 +84,9 @@ bool playeri::play(action_s id, bool run) {
 	if(run) {
 		if(e.effect_text) {
 			string sb;
-			sb.add(e.effect_text, e.effect_count);
+			sb.planet = planet;
+			sb.count = effect_count;
+			sb.add(e.effect_text);
 			apply(sb);
 		}
 	}

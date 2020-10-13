@@ -271,7 +271,7 @@ void draw::syscursor(bool enable) {
 	ShowCursor(enable ? 1 : 0);
 }
 
-void draw::create(int x, int y, int width, int height, unsigned flags, int bpp) {
+void draw::add(int x, int y, int width, int height, unsigned flags, int bpp) {
 	if(!bpp)
 		bpp = draw::canvas->bpp;
 	if(!width)

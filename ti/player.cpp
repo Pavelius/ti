@@ -53,7 +53,7 @@ static playerpregeni player_pregen_data[] = {{"xxcha", "Королевство Иксча", {2, 
 {SarweenTools, PlasmaScoring}
 },
 {"hacan", "Эмираты Хакканов", {2, 3, 3}, 6,
-{BonusTrade},
+{Arbiters, MastersOfTrade, GuildShips},
 {},
 {GroundForces, GroundForces, GroundForces, GroundForces, Carrier, Carrier, Cruiser, Fighters, Fighters},
 {AntimassDeflectors, SarweenTools}
@@ -123,14 +123,14 @@ void playeri::sethuman() {
 	human_player = this;
 }
 
-uniti* playeri::create(variant_s id, solari* solar) {
+uniti* playeri::add(variant_s id, solari* solar) {
 	auto p = new uniti(id);
 	p->setplayer(this);
 	p->setsolar(solar);
 	return p;
 }
 
-uniti* playeri::create(variant_s id, planeti* planet) {
+uniti* playeri::add(variant_s id, planeti* planet) {
 	auto p = new uniti(id);
 	p->setplayer(this);
 	p->setplanet(planet);
@@ -189,17 +189,17 @@ static void create_start_units(playeri* player) {
 	qsort(planets.data, planets.count, sizeof(planets.data[0]), compare_planets);
 	auto base_planet = planets[0];
 	auto solar_system = base_planet->getsolar();
-	player->create(SpaceDock, base_planet);
+	player->add(SpaceDock, base_planet);
 	for(auto e : p->start_units) {
 		if(!e)
 			break;
 		switch(e) {
 		case GroundForces:
 		case PDS:
-			player->create(e, base_planet);
+			player->add(e, base_planet);
 			break;
 		default:
-			player->create(e, solar_system);
+			player->add(e, solar_system);
 			break;
 		}
 	}
@@ -515,9 +515,9 @@ void playeri::build_units(solari* solar) {
 	for(auto& e : a1) {
 		for(auto i = e.count * bsdata<varianti>::elements[e.gettype()].production; i > 0; i--) {
 			if(e.isplanetary())
-				create(e.gettype(), planet);
+				add(e.gettype(), planet);
 			else
-				create(e.gettype(), solar);
+				add(e.gettype(), solar);
 		}
 	}
 }

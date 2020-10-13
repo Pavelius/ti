@@ -44,7 +44,9 @@ enum tech_s : unsigned char {
 	FirstTech = PlasmaScoring, LastTech = LightWaveDeflector,
 };
 enum bonus_s : unsigned char {
-	BonusActionCards, BonusCommandCounter, BonusInitiative, BonusFleetTokens, BonusTrade, BonusTechnology,
+	BonusActionCards, BonusCommandCounter, BonusInitiative, BonusFleetTokens,
+	Arbiters, GuildShips, MastersOfTrade,
+	BonusTechnology,
 	BonusCostDreadnought,
 	CombatBonusAll, CombatBonusDreadnought, CombatBonusGroundForcesAttack,
 	CombatBonusDefend,
@@ -240,6 +242,8 @@ public:
 	//
 	explicit operator bool() const { return id != 0; }
 	void						activate();
+	uniti*						add(variant_s id, solari* solar);
+	uniti*						add(variant_s id, planeti* planet);
 	void						add(action_s id, int v) { costi::add(id, v); }
 	void						add_action_cards(int value);
 	void						add_command_tokens(int value);
@@ -266,8 +270,6 @@ public:
 	planeti*					choose_planet(const char* text, unsigned flags);
 	bool						choose_trade() const { return true; }
 	playeri*					create(const char* id);
-	uniti*						create(variant_s id, solari* solar);
-	uniti*						create(variant_s id, planeti* planet);
 	static void					create_action_deck();
 	static void					create_agenda_deck();
 	static void					create_objectve_deck();
@@ -490,6 +492,8 @@ class string : public stringbuilder {
 	char						buffer[8192];
 public:
 	const playeri*				player;
+	const planeti*				planet;
+	int							count;
 	string();
 	void						addidentifier(const char* identifier) override;
 };

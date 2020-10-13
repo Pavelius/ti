@@ -11,10 +11,10 @@ int main() {
 	//return 0;
 	srand(1231);
 	draw::initialize();
-	draw::create(-1, -1, 800, 600, WFResize | WFMinmax, 32);
+	draw::add(-1, -1, 800, 600, WFResize | WFMinmax, 32);
 	draw::setcaption("Звездная империя");
 	planeti::initialize();
-	auto player = bsdata<playeri>::add()->create("sol");
+	auto p1 = bsdata<playeri>::add()->create("sol");
 	bsdata<playeri>::add()->create("jelnar");
 	bsdata<playeri>::add()->create("hacan");
 	bsdata<playeri>::add()->create("barony");
@@ -23,10 +23,10 @@ int main() {
 	planeti::create_stars();
 	playeri::setup();
 	//playeri::make_move(true, true);
-	player->add(Goods, 5);
-	player->strategy = Construction;
-	player->sethuman();
-	player->make_move(false, true);
+	p1->add(Goods, 5);
+	p1->strategy = Construction;
+	p1->sethuman();
+	p1->make_move(false, true);
 	return 0;
 }
 

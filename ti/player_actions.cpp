@@ -44,10 +44,10 @@ static void build_primary(playeri* p) {
 	auto ut = choose_dock_or_PDS(p);
 	auto pp = choose_planet_construct(p, ut, "¬ыбирайте планету, на которой будете строить [%1].");
 	if(pp)
-		p->create(ut, pp);
+		p->add(ut, pp);
 	pp = choose_planet_construct(p, PDS, "Ќа втором шаге мы усилим свою безопасность. √де мы будем строить [%1]?");
 	if(pp)
-		p->create(PDS, pp);
+		p->add(PDS, pp);
 }
 
 static void trade_activity(playeri* p) {

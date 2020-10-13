@@ -52,7 +52,7 @@ struct file : stream {
 	~file();
 	operator bool() const { return handle != 0; }
 	void				close();
-	bool				create(const char* url, unsigned flags);
+	bool				add(const char* url, unsigned flags);
 	static bool			exist(const char* url);
 	static char*		getdir(char* url, int size);
 	static char*		getmodule(char* url, int size);

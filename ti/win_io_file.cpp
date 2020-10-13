@@ -11,7 +11,7 @@ io::file::file() : handle(0) {
 }
 
 io::file::file(const char* url, unsigned flags) : file() {
-	create(url, flags);
+	add(url, flags);
 }
 
 io::file::~file() {
@@ -56,7 +56,7 @@ const char* io::file::find::name() {
 	return ((WIN32_FIND_DATA*)&reserved)->cFileName;
 }
 
-bool io::file::create(const char* url, unsigned flags) {
+bool io::file::add(const char* url, unsigned flags) {
 	if(handle)
 		return true;
 	handle = (int)CreateFileA(url,

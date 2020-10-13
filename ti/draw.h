@@ -239,7 +239,7 @@ extern surface*			canvas;
 void					circle(int x, int y, int radius);
 void					circle(int x, int y, int radius, const color c1);
 void					circlef(int x, int y, int radius, const color c1, unsigned char alpha = 0xFF);
-void					create(int x, int y, int width, int height, unsigned flags, int bpp);
+void					add(int x, int y, int width, int height, unsigned flags, int bpp);
 void					decortext(unsigned flags);
 void					domodal();
 void					execute(void(*callback)(), int value = 0);
