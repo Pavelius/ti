@@ -956,7 +956,7 @@ static void draw_resource(int x, int y, int value, color c) {
 	fore = push_fore;
 	char temp[16]; stringbuilder sb(temp);
 	sb.add("%1i", value);
-	text(x - textw(temp)/2, y - texth()/2, temp, -1, TextStroke);
+	text(x - textw(temp) / 2, y - texth() / 2, temp, -1, TextStroke);
 }
 
 static void draw_planet(point pt, planeti* p) {

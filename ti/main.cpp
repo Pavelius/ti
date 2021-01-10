@@ -22,11 +22,14 @@ int main() {
 	bsdata<playeri>::add()->create("xxcha");
 	planeti::create_stars();
 	playeri::setup();
-	//playeri::make_move(true, true);
-	p1->add(Goods, 5);
-	p1->strategy = Construction;
 	p1->sethuman();
-	p1->make_move(false, true);
+	if(true)
+		playeri::make_move(true, true);
+	else {
+		p1->add(Goods, 5);
+		p1->strategy = Construction;
+		p1->make_move(false, true);
+	}
 	return 0;
 }
 
